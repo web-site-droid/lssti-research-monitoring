@@ -1,0 +1,8 @@
+RewriteEngine On
+Options -Indexes
+
+RewriteRule ^$ public/index.php [L]
+RewriteRule ^public/ - [L]
+RewriteRule ^(app|config|database|docs|storage)(/|$) - [F,L]
+RewriteRule \.(sql|md|ini|log|env)$ - [F,L]
+RewriteRule ^(.*)$ public/$1 [L]

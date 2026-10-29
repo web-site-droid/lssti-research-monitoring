@@ -1,0 +1,3 @@
+-- Do not import this file.
+-- Tables and default accounts are both in schema.sql.
+-- In phpMyAdmin, select the database, then import schema.sql only.

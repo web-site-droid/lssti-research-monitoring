@@ -1,0 +1,20 @@
+@font-face {
+  font-family: Poppins;
+  src: url("../fonts/poppins-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: Poppins;
+  src: url("../fonts/poppins-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+body.print-report { font-family: Poppins, "Segoe UI", sans-serif; margin: 1.5rem; color: #000; }
+.print-header { display: flex; gap: 1rem; border-bottom: 3px solid #700c0c; padding-bottom: 0.75rem; margin-bottom: 1rem; }
+body.print-report { color: #111; background: #fff; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+th, td { border: 1px solid #333; padding: 0.35rem 0.5rem; font-size: 0.9rem; }
+th { background: #eee; }
