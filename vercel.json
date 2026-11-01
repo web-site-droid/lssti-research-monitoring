@@ -1,25 +1,8 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["sin1"],
-  "functions": {
-    "api/index.php": {
-      "runtime": "vercel-php@0.7.4",
-      "maxDuration": 30,
-      "excludeFiles": "{docs/**,database/**,storage/**,.git/**}"
-    }
-  },
-  "routes": [
-    { "src": "/assets/(.*)", "dest": "/public/assets/$1" },
-    { "src": "/index.php", "dest": "/api/index.php" },
-    { "src": "/login.php", "dest": "/api/index.php" },
-    { "src": "/favicon.ico", "dest": "/public/assets/images/logo.png" },
-    { "src": "/(.*)", "dest": "/api/index.php" }
-  ]
-}
-
   "version": 2,
   "routes": [
     { "src": "/assets/(.*)", "dest": "/public/assets/$1" },
+    { "src": "/favicon.ico", "dest": "/public/assets/images/logo.png" },
     { "src": "/(.*)", "dest": "/api/index.php" }
   ]
 }
