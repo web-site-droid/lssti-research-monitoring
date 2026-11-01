@@ -1,6 +1,11 @@
-<?php
-
-declare(strict_types=1);
-
-header('Location: public/index.php?route=login');
-exit;
+{
+  "functions": {
+    "api/index.php": {
+      "runtime": "vercel-php@0.7.4"
+    }
+  },
+  "routes": [
+    { "src": "/assets/(.*)", "dest": "/public/assets/$1" },
+    { "src": "/(.*)", "dest": "/api/index.php" }
+  ]
+}
