@@ -16,3 +16,10 @@
     { "src": "/(.*)", "dest": "/api/index.php" }
   ]
 }
+
+  "version": 2,
+  "routes": [
+    { "src": "/assets/(.*)", "dest": "/public/assets/$1" },
+    { "src": "/(.*)", "dest": "/api/index.php" }
+  ]
+}
