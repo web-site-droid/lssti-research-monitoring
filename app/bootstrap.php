@@ -36,6 +36,6 @@ spl_autoload_register(static function (string $class): void {
 
 require_once APP_PATH . '/helpers/functions.php';
 
-App\Helpers\Session::start();
 App\Helpers\StorageFiles::ensureSchema();
+App\Helpers\Session::start();
 App\Helpers\IpAllowlist::enforce();
