@@ -3,7 +3,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "functions": {
-    "api/*.php": {
+    "api/index.php": {
       "runtime": "vercel-php@0.5.2"
     }
   },
@@ -13,7 +13,7 @@
       "dest": "/public/assets/$1"
     },
     {
-      "src": "^/favicon.ico$",
+      "src": "^/favicon\\.ico$",
       "dest": "/public/assets/images/logo.png"
     },
     {
