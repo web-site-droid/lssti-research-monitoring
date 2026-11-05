@@ -138,7 +138,7 @@ $initials = strtoupper(substr((string) ($user['first_name'] ?? 'U'), 0, 1) . sub
 </div>
 <?php if (($bookmarks ?? []) !== []): ?>
 <section class="card card-elevated paper-group is-wide" id="bookmarks">
-    <h2 class="section-title section-title-plain">Bookmarks</h2>
+    <h2 class="section-title section-title-plain">Starred studies</h2>
     <div class="table-wrap">
         <table class="data-table paper-table">
             <thead>

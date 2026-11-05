@@ -31,4 +31,6 @@ if(!str_contains($full->sql,'s.abstract, s.research_objectives')||!str_contains(
 if(($full->params['program_code']??'')!=='BSCS'||$full->params['year_from']!==2024||$full->params['year_to']!==2026)throw new RuntimeException('Filters lost on Enter');
 \App\Models\Study::searchApproved(['q'=>'d','full_text'=>true]);$letter=$GLOBALS['db']->calls[7];
 if(isset($letter->params['initial']))throw new RuntimeException('Enter search incorrectly restricted to title prefixes');
-echo 'Passed 10 server search query checks.'.PHP_EOL;
+\App\Models\Study::listApprovedCatalog(3,42);$starred=end($GLOBALS['db']->calls);
+if(($starred->params['star_user']??0)!==42||!str_contains($starred->sql,'b.user_id=:star_user')||!str_contains($starred->sql,"WHERE s.status = 'approved'"))throw new RuntimeException('Personal favorites must preserve published catalog scope');
+echo 'Passed 11 server search query checks.'.PHP_EOL;

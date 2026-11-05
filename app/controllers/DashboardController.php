@@ -31,7 +31,10 @@ final class DashboardController
         $deptCatalog = [];
         $otherDeptCatalog = [];
         if ($role === 'student') {
-            $deptCatalog = Study::listApprovedCatalog((int) ($user['program_id'] ?? 0));
+            $deptCatalog = Study::listApprovedCatalog((int) ($user['program_id'] ?? 0), (int) $user['id']);
+            $starredIds = array_flip(Study::savedIds((int) $user['id']));
+            foreach ($deptCatalog as &$paper) { $paper['is_starred'] = isset($starredIds[(int) $paper['id']]); }
+            unset($paper);
             $programs = Program::active();
         }
         if ($role === 'research_adviser') {

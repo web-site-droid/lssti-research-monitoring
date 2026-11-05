@@ -108,10 +108,22 @@
   function saveControl(item) {
     var logged = document.getElementById('results').getAttribute('data-logged') === '1';
     if (!logged) {
-      return '<a class="scholar-save" href="index.php?route=login">☆ Save</a>';
+      return '<a class="scholar-save" href="index.php?route=login">☆ Star</a>';
     }
-    return '<button type="button" class="scholar-save' + (item.saved ? ' is-saved' : '') + '" data-save="' + item.id + '">' +
-      (item.saved ? '★ Saved' : '☆ Save') + '</button>';
+    return '<button type="button" class="scholar-save' + (item.saved ? ' is-saved' : '') + '" aria-pressed="' + (!!item.saved) + '" data-save="' + item.id + '">' +
+      (item.saved ? '★ Starred' : '☆ Star') + '</button>';
+  }
+
+  function updateDashboardStar(id, saved) {
+    var grid = document.getElementById('dept-paper-cards');
+    if (!grid) return;
+    grid.querySelectorAll('.paper-card').forEach(function (card) {
+      if (card.getAttribute('data-study-id') !== String(id)) return;
+      card.setAttribute('data-starred', saved ? '1' : '0');
+      var button = card.querySelector('[data-star-study]');
+      if (button) { button.textContent = saved ? '★ Starred' : '☆ Star'; button.setAttribute('aria-pressed', saved ? 'true' : 'false'); }
+    });
+    if (!dashboardSearchActive && grid._applyTableFilter) grid._applyTableFilter();
   }
 
   function openDialog(dialog) {
@@ -197,25 +209,33 @@
     });
     box.querySelectorAll('[data-save]').forEach(function (button) {
       button.addEventListener('click', function () {
+        if (button.disabled) return;
+        button.disabled = true;
         var body = new FormData();
         body.append('_csrf', box.getAttribute('data-csrf') || '');
         body.append('study_id', button.getAttribute('data-save'));
         body.append('ajax', '1');
         fetch('index.php?route=search/bookmark', { method: 'POST', body: body, credentials: 'same-origin' })
-          .then(function (r) { return r.json(); })
+          .then(function (r) { if (!r.ok) throw new Error('Star failed'); return r.json(); })
           .then(function (data) {
             if (!data || !data.ok) return;
             var item = catalog[button.getAttribute('data-save')];
             if (item) item.saved = !!data.saved;
             button.classList.toggle('is-saved', !!data.saved);
-            button.textContent = data.saved ? '★ Saved' : '☆ Save';
-          });
+            button.setAttribute('aria-pressed', data.saved ? 'true' : 'false');
+            button.textContent = data.saved ? '★ Starred' : '☆ Star';
+            updateDashboardStar(button.getAttribute('data-save'), !!data.saved);
+            if (box.getAttribute('data-can-rate') === '1') {
+              renderResults(Object.keys(catalog).map(function (id) { return catalog[id]; }), false, (document.getElementById('q') || {}).value || '');
+            }
+          }).catch(function () { button.textContent = 'Try starring again'; }).finally(function () { button.disabled = false; });
       });
     });
   }
 
   function renderResults(items, featured, query) {
     var box = document.getElementById('results');
+    if (box.getAttribute('data-can-rate') === '1') items.sort(function (a, b) { return Number(!!b.saved) - Number(!!a.saved); });
     var main = document.querySelector('.scholar-main');
     if (featured) {
       if (main) main.classList.remove('is-searching');
@@ -386,6 +406,20 @@
   document.addEventListener('DOMContentLoaded', function () {
     var q = document.getElementById('q');
     if (!q) return;
+    document.querySelectorAll('[data-star-study]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (button.disabled) return;
+        button.disabled = true;
+        var body = new FormData();
+        body.append('_csrf', document.getElementById('results').getAttribute('data-csrf') || '');
+        body.append('study_id', button.getAttribute('data-star-study')); body.append('ajax', '1');
+        fetch('index.php?route=search/bookmark', {method:'POST', body:body, credentials:'same-origin'})
+          .then(function (r) { if (!r.ok) throw new Error('Star failed'); return r.json(); })
+          .then(function (data) { if (data.ok) updateDashboardStar(button.getAttribute('data-star-study'), !!data.saved); })
+          .catch(function () { button.textContent='Try starring again'; })
+          .finally(function () { button.disabled=false; });
+      });
+    });
     var debouncedSuggest = debounce(function () {
       runSuggest(q.value.trim());
     }, 200);

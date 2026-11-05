@@ -229,7 +229,7 @@ final class SearchController
         if ($ajax) {
             json_response(['ok' => true, 'saved' => $saved]);
         }
-        flash('success', $saved ? 'Saved to your bookmarks.' : 'Removed from your bookmarks.');
+        flash('success', $saved ? 'Study starred.' : 'Star removed.');
         redirect('profile');
     }
 }

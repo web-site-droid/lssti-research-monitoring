@@ -41,3 +41,18 @@ assert.strictEqual(state.matches(paper('Design of a system', 'Jane', '')), true)
 assert.strictEqual(state.matches(paper('The development of a system', 'David', '')), false);
 assert.strictEqual(state.matches(paper('Artificial Intelligence', 'David', '')), false);
 console.log('Passed 3 single-letter prefix checks.');
+state.cardsSel = '#dept-paper-cards';
+state.sortEl = {value: 'newest'};
+state.itemTitle = node => node.getAttribute('data-search-title');
+vm.runInContext(app.slice(app.indexOf('    function sortNodes(list) {'), app.indexOf('    function paint() {', app.indexOf('    function sortNodes(list) {'))), state);
+function favorite(title, starred, when) {
+  return {getAttribute: key => ({'data-search-title': title, 'data-starred': starred ? '1' : '0', 'data-when': when}[key] || '')};
+}
+const olderStar = favorite('Zebra', true, '2025-01-01');
+const newer = favorite('Apple', false, '2026-11-06');
+assert.strictEqual(state.sortNodes([newer, olderStar])[0], olderStar);
+state.sortEl.value = 'title';
+assert.strictEqual(state.sortNodes([newer, olderStar])[0], olderStar);
+state.cardsSel = '#other-list';
+assert.strictEqual(state.sortNodes([olderStar, newer])[0], newer);
+console.log('Passed 3 personal favorite sorting checks.');

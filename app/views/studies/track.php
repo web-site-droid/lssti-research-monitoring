@@ -22,9 +22,7 @@ foreach ($studies as $study) {
         continue;
     }
     $tableStudies[] = $study;
-    if ($study['status'] !== 'approved') {
-        $tracking[] = $study;
-    }
+    $tracking[] = $study;
 }
 $statusLabel = static function (string $status): string {
     return match ($status) {
@@ -40,23 +38,17 @@ $statusLabel = static function (string $status): string {
         default => 'In review',
     };
 };
-$inReview = [];
-$approved = [];
-foreach ($tableStudies as $study) {
-    if (($study['status'] ?? '') === 'approved') {
-        $approved[] = $study;
-    } else {
-        $inReview[] = $study;
-    }
-}
 $hasAny = $tableStudies !== [] || $waitingStudies !== [];
-usort($approved, static fn (array $a, array $b): int => strcmp((string) ($b['approved_at'] ?? ''), (string) ($a['approved_at'] ?? '')));
-$publishedByDay = [];
-foreach ($approved as $paper) {
-    $day = !empty($paper['approved_at']) ? substr((string) $paper['approved_at'], 0, 10) : '';
-    $publishedByDay[$day][] = $paper;
+$trackTime = static function (array $paper): string {
+    if (($paper['status'] ?? '') === 'approved') return (string) ($paper['approved_at'] ?? '');
+    return (string) ($paper['updated_at'] ?? $paper['submitted_at'] ?? $paper['created_at'] ?? '');
+};
+usort($tracking, static fn (array $a, array $b): int => strcmp($trackTime($b), $trackTime($a)));
+$trackingGroups = [];
+foreach ($tracking as $paper) {
+    $stamp = $trackTime($paper);
+    $trackingGroups[$stamp !== '' ? substr($stamp, 0, 10) : ''][] = $paper;
 }
-$showPublished = $inReview === [] && $approved !== [];
 ?>
 <?php if ($waitingView): ?>
 <?php if ($waitingStudies === []): ?>
@@ -118,90 +110,22 @@ $showPublished = $inReview === [] && $approved !== [];
         : 'No studies yet. Upload a study to wait for your research adviser, then track it here.' ?></p>
     <a class="btn btn-primary" href="<?= e(url('studies/create')) ?>"><?= icon('upload') ?> Upload a study</a>
 <?php else: ?>
-<?php if ($tracking !== []): ?>
-<ul class="track-list">
-    <?php foreach ($tracking as $study): ?>
+<?php foreach ($trackingGroups as $day => $papers): ?>
+<section class="published-track-day">
+    <h2 class="section-title"><?= $day !== '' ? e(date('F j, Y', strtotime($day))) : 'Date unavailable' ?></h2>
+    <ul class="track-list">
+    <?php foreach ($papers as $study): ?>
         <li>
             <p class="study-main">
-                <a class="study-title" href="<?= e(url('studies/view', ['id' => $study['id']])) ?>"><?= e($study['short_title']) ?></a>
+                <a class="study-title" href="<?= e(url('studies/view', ['id' => $study['id']])) ?>"><?= e($study['title']) ?></a>
                 <span class="badge"><?= e(study_type_label($study['study_type'] ?? '')) ?></span>
-                <?= status_badge((string) ($study['status'] ?? ''), $statusLabel($study['status'])) ?>
+                <?= status_badge((string) $study['status'], $statusLabel($study['status'])) ?>
             </p>
+            <p class="publication-timestamp"><?= $study['status'] === 'approved' ? 'Published: ' : 'Last update: ' ?><?= e($trackTime($study) !== '' ? publication_timestamp_label($trackTime($study)) : ($study['status'] === 'approved' ? 'Publication date unavailable' : 'Date unavailable')) ?></p>
             <?php partial('study_progress', ['study' => $study, 'skipAdviser' => $adviserTrack]); ?>
         </li>
     <?php endforeach; ?>
-</ul>
-<?php endif; ?>
-<div class="track-fuse" role="group" aria-label="Study lists">
-    <button type="button" class="<?= !$showPublished ? 'is-on' : '' ?>" data-track-panel="review" aria-pressed="<?= !$showPublished ? 'true' : 'false' ?>">In review</button>
-    <button type="button" class="<?= $showPublished ? 'is-on' : '' ?>" data-track-panel="approved" aria-pressed="<?= $showPublished ? 'true' : 'false' ?>">Published</button>
-</div>
-<div class="card card-elevated track-board">
-<div class="paper-tables track-panels">
-    <section class="paper-group" data-panel="review" <?= $showPublished ? 'hidden' : '' ?>>
-        <?php if ($inReview === []): ?>
-            <p class="empty-state">No studies in review.</p>
-        <?php else: ?>
-        <div class="table-wrap">
-            <table class="data-table paper-table">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($inReview as $study): ?>
-                        <tr>
-                            <td><a href="<?= e(url('studies/view', ['id' => $study['id']])) ?>"><?= e($study['short_title']) ?></a></td>
-                            <td><?= e(study_type_label($study['study_type'] ?? '')) ?></td>
-                            <td><?= e($statusLabel($study['status'])) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-        <?php endif; ?>
-    </section>
-    <section class="paper-group" data-panel="approved" <?= !$showPublished ? 'hidden' : '' ?>>
-        <h2 class="section-title">Published by date</h2>
-        <?php if ($approved === []): ?>
-            <p class="empty-state">No published studies yet.</p>
-        <?php else: ?>
-        <?php foreach ($publishedByDay as $day => $papers): ?>
-        <section class="published-track-day">
-            <h3><?= $day !== '' ? e(date('F j, Y', strtotime($day))) : 'Publication date unavailable' ?></h3>
-            <ul class="track-list">
-            <?php foreach ($papers as $study): ?>
-                <li>
-                    <p class="study-main"><a class="study-title" href="<?= e(url('studies/view', ['id' => $study['id']])) ?>"><?= e($study['title']) ?></a></p>
-                    <p class="publication-timestamp">Published: <?= e(publication_timestamp_label($study['approved_at'] ?? null)) ?></p>
-                    <?php partial('study_progress', ['study' => $study, 'skipAdviser' => $adviserTrack]); ?>
-                </li>
-            <?php endforeach; ?>
-            </ul>
-        </section>
-        <?php endforeach; ?>
-        <?php endif; ?>
-    </section>
-</div>
-</div>
-<script>
-(function () {
-  document.querySelectorAll('[data-track-panel]').forEach(function (button) {
-    button.addEventListener('click', function () {
-      var name = button.getAttribute('data-track-panel');
-      document.querySelectorAll('[data-track-panel]').forEach(function (other) {
-        var on = other === button;
-        other.classList.toggle('is-on', on);
-        other.setAttribute('aria-pressed', on ? 'true' : 'false');
-      });
-      document.querySelectorAll('[data-panel]').forEach(function (panel) {
-        panel.hidden = panel.getAttribute('data-panel') !== name;
-      });
-    });
-  });
-})();
-</script>
+    </ul>
+</section>
+<?php endforeach; ?>
 <?php endif; ?>

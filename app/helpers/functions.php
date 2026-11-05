@@ -314,6 +314,8 @@ function paper_find_attrs(array $paper): string
         }
     }
     return ' data-program="' . e((string) ($paper['program_code'] ?? '')) . '"'
+        . ' data-starred="' . (!empty($paper['is_starred']) ? '1' : '0') . '"'
+        . ' data-study-id="' . (int) ($paper['id'] ?? 0) . '"'
         . ' data-search-title="' . e((string) ($paper['title'] ?? $paper['short_title'] ?? '')) . '"'
         . ' data-search-authors="' . e((string) ($paper['authors'] ?? '')) . '"'
         . ' data-type="' . e((string) ($paper['study_type'] ?? '')) . '"'

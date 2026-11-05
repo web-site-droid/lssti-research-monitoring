@@ -571,6 +571,10 @@ function initFindBars() {
     function sortNodes(list) {
       var mode = sortEl ? sortEl.value : 'newest';
       list.sort(function (a, b) {
+        if (cardsSel === '#dept-paper-cards') {
+          var starred = Number(b.getAttribute('data-starred') || 0) - Number(a.getAttribute('data-starred') || 0);
+          if (starred) return starred;
+        }
         if (mode === 'title' || mode === 'title-desc') {
           var cmp = itemTitle(a).localeCompare(itemTitle(b));
           return mode === 'title-desc' ? -cmp : cmp;

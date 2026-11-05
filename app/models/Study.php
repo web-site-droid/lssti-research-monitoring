@@ -297,7 +297,7 @@ final class Study
 
     /** Published studies across departments, with the student's department first. */
     /** @return list<array<string,mixed>> */
-    public static function listApprovedCatalog(int $homeProgramId = 0): array
+    public static function listApprovedCatalog(int $homeProgramId = 0, int $userId = 0): array
     {
         $stmt = db()->prepare(
             "SELECT s.id, s.title, s.short_title, s.status, s.abstract, s.research_objectives,
@@ -315,10 +315,12 @@ final class Study
              FROM studies s
              INNER JOIN programs p ON p.id = s.program_id
              WHERE s.status = 'approved'
-             ORDER BY CASE WHEN s.program_id = :home_pid_case THEN 0 ELSE 1 END, p.code ASC, s.updated_at DESC, s.title ASC"
+             ORDER BY EXISTS(SELECT 1 FROM study_bookmarks b WHERE b.study_id=s.id AND b.user_id=:star_user) DESC,
+                      CASE WHEN s.program_id = :home_pid_case THEN 0 ELSE 1 END, p.code ASC, s.updated_at DESC, s.title ASC"
         );
         $stmt->execute([
             'home_pid_case' => $homeProgramId,
+            'star_user' => $userId,
         ]);
         return $stmt->fetchAll();
     }

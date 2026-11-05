@@ -771,6 +771,7 @@ $pendingUploads = $uploads ?? [];
                 <p class="scholar-snippet"><?= e(mb_strimwidth((string) ($paper['abstract'] ?? ''), 0, 320, '...')) ?></p>
                 <?php if (!$canRead): ?><p class="scholar-access-note">Abstract only. Full manuscripts are available for your department.</p><?php endif; ?>
                 <div class="paper-card-actions">
+                <button type="button" class="student-star-link" data-star-study="<?= (int) $paper['id'] ?>" aria-pressed="<?= !empty($paper['is_starred']) ? 'true' : 'false' ?>"><?= !empty($paper['is_starred']) ? '★ Starred' : '☆ Star' ?></button>
                 <button type="button" class="student-abstract-link" data-study-quick
                     data-title="<?= e($paper['title']) ?>"
                     data-meta="<?= e(trim(($paper['authors'] ?: '—') . ' · ' . ($paper['program_code'] ?? '') . ' · ' . ($paper['school_year'] ?? ''), ' ·')) ?>"
