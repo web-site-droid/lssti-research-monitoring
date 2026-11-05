@@ -34,8 +34,8 @@ $statusLabel = static function (string $status): string {
         'pending' => 'With dept research coordinator',
         'dean_review' => 'With dean',
         'under_review', 'ethics_review' => 'With school research coordinator',
-        'library_review' => 'With school administrator',
-        'admin_review' => 'With school administrator',
+        'library_review' => 'With librarian',
+        'admin_review' => 'With librarian',
         'archived' => 'Not approved',
         default => 'In review',
     };
