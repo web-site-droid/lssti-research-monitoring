@@ -223,25 +223,23 @@ $schoolWideFilterEmpty = 'No papers in this department.';
 <?php if (($user['role_slug'] ?? '') === 'research_adviser'): ?>
 <?php $deptCatalog = $deptCatalog ?? []; ?>
 <?php $otherDeptCatalog = $otherDeptCatalog ?? []; ?>
-<section class="card card-elevated">
+<div class="adviser-workspace">
+<?php partial('adviser_queue', ['user' => $user]); ?>
+<nav class="adviser-section-nav" aria-label="Adviser workspace sections">
+    <a href="#adviser-priority">Needs your review</a>
+    <a href="#adviser-department">Department papers</a>
+    <a href="#adviser-discover">Other departments</a>
+</nav>
+<section class="card card-elevated" id="adviser-department">
     <h2 class="section-title">Department papers<?= !empty($departmentLabel) ? ' — ' . e($departmentLabel) : '' ?></h2>
     <p class="muted">Every paper in your department. The whole file is available.</p>
     <?php partial('find_bar', [
         'table' => '#adviser-dept-table',
-        'cards' => '#adviser-read-cards',
         'empty' => '#adviser-dept-table-empty',
         'papers' => $deptCatalog,
         'programs' => $programs ?? [],
         'showDepartment' => false,
     ]); ?>
-    <p class="muted">Click a card to read the whole file and play it aloud.</p>
-    <div class="paper-cards" id="adviser-read-cards">
-        <?php foreach ($deptCatalog as $paper): ?>
-            <?php if (can_open_full_file($user, $paper)) {
-                partial('paper_read_card', ['paper' => $paper]);
-            } ?>
-        <?php endforeach; ?>
-    </div>
     <p id="adviser-dept-table-empty" class="empty-state" hidden data-empty-text="No studies match.">No studies match.</p>
     <div class="table-scroll<?= count($deptCatalog) > 10 ? ' is-scroll' : '' ?>">
     <div class="table-wrap">
@@ -292,7 +290,7 @@ $schoolWideFilterEmpty = 'No papers in this department.';
     </div>
     </div>
 </section>
-<section class="card card-elevated" style="margin-top:1.25rem">
+<section class="card card-elevated" id="adviser-discover" style="margin-top:1.25rem">
     <h2 class="section-title">Other departments</h2>
     <p class="muted">Approved papers outside your department. Title and abstract only — full files are not available.</p>
     <?php partial('find_bar', [
@@ -361,6 +359,7 @@ $schoolWideFilterEmpty = 'No papers in this department.';
     </div>
 </dialog>
 
+</div>
 <?php elseif (($user['role_slug'] ?? '') === 'dean'): ?>
 <?php
 $deptCatalog = $deptCatalog ?? [];

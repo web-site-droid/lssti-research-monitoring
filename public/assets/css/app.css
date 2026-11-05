@@ -3430,6 +3430,36 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
   margin-top: 0.2rem;
 }
 
+.adviser-workspace { display: grid; gap: 1.5rem; }
+.adviser-workspace > section { margin: 0 !important; scroll-margin-top: 5rem; }
+.adviser-priority { background: linear-gradient(120deg, #152b43, #0f1c2e); border: 1px solid #2c4562; border-radius: 16px; padding: 1.5rem; }
+.adviser-priority-heading { display: flex; justify-content: space-between; align-items: center; gap: 1.25rem; margin-bottom: 1rem; }
+.adviser-eyebrow { color: #e8c46a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 0.5rem; }
+.adviser-priority h2 { font-size: 1.4rem; margin: 0 0 0.5rem; }
+.adviser-priority h2 span { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 99px; background: #263f5c; font-size: 1rem; }
+.adviser-priority-heading .muted { margin: 0; }
+.adviser-priority-heading > .btn { white-space: nowrap; }
+.adviser-queue { display: grid; }
+.adviser-queue-item { display: flex; justify-content: space-between; align-items: center; gap: 1.25rem; padding: 1.1rem 0; border-top: 1px solid #2c4562; }
+.adviser-queue-item h3 { margin: 0.5rem 0 0.35rem; font-size: 1rem; line-height: 1.45; }
+.adviser-queue-item h3 a { color: var(--text); text-decoration: none; }
+.adviser-queue-item h3 a:hover { color: #9ec5fe; text-decoration: underline; }
+.adviser-queue-item p, .adviser-queue-empty { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
+.adviser-queue-empty { padding: 1rem 0 0; border-top: 1px solid #2c4562; }
+.adviser-queue-item > .btn { white-space: nowrap; flex-shrink: 0; }
+.adviser-section-nav { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.adviser-section-nav a { color: var(--text-muted); text-decoration: none; padding: 0.65rem 1rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
+.adviser-section-nav a:hover { color: var(--text); background: var(--card-2); }
+.adviser-workspace .table-scroll { max-height: 36rem; }
+.adviser-workspace .dash-table th { position: sticky; top: 0; z-index: 1; background: var(--card); }
+.adviser-workspace .dash-table td { padding-block: 1rem; }
+.adviser-workspace .dash-table td:first-child { min-width: 14rem; }
+@media (max-width: 700px) {
+  .adviser-priority { padding: 1rem; }
+  .adviser-priority-heading, .adviser-queue-item { flex-direction: column; align-items: stretch; }
+  .adviser-section-nav a { flex: 1; text-align: center; }
+}
+
 .publication-timestamp {
   color: var(--text-muted);
   font-size: 0.85rem;
