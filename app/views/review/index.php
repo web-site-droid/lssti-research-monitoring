@@ -23,7 +23,7 @@ $ownDepartment = $adviserQueue || $deanQueue;
 <?php if (!empty($error)): ?><p class="alert alert-error"><?= e($error) ?></p><?php endif; ?>
 <?php if ($deanQueue || $srcQueue): ?>
 <nav class="adviser-section-nav" aria-label="Review lists">
-    <?php foreach (($srcQueue ? ['pending' => 'Pending', 'accepted' => 'Accepted', 'other' => 'Earlier stages'] : ['pending' => 'Pending', 'accepted' => 'Accepted']) as $value => $label): ?>
+    <?php foreach (['pending' => 'Pending', 'accepted' => 'Accepted'] as $value => $label): ?>
     <a href="<?= e(url('review', ['decision' => $value])) ?>" <?= ($decisionFilter ?? '') === $value ? 'aria-current="page"' : '' ?>><?= e($label) ?></a>
     <?php endforeach; ?>
 </nav>

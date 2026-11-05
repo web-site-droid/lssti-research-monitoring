@@ -26,12 +26,15 @@ final class ReviewController
         $queue = match ($role) {
             'research_adviser' => ['submitted', 'revision_requested', 'adviser_reviewed', 'pending', 'dean_review', 'under_review', 'library_review', 'admin_review', 'approved'],
             'dean' => ['dean_review'],
-            'school_research_coordinator' => ['under_review', 'library_review', 'admin_review', 'approved', 'archived', 'dean_review', 'pending'],
+            'school_research_coordinator' => ['under_review', 'library_review', 'admin_review', 'approved', 'archived'],
             'school_administrator' => ['admin_review', 'library_review', 'under_review', 'approved', 'archived'],
             default => ['under_review'],
         };
         $pending = array_values(array_filter($studies, static fn ($s) => in_array($s['status'], $queue, true)));
         $decision = ($adviserQueue || $deanQueue || $srcQueue) ? (string) ($_GET['decision'] ?? '') : '';
+        if ($srcQueue && !in_array($decision, ['pending', 'accepted'], true)) {
+            $decision = '';
+        }
         if ($deanQueue && !in_array($decision, ['pending', 'accepted'], true)) {
             $decision = 'pending';
         }
@@ -55,11 +58,6 @@ final class ReviewController
                     ? in_array($status, ['submitted', 'revision_requested'], true)
                     : !in_array($status, ['submitted', 'revision_requested', 'draft'], true);
             }));
-        }
-        if ($srcQueue && $decision === 'other') {
-            $pending = array_values(array_filter($studies, static fn (array $study): bool =>
-                !in_array($study['status'] ?? '', ['draft', 'under_review', 'library_review', 'admin_review', 'approved', 'archived'], true)
-            ));
         }
         view('review/index', [
             'studies' => $pending,

@@ -44,7 +44,7 @@
                 'pending' => url('review', ['decision' => 'pending']),
                 'accepted' => url('review', ['decision' => 'accepted']),
                 'department_studies' => '#dash-studies',
-                'other_studies' => url('review', ['decision' => 'other']),
+                'other_studies' => '#dash-studies',
                 default => null,
             };
         }
