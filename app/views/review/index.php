@@ -5,7 +5,8 @@ $adminQueue = !empty($adminQueue);
 $ownDepartment = $adviserQueue || $deanQueue;
 ?>
 <div class="page-header">
-    <h1>Reviews</h1>
+    <h1><?= $adviserQueue && in_array($decisionFilter ?? '', ['pending', 'accepted'], true) ? ucfirst($decisionFilter) . ' reviews' : 'Reviews' ?></h1>
+    <?php if ($adviserQueue && !empty($decisionFilter)): ?><a href="<?= e(url('review')) ?>">View all reviews</a><?php endif; ?>
     <p class="lead"><?= $adviserQueue
         ? 'Accept a student study so they can send it to the dept research coordinator.'
         : ($deanQueue

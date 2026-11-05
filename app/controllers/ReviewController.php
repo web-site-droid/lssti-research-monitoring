@@ -30,9 +30,22 @@ final class ReviewController
             default => ['under_review'],
         };
         $pending = array_values(array_filter($studies, static fn ($s) => in_array($s['status'], $queue, true)));
+        $decision = $adviserQueue ? (string) ($_GET['decision'] ?? '') : '';
+        if (in_array($decision, ['pending', 'accepted'], true)) {
+            $pending = array_values(array_filter($studies, static function (array $study) use ($decision, $user): bool {
+                if ((int) ($study['program_id'] ?? 0) !== (int) ($user['program_id'] ?? 0)) {
+                    return false;
+                }
+                $status = $study['status'] ?? '';
+                return $decision === 'pending'
+                    ? in_array($status, ['submitted', 'revision_requested'], true)
+                    : !in_array($status, ['submitted', 'revision_requested', 'draft'], true);
+            }));
+        }
         view('review/index', [
             'studies' => $pending,
             'adviserQueue' => $adviserQueue,
+            'decisionFilter' => $decision,
             'deanQueue' => $deanQueue,
             'adminQueue' => $role === 'school_administrator',
             'seeAllPapers' => $role === 'school_research_coordinator',

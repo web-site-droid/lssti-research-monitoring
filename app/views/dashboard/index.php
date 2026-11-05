@@ -31,7 +31,16 @@
 <?php if (!empty($stats) && ($user['role_slug'] ?? '') !== 'student'): ?>
 <section class="stat-grid" aria-label="Quick counts">
     <?php foreach ($stats as $key => $val): ?>
-        <div class="stat-card">
+        <?php
+        $statHref = ($user['role_slug'] ?? '') === 'research_adviser' ? match ($key) {
+            'pending' => url('review', ['decision' => 'pending']),
+            'accepted' => url('review', ['decision' => 'accepted']),
+            'department_studies' => '#adviser-department',
+            'other_studies' => '#adviser-discover',
+            default => null,
+        } : null;
+        ?>
+        <?php if ($statHref): ?><a class="stat-card stat-card-link" href="<?= e($statHref) ?>"><?php else: ?><div class="stat-card"><?php endif; ?>
             <span class="stat-value"><?= e((string) $val) ?></span>
             <span class="stat-key"><?php
                 $statLabels = [
@@ -50,7 +59,7 @@
                 ];
                 echo e($statLabels[$key] ?? ucwords(str_replace('_', ' ', $key)));
             ?></span>
-        </div>
+        <?php if ($statHref): ?></a><?php else: ?></div><?php endif; ?>
     <?php endforeach; ?>
 </section>
 <?php endif; ?>
