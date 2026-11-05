@@ -3442,6 +3442,9 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
 #department-review-table .btn { white-space: nowrap; }
 .adviser-section-nav a[aria-current="page"] { color: #dceaff; border-color: #597a9f; background: #1b304c; }
 .adviser-section-nav + .find-board { margin-top: 1rem; }
+.dean-password-reset { max-width: 22rem; text-align: left; }
+.dean-password-reset summary { color: #b6cef1; cursor: pointer; padding: 0.5rem 0; white-space: nowrap; }
+.dean-password-reset form { margin-top: 0.65rem; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--card-2); min-width: 15rem; }
 .status-help { border: 1px solid transparent; cursor: help; font-family: inherit; display: inline-flex; align-items: center; gap: 0.4rem; vertical-align: middle; appearance: none; }
 .status-help-label { display: inline-block; white-space: nowrap; flex: 0 0 auto; text-decoration: underline dotted; text-underline-offset: 3px; }
 .status-help-icon { display: inline-flex; align-items: center; justify-content: center; width: 0.9rem; height: 0.9rem; border: 1px solid currentColor; border-radius: 50%; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; opacity: 0.8; }

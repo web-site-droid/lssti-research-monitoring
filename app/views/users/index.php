@@ -14,7 +14,7 @@ $editRoles = $editRoles ?? $roles ?? [];
         } elseif (!empty($canManageDepartments)) {
             echo 'Add people and assign a department.';
         } elseif ($deanMode) {
-            echo 'Add a student, research adviser, or dept research coordinator in your department' . ($departmentLabel !== '' ? ' (' . e($departmentLabel) . ')' : '') . '.';
+            echo 'View accounts you added in your department and assign or reset their temporary passwords. Account details cannot be edited.';
         } elseif ($coordinatorMode) {
             echo 'Research advisers and students in your department' . ($departmentLabel !== '' ? ' (' . e($departmentLabel) . ')' : '') . '.';
         } elseif ($adviserMode) {
@@ -108,6 +108,19 @@ ksort($departments);
             <td><span class="status-pill <?= (int) $u['is_active'] ? 'is-on' : 'is-off' ?>"><?= (int) $u['is_active'] ? 'Active' : 'Inactive' ?></span></td>
             <td class="actions-cell">
                 <div class="actions">
+                <?php if ($deanMode): ?>
+                <details class="dean-password-reset">
+                    <summary>Set / reset password</summary>
+                    <form method="post" action="<?= e(url('users/reset-password')) ?>" class="stack">
+                        <?= \App\Helpers\Csrf::field() ?>
+                        <input type="hidden" name="id" value="<?= (int) $u['id'] ?>">
+                        <label for="dean-password-<?= (int) $u['id'] ?>">New temporary password</label>
+                        <input id="dean-password-<?= (int) $u['id'] ?>" name="password" value="<?= e(\App\Helpers\UserImport::DEFAULT_PASSWORD) ?>" minlength="8" required autocomplete="off">
+                        <p class="muted">Share this temporary password with the user. They must change it after signing in.</p>
+                        <button type="submit" class="btn btn-secondary"><?= icon('key') ?> Reset password</button>
+                    </form>
+                </details>
+                <?php else: ?>
                 <button type="button" class="btn btn-secondary btn-sm" data-edit-account
                     data-id="<?= (int) $u['id'] ?>"
                     data-school-id="<?= e($u['school_id']) ?>"
@@ -119,6 +132,7 @@ ksort($departments);
                     data-program-label="<?= e(trim((string) (($u['program_code'] ?? '') . ' — ' . ($u['program_name'] ?? '')), ' —')) ?>"
                     data-created="<?= (int) ($u['created_by'] ?? 0) ?>"
                     data-active="<?= (int) $u['is_active'] ?>"><?= icon('pencil') ?> Edit</button>
+                <?php endif; ?>
                 </div>
             </td>
         </tr>
@@ -126,6 +140,7 @@ ksort($departments);
     </tbody>
 </table>
 </div>
+<?php if (!$deanMode): ?>
 <dialog id="edit-account" class="preview-modal profile-modal" data-open-edit="<?= (int) ($openEdit ?? 0) ?>" data-actor-id="<?= (int) ((\App\Helpers\Auth::user()['id'] ?? 0)) ?>" data-manage-dept="<?= !empty($canManageDepartments) ? '1' : '0' ?>" data-assign-dept="<?= !empty($canAssignUserDepartment) ? '1' : '0' ?>">
     <form method="post" action="<?= e(url('users/edit/submit')) ?>" class="profile-editor stack">
         <?= \App\Helpers\Csrf::field() ?>
@@ -214,6 +229,7 @@ ksort($departments);
         </div>
     </form>
 </dialog>
+<?php endif; ?>
 <dialog id="add-account" class="preview-modal profile-modal" data-open-add="<?= !empty($openAdd) ? '1' : '0' ?>">
     <form method="post" action="<?= e(url('users/create/submit')) ?>" class="profile-editor stack">
         <?= \App\Helpers\Csrf::field() ?>

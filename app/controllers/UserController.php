@@ -63,6 +63,11 @@ final class UserController
         } else {
             $users = User::all();
         }
+        if ($deanMode) {
+            $users = array_values(array_filter($users, static fn (array $account): bool =>
+                (int) ($account['created_by'] ?? 0) === (int) $actor['id']
+            ));
+        }
         view('users/index', [
             'users' => $users,
             'adviserMode' => $adviserMode,
@@ -81,7 +86,7 @@ final class UserController
             'canManageDepartments' => $canManageDepartments,
             'canAssignUserDepartment' => $adminMode,
             'studentRoleId' => $adviserMode ? (int) ((User::findRoleBySlug('student')['id'] ?? 0)) : 0,
-            'openEdit' => (int) ($_GET['edit'] ?? 0),
+            'openEdit' => $deanMode ? 0 : (int) ($_GET['edit'] ?? 0),
             'openAdd' => (int) ($_GET['add'] ?? 0) === 1,
         ]);
     }
@@ -166,6 +171,10 @@ final class UserController
 
     public function editForm(): void
     {
+        if ((Auth::user()['role_slug'] ?? '') === Role::DEAN) {
+            flash('error', 'Deans can view their added accounts and reset passwords, but cannot edit accounts.');
+            redirect('users');
+        }
         $id = (int) ($_GET['id'] ?? 0);
         redirect('users', $id > 0 ? ['edit' => $id] : []);
     }
@@ -173,6 +182,10 @@ final class UserController
     public function editSubmit(): void
     {
         Csrf::requireValid();
+        if ((Auth::user()['role_slug'] ?? '') === Role::DEAN) {
+            flash('error', 'Deans cannot edit accounts.');
+            redirect('users');
+        }
         $id = (int) ($_POST['id'] ?? 0);
         $data = [
             'first_name' => trim($_POST['first_name'] ?? ''),
@@ -269,9 +282,11 @@ final class UserController
                 !$target
                 || !in_array($target['role_slug'] ?? '', $allowed, true)
                 || (int) ($target['program_id'] ?? 0) !== $programId
+                || $programId <= 0
+                || ($roleSlug === Role::DEAN && (int) ($target['created_by'] ?? 0) !== (int) $actor['id'])
             ) {
                 flash('error', $roleSlug === Role::DEAN
-                    ? 'You can reset passwords for student, adviser, and dept research coordinator accounts in your department only.'
+                    ? 'You can reset passwords only for accounts you added in your department.'
                     : 'You can reset passwords for student and research adviser accounts in your department only.');
                 redirect('users');
             }
