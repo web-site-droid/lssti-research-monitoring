@@ -21,10 +21,10 @@ final class ReportController
         $viewProgramCode = $ownDept ? trim((string) ($user['program_code'] ?? '')) : '';
         $studyProgramId = $ownDept ? (int) ($user['program_id'] ?? 0) : 0;
         view('reports/index', [
-            'signIns' => $this->signInsByDepartment(null),
-            'reads' => ReadLog::latestPerUserStudy($studyProgramId > 0 ? $studyProgramId : null),
-            'downloads' => DownloadLog::latestPerUserStudy($studyProgramId > 0 ? $studyProgramId : null),
-            'programs' => Program::active(),
+            'signIns' => $ownDept && $studyProgramId <= 0 ? [] : $this->signInsByDepartment($ownDept ? $studyProgramId : null),
+            'reads' => $ownDept && $studyProgramId <= 0 ? [] : ReadLog::latestPerUserStudy($ownDept ? $studyProgramId : null),
+            'downloads' => $ownDept && $studyProgramId <= 0 ? [] : DownloadLog::latestPerUserStudy($ownDept ? $studyProgramId : null),
+            'programs' => array_values(array_filter(Program::active(), static fn (array $program): bool => !$ownDept || (int) $program['id'] === $studyProgramId)),
             'viewProgramCode' => $viewProgramCode,
             'readsOwnDepartment' => $ownDept,
         ]);
@@ -37,6 +37,14 @@ final class ReportController
         $sql = 'SELECT a.*, u.school_id, u.first_name, u.last_name FROM audit_logs a
                 LEFT JOIN users u ON u.id = a.user_id WHERE 1=1';
         $params = [];
+        $departmentId = $this->departmentScope();
+        if ($departmentId !== null) {
+            $sql .= ' AND u.program_id = :scope_pid';
+            $params['scope_pid'] = $departmentId;
+            if ($departmentId <= 0) {
+                $sql .= ' AND 1=0';
+            }
+        }
         if ($from) {
             $sql .= ' AND a.created_at >= :from';
             $params['from'] = $from;
@@ -60,7 +68,9 @@ final class ReportController
         $user = Auth::user();
         $studyId = (int) ($_GET['study_id'] ?? 0);
         $study = $studyId ? Study::find($studyId) : null;
-        if ($study && !Role::canSeeArticleReaders($user, $study)) {
+        $departmentId = $this->departmentScope();
+        if ($studyId && (!$study || !Role::canSeeArticleReaders($user, $study)
+            || ($departmentId !== null && ($departmentId <= 0 || (int) $study['program_id'] !== $departmentId)))) {
             http_response_code(403);
             view('errors/forbidden', ['message' => 'You can only see who read articles in your department.']);
             return;
@@ -90,18 +100,18 @@ final class ReportController
             }
         } elseif ($type === 'most_read') {
             fputcsv($out, ['Study ID', 'Title', 'Read Count']);
-            $rows = db()->query(
+            $rows = $this->scopedRows(
                 'SELECT s.id, s.title, COUNT(r.id) AS c FROM read_logs r
-                 INNER JOIN studies s ON s.id = r.study_id GROUP BY s.id ORDER BY c DESC LIMIT 50'
-            )->fetchAll();
+                 INNER JOIN studies s ON s.id = r.study_id WHERE {{scope}} GROUP BY s.id ORDER BY c DESC LIMIT 50', 's.program_id'
+            );
             foreach ($rows as $row) {
                 fputcsv($out, [$row['id'], $row['title'], $row['c']]);
             }
         } elseif ($type === 'search_terms') {
             fputcsv($out, ['Query', 'Count']);
-            $rows = db()->query(
-                'SELECT query_text, COUNT(*) AS c FROM search_logs GROUP BY query_text ORDER BY c DESC LIMIT 100'
-            )->fetchAll();
+            $rows = $this->scopedRows(
+                'SELECT l.query_text, COUNT(*) AS c FROM search_logs l LEFT JOIN users u ON u.id = l.user_id WHERE {{scope}} GROUP BY l.query_text ORDER BY c DESC LIMIT 100', 'u.program_id'
+            );
             foreach ($rows as $row) {
                 fputcsv($out, [$row['query_text'], $row['c']]);
             }
@@ -116,19 +126,19 @@ final class ReportController
         $data = [
             'report' => $report,
             'studiesGrouped' => $this->studiesGrouped(),
-            'mostRead' => db()->query(
+            'mostRead' => $this->scopedRows(
                 'SELECT s.id, s.title, COUNT(r.id) AS c FROM read_logs r
-                 INNER JOIN studies s ON s.id = r.study_id GROUP BY s.id ORDER BY c DESC LIMIT 20'
-            )->fetchAll(),
-            'pending' => db()->query(
+                 INNER JOIN studies s ON s.id = r.study_id WHERE {{scope}} GROUP BY s.id ORDER BY c DESC LIMIT 20', 's.program_id'
+            ),
+            'pending' => $this->scopedRows(
                 "SELECT s.*, p.code FROM studies s INNER JOIN programs p ON p.id = s.program_id
-                 WHERE s.status IN ('ethics_review','under_review','revision_requested','resubmitted')"
-            )->fetchAll(),
-            'plagiarismHigh' => db()->query(
+                 WHERE {{scope}} AND s.status IN ('ethics_review','under_review','revision_requested','resubmitted')", 's.program_id'
+            ),
+            'plagiarismHigh' => $this->scopedRows(
                 'SELECT s.id, s.title, pr.similarity_percentage FROM plagiarism_results pr
-                 INNER JOIN studies s ON s.id = pr.study_id WHERE pr.similarity_percentage > 10
-                 ORDER BY pr.similarity_percentage DESC'
-            )->fetchAll(),
+                 INNER JOIN studies s ON s.id = pr.study_id WHERE {{scope}} AND pr.similarity_percentage > 10
+                 ORDER BY pr.similarity_percentage DESC', 's.program_id'
+            ),
         ];
         extract($data, EXTR_SKIP);
         $pageTitle = 'Report · ' . APP_NAME;
@@ -167,10 +177,31 @@ final class ReportController
     /** @return list<array> */
     private function studiesGrouped(): array
     {
-        return db()->query(
+        return $this->scopedRows(
             'SELECT p.code, s.school_year, s.status, COUNT(*) AS c
              FROM studies s INNER JOIN programs p ON p.id = s.program_id
-             GROUP BY p.code, s.school_year, s.status ORDER BY p.code, s.school_year'
-        )->fetchAll();
+             WHERE {{scope}} GROUP BY p.code, s.school_year, s.status ORDER BY p.code, s.school_year', 's.program_id'
+        );
+    }
+
+    /** Null means school-wide access; zero means no assigned department. */
+    private function departmentScope(): ?int
+    {
+        $user = Auth::user();
+        $role = Role::canonical((string) ($user['role_slug'] ?? ''), (string) ($user['role_name'] ?? ''));
+        return in_array($role, [Role::DEAN, Role::DEPT_RESEARCH_COORDINATOR], true)
+            ? max(0, (int) ($user['program_id'] ?? 0)) : null;
+    }
+
+    private function scopedRows(string $sql, string $column): array
+    {
+        $departmentId = $this->departmentScope();
+        if ($departmentId === 0) {
+            return [];
+        }
+        $sql = str_replace('{{scope}}', $departmentId === null ? '1=1' : $column . ' = :scope_pid', $sql);
+        $stmt = db()->prepare($sql);
+        $stmt->execute($departmentId === null ? [] : ['scope_pid' => $departmentId]);
+        return $stmt->fetchAll();
     }
 }

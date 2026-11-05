@@ -41,8 +41,8 @@ if ($viewProgramCode !== '' && !isset($departments[$viewProgramCode])) {
             <input type="search" data-table-filter="#signins-table" placeholder="Name, school ID, role, or department">
         </label>
         <label class="table-search is-filter" for="logs-dept-filter">Department
-            <select id="logs-dept-filter" data-table-dept="#signins-table">
-                <option value="">All departments</option>
+            <select id="logs-dept-filter" data-table-dept="#signins-table" <?= $readsOwnDepartment ? 'disabled' : '' ?>>
+                <?php if (!$readsOwnDepartment): ?><option value="">All departments</option><?php endif; ?>
                 <?php foreach ($departments as $code): ?>
                     <option value="<?= e($code) ?>"<?= $viewProgramCode === $code ? ' selected' : '' ?>><?= e($code) ?></option>
                 <?php endforeach; ?>
