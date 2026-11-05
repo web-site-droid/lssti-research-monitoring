@@ -480,7 +480,11 @@ function initFindBars() {
     }
     function matches(node) {
       var query = queryEl ? queryEl.value.trim().toLowerCase() : '';
-      var textOk = !query || (node.textContent || '').toLowerCase().indexOf(query) !== -1;
+      var heading = node.querySelector('h3, td');
+      var authors = node.querySelector('.paper-card-authors');
+      var cells = node.querySelectorAll('td');
+      var searchable = [node.getAttribute('data-search-title') || (heading ? heading.textContent : ''), node.getAttribute('data-search-authors') || (authors ? authors.textContent : (cells[1] ? cells[1].textContent : '')), node.getAttribute('data-program') || ''].join(' ').toLowerCase();
+      var textOk = !query || query.split(/\s+/).every(function (word) { return searchable.indexOf(word) !== -1; });
       var deptOk = !applied.dept || node.getAttribute('data-program') === applied.dept || node.getAttribute('data-all-depts') === '1';
       var typeOk = !applied.type || node.getAttribute('data-type') === applied.type;
       var yearOk = !applied.year || node.getAttribute('data-year') === applied.year;
@@ -496,7 +500,10 @@ function initFindBars() {
         box.innerHTML = '';
         return;
       }
-      var hits = pool.filter(matches).slice(0, 6);
+      var hits = pool.filter(matches).sort(function (a, b) {
+        var term = query.toLowerCase();
+        return Number(itemTitle(b).indexOf(term) !== -1) - Number(itemTitle(a).indexOf(term) !== -1);
+      }).slice(0, 6);
       box.innerHTML = '';
       if (!hits.length) {
         var emptyHit = document.createElement('p');

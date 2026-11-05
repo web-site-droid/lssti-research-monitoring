@@ -42,11 +42,9 @@
     return marks;
   }
 
-  var skipWords = { a: 1, an: 1, and: 1, for: 1, in: 1, of: 1, on: 1, or: 1, the: 1, to: 1 };
-
   function searchWords(query) {
     return (query || '').trim().split(/\s+/).filter(function (word) {
-      return word.length > 0 && !skipWords[word.toLowerCase()];
+      return word.length > 0;
     });
   }
 

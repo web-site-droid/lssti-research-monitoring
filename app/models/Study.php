@@ -919,11 +919,9 @@ final class Study
 
         if ($q !== '') {
             $words = self::searchWords($q);
-            $hay = "CONCAT_WS(' ', s.title, s.short_title, IFNULL(s.abstract, ''), IFNULL(s.research_objectives, ''),
+            $hay = "CONCAT_WS(' ', s.title, s.short_title, p.code, p.name,
                 IFNULL((SELECT GROUP_CONCAT(CONCAT(a.first_name, ' ', a.last_name) SEPARATOR ' ')
-                        FROM study_authors a WHERE a.study_id = s.id), ''),
-                IFNULL((SELECT GROUP_CONCAT(k.keyword SEPARATOR ' ')
-                        FROM study_keywords k WHERE k.study_id = s.id), '')
+                        FROM study_authors a WHERE a.study_id = s.id), '')
             )";
             $parts = [];
             foreach ($words as $i => $word) {
@@ -931,7 +929,7 @@ final class Study
                 $parts[] = $hay . " LIKE :{$key}";
                 $params[$key] = '%' . self::likeEscape($word) . '%';
             }
-            $sql .= ' AND (' . implode(' OR ', $parts) . ')';
+            $sql .= ' AND (' . implode(' AND ', $parts) . ')';
         }
         if (!empty($filters['program_id'])) {
             $sql .= ' AND s.program_id = :pid';
@@ -990,8 +988,11 @@ final class Study
             $sql .= match ($sort) {
                 'title' => ' ORDER BY s.title ASC',
                 'date' => ' ORDER BY s.approved_at DESC, s.title ASC',
-                default => ' ORDER BY star_total DESC, s.approved_at DESC, s.title ASC',
+                default => $q !== '' ? ' ORDER BY (s.title LIKE :title_match) DESC, star_total DESC, s.approved_at DESC, s.title ASC' : ' ORDER BY star_total DESC, s.approved_at DESC, s.title ASC',
             };
+            if ($q !== '' && !in_array($sort, ['title', 'date'], true)) {
+                $params['title_match'] = '%' . self::likeEscape($q) . '%';
+            }
         }
 
         $stmt = db()->prepare($sql);
@@ -1057,7 +1058,7 @@ final class Study
         if ($term === '') {
             return [];
         }
-        $like = $term . '%';
+        $like = '%' . self::likeEscape($term) . '%';
         $deptSql = $programId > 0 ? ' AND s.program_id = :pid' : '';
         $titles = db()->prepare(
             "SELECT DISTINCT s.title AS label, 'title' AS type FROM studies s
@@ -1097,12 +1098,11 @@ final class Study
     /** @return list<string> */
     private static function searchWords(string $q): array
     {
-        $skip = ['a', 'an', 'and', 'for', 'in', 'of', 'on', 'or', 'the', 'to'];
         $parts = preg_split('/\s+/u', $q) ?: [];
         $words = [];
         foreach ($parts as $part) {
             $word = trim($part);
-            if ($word === '' || mb_strlen($word) < 3 || in_array(mb_strtolower($word), $skip, true)) {
+            if ($word === '') {
                 continue;
             }
             $words[] = $word;
