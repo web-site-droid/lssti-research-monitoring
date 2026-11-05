@@ -19,7 +19,7 @@ $role = \App\Helpers\Role::canonical((string) ($user['role_slug'] ?? ''), (strin
         <a href="<?= e(url('users')) ?>" data-nav-match="users"><?= icon('users') ?> People</a>
         <a href="<?= e(url('reports')) ?>" data-nav-match="reports"><?= icon('list') ?> Logs</a>
     <?php elseif ($role === Role::DEPT_RESEARCH_COORDINATOR): ?>
-        <a href="<?= e(url('reports')) ?>" data-nav-match="reports"><?= icon('list') ?> Logs</a>
+        <a href="<?= e(url('dashboard')) ?>#drc-dept-table" data-nav-match="library library/review"><?= icon('eye') ?> Review</a>
     <?php elseif ($role === Role::LIBRARIAN): ?>
         <a href="<?= e(url('reports')) ?>" data-nav-match="reports"><?= icon('list') ?> Logs</a>
         <a href="<?= e(url('users')) ?>" data-nav-match="users"><?= icon('users') ?> People</a>
