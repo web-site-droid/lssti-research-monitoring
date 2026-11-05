@@ -26,7 +26,6 @@ $editRoles = $editRoles ?? $roles ?? [];
 </div>
 <?php if (!empty($success)): ?><p class="alert alert-success"><?= e($success) ?></p><?php endif; ?>
 <?php if (!empty($error)): ?><p class="alert alert-error"><?= e($error) ?></p><?php endif; ?>
-<?php if (!$deanMode): ?>
 <section class="card card-elevated import-card">
     <h2 class="section-title">Import from Excel</h2>
     <p class="lead"><?php
@@ -60,7 +59,6 @@ $editRoles = $editRoles ?? $roles ?? [];
         </ul>
     <?php endif; ?>
 </section>
-<?php endif; ?>
 <p class="toolbar">
     <button type="button" class="btn btn-primary" data-open-add <?= $deptMode && $departmentLabel === '' ? 'disabled' : '' ?>><?= icon('user-plus') ?> <?= $deptMode ? 'Add account' : 'Add person' ?></button>
 </p>

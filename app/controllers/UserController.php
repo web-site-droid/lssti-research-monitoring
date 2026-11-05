@@ -315,7 +315,6 @@ final class UserController
 
     public function importTemplate(): void
     {
-        $this->denyDeanAccountChanges();
         $binary = Spreadsheet::xlsx(UserImport::templateSheets());
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment; filename="LSSTI-account-format.xlsx"');
@@ -327,7 +326,6 @@ final class UserController
 
     public function importSubmit(): void
     {
-        $this->denyDeanAccountChanges();
         Csrf::requireValid();
         $file = $_FILES['file'] ?? null;
         if (!is_array($file) || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
