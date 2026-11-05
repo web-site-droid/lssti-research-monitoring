@@ -19,13 +19,18 @@ final class LibraryController
         $user = Auth::user();
         if (($user['role_slug'] ?? '') === Role::DEPT_RESEARCH_COORDINATOR) {
             $programId = (int) ($user['program_id'] ?? 0);
-            $studies = $programId > 0 ? Study::listForUser($user, ['status' => 'pending']) : [];
+            $decision = ($_GET['decision'] ?? '') === 'accepted' ? 'accepted' : 'pending';
+            $statuses = $decision === 'accepted'
+                ? ['dean_review', 'under_review', 'library_review', 'admin_review', 'approved', 'archived']
+                : ['pending'];
+            $studies = $programId > 0 ? Study::listForUser($user) : [];
             $studies = array_values(array_filter($studies, static fn (array $study): bool =>
-                ($study['status'] ?? '') === 'pending' && (int) ($study['program_id'] ?? 0) === $programId
+                in_array($study['status'] ?? '', $statuses, true) && (int) ($study['program_id'] ?? 0) === $programId
             ));
             view('library/department_queue', [
                 'user' => $user,
                 'studies' => $studies,
+                'decision' => $decision,
                 'success' => flash('success'),
                 'error' => flash('error'),
             ]);

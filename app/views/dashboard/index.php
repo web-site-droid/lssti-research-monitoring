@@ -39,6 +39,15 @@
             'other_studies' => '#adviser-discover',
             default => null,
         } : null;
+        if (($user['role_slug'] ?? '') === 'dept_research_coordinator') {
+            $statHref = match ($key) {
+                'pending' => url('library', ['decision' => 'pending']),
+                'accepted' => url('library', ['decision' => 'accepted']),
+                'department_studies' => '#drc-dept-table',
+                'other_studies' => '#drc-other-table',
+                default => null,
+            };
+        }
         ?>
         <?php if ($statHref): ?><a class="stat-card stat-card-link" href="<?= e($statHref) ?>"><?php else: ?><div class="stat-card"><?php endif; ?>
             <span class="stat-value"><?= e((string) $val) ?></span>
