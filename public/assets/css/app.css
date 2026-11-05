@@ -3442,6 +3442,11 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
 #department-review-table .btn { white-space: nowrap; }
 .adviser-section-nav a[aria-current="page"] { color: #dceaff; border-color: #597a9f; background: #1b304c; }
 .adviser-section-nav + .find-board { margin-top: 1rem; }
+.src-study-table { min-width: 64rem; table-layout: auto; }
+.src-study-table th { background: #112034 !important; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 1rem; }
+.src-study-table td { padding: 1.1rem 1rem; vertical-align: top; font-size: 0.85rem; line-height: 1.6; }
+.src-study-table td:first-child { width: 34%; min-width: 18rem; white-space: normal; overflow-wrap: anywhere; font-weight: 600; }
+.src-study-table tbody tr:hover td { background: #14243a !important; }
 .dean-people-table { min-width: 50rem; }
 .dean-people-table th { background: #112034 !important; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 1rem; }
 .dean-people-table td { padding: 1rem; vertical-align: middle; }

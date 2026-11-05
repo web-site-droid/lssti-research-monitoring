@@ -2,10 +2,12 @@
 $adviserQueue = !empty($adviserQueue);
 $deanQueue = !empty($deanQueue);
 $adminQueue = !empty($adminQueue);
+$srcQueue = !empty($srcQueue);
+$tableOnly = $adviserQueue || $deanQueue || $srcQueue;
 $ownDepartment = $adviserQueue || $deanQueue;
 ?>
 <div class="page-header">
-    <h1><?= ($adviserQueue || $deanQueue) && in_array($decisionFilter ?? '', ['pending', 'accepted'], true) ? ucfirst($decisionFilter) . ' reviews' : 'Reviews' ?></h1>
+    <h1><?= $tableOnly && in_array($decisionFilter ?? '', ['pending', 'accepted', 'other'], true) ? ucfirst($decisionFilter) . ' reviews' : 'Reviews' ?></h1>
     <?php if ($adviserQueue && !empty($decisionFilter)): ?><a href="<?= e(url('review')) ?>">View all reviews</a><?php endif; ?>
     <p class="lead"><?= $adviserQueue
         ? 'Accept a student study so they can send it to the dept research coordinator.'
@@ -19,22 +21,22 @@ $ownDepartment = $adviserQueue || $deanQueue;
 </div>
 <?php if (!empty($success)): ?><p class="alert alert-success"><?= e($success) ?></p><?php endif; ?>
 <?php if (!empty($error)): ?><p class="alert alert-error"><?= e($error) ?></p><?php endif; ?>
-<?php if ($deanQueue): ?>
-<nav class="adviser-section-nav" aria-label="Dean review lists">
-    <?php foreach (['pending' => 'Pending', 'accepted' => 'Accepted'] as $value => $label): ?>
+<?php if ($deanQueue || $srcQueue): ?>
+<nav class="adviser-section-nav" aria-label="Review lists">
+    <?php foreach (($srcQueue ? ['pending' => 'Pending', 'accepted' => 'Accepted', 'other' => 'Earlier stages'] : ['pending' => 'Pending', 'accepted' => 'Accepted']) as $value => $label): ?>
     <a href="<?= e(url('review', ['decision' => $value])) ?>" <?= ($decisionFilter ?? '') === $value ? 'aria-current="page"' : '' ?>><?= e($label) ?></a>
     <?php endforeach; ?>
 </nav>
 <?php endif; ?>
 <?php partial('find_bar', [
     'table' => '#review-studies',
-    'cards' => $ownDepartment ? '' : '#review-read-cards',
+    'cards' => $tableOnly ? '' : '#review-read-cards',
     'papers' => $studies,
     'statusOptions' => $adviserQueue ? ['' => 'Any status', 'pending' => 'Pending', 'accepted' => 'Accepted'] : [],
     'statusAttr' => 'data-decision',
     'showDepartment' => !$ownDepartment,
 ]); ?>
-<?php if (!$ownDepartment): ?>
+<?php if (!$tableOnly): ?>
 <p class="muted">Click a card to read the whole file and play it aloud.</p>
 <div class="paper-cards" id="review-read-cards">
     <?php foreach ($studies as $paper): ?>
@@ -45,9 +47,9 @@ $ownDepartment = $adviserQueue || $deanQueue;
     <?php endforeach; ?>
 </div>
 <?php endif; ?>
-<div class="table-scroll<?= $ownDepartment ? ' adviser-results' : '' ?><?= count($studies) > 10 ? ' is-scroll' : '' ?>">
+<div class="table-scroll<?= $tableOnly ? ' adviser-results' : '' ?><?= count($studies) > 10 ? ' is-scroll' : '' ?>">
 <div class="table-wrap dash-board">
-<table class="dash-table review-table<?= $ownDepartment ? ' is-own-dept adviser-results-table' : '' ?>" id="review-studies">
+<table class="dash-table review-table<?= $ownDepartment ? ' is-own-dept adviser-results-table' : '' ?><?= $srcQueue ? ' src-study-table' : '' ?>" id="review-studies">
     <thead>
         <tr>
             <th>Title</th>
@@ -56,7 +58,7 @@ $ownDepartment = $adviserQueue || $deanQueue;
             <?php if (!$ownDepartment): ?>
             <th>Department</th>
             <?php endif; ?>
-            <th><?= $adviserQueue ? 'Decision' : ($deanQueue ? 'Status' : 'Academic year') ?></th>
+            <th><?= $adviserQueue ? 'Decision' : (($deanQueue || $srcQueue) ? 'Status' : 'Academic year') ?></th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -79,7 +81,7 @@ $ownDepartment = $adviserQueue || $deanQueue;
             <td>
                 <?php if ($adviserQueue): ?>
                     <?= status_badge((string) $s['status'], $accepted ? 'Accepted' : 'Pending') ?>
-                <?php elseif ($deanQueue): ?>
+                <?php elseif ($deanQueue || $srcQueue): ?>
                     <?= status_badge((string) $s['status']) ?>
                 <?php else: ?>
                     <?= e($s['school_year'] ?? '') ?>

@@ -22,6 +22,7 @@ $who = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))
                 <a href="<?= e(url('reports')) ?>" data-nav-match="reports">Logs</a>
                 <a href="<?= e(url('settings')) ?>" data-nav-match="settings">Reports</a>
             <?php elseif ($role === Role::SCHOOL_RESEARCH_COORDINATOR): ?>
+                <a href="<?= e(url('review')) ?>" data-nav-match="review">Review</a>
                 <a href="<?= e(url('study')) ?>" data-nav-match="study">Study</a>
                 <a href="<?= e(url('users')) ?>" data-nav-match="users">People</a>
                 <a href="<?= e(url('reports')) ?>" data-nav-match="reports">Logs</a>

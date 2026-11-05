@@ -39,6 +39,15 @@
             'other_studies' => '#adviser-discover',
             default => null,
         } : null;
+        if (($user['role_slug'] ?? '') === 'school_research_coordinator') {
+            $statHref = match ($key) {
+                'pending' => url('review', ['decision' => 'pending']),
+                'accepted' => url('review', ['decision' => 'accepted']),
+                'department_studies' => '#dash-studies',
+                'other_studies' => url('review', ['decision' => 'other']),
+                default => null,
+            };
+        }
         if (($user['role_slug'] ?? '') === 'dean') {
             $statHref = match ($key) {
                 'pending' => url('review', ['decision' => 'pending']),
@@ -105,12 +114,13 @@ $schoolWideFilterEmpty = 'No papers in this department.';
     <?php endif; ?>
 <?php partial('find_bar', [
     'table' => '#dash-studies',
-    'cards' => '#dash-read-cards',
+    'cards' => $isSrcDash ? '' : '#dash-read-cards',
     'empty' => '#dash-studies-empty',
     'papers' => $directorStudies,
     'programs' => $programs,
     'statusOptions' => ['' => 'Any status', 'pending' => 'Pending', 'accepted' => 'Accepted'],
 ]); ?>
+<?php if (!$isSrcDash): ?>
 <p class="muted">Click a card to read the whole file and play it aloud.</p>
 <div class="paper-cards" id="dash-read-cards">
     <?php foreach ($directorStudies as $paper): ?>
@@ -125,10 +135,11 @@ $schoolWideFilterEmpty = 'No papers in this department.';
         endif; ?>
         <?php endforeach; ?>
 </div>
+<?php endif; ?>
 <p id="dash-studies-empty" class="empty-state" hidden data-empty-dept="No papers in that department." data-empty-text="No studies match.">No studies match.</p>
 <div class="table-scroll<?= count($directorStudies) > 10 ? ' is-scroll' : '' ?>">
 <div class="table-wrap dash-board">
-<table class="dash-table" id="dash-studies" data-sortable>
+<table class="dash-table<?= $isSrcDash ? ' src-study-table' : '' ?>" id="dash-studies" data-sortable>
     <thead>
         <tr>
             <th>Title</th>
