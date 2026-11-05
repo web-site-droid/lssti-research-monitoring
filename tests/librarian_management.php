@@ -61,7 +61,9 @@ namespace {
     $GLOBALS['db']->duplicate=false;$_POST['school_id']='';blocked(fn()=>$controller->editSubmit(),'redirect');check(!$GLOBALS['db']->updates,'Empty ID rejected');
     $_POST['school_id']=str_repeat('X',33);blocked(fn()=>$controller->editSubmit(),'redirect');check(!$GLOBALS['db']->updates,'Oversized ID rejected');
     \App\Helpers\Auth::$actor['role_slug']='school_research_coordinator';$_POST['school_id']='FORGED-ID';
-    blocked(fn()=>$controller->editSubmit(),'redirect');check(!array_key_exists('sid',$GLOBALS['db']->updates[0]),'SRC cannot change ID through forged fields');
+    blocked(fn()=>$controller->editSubmit(),'redirect');check($GLOBALS['db']->updates[0]['sid']==='FORGED-ID','SRC can edit ID');
+    $GLOBALS['db']->updates=[];\App\Helpers\Auth::$actor['role_slug']='research_adviser';\App\Helpers\Auth::$actor['program_id']=3;
+    blocked(fn()=>$controller->editSubmit(),'redirect');check(!array_key_exists('sid',$GLOBALS['db']->updates[0]),'Adviser cannot forge ID edits');
     \App\Helpers\Auth::$actor['role_slug']='school_administrator';
     $GLOBALS['db']=new Fixture();
     foreach(['studies','study_versions','review_assignments','review_comments','review_scores','plagiarism_results','read_logs'] as $table){
@@ -74,8 +76,12 @@ namespace {
     $GLOBALS['db']->target['role_slug']='account_admin';blocked(fn()=>\App\Models\User::deleteWithoutAcademicRecords(2,1),'Admin accounts');
     $GLOBALS['db']->target['role_slug']='student';\App\Models\User::deleteWithoutAcademicRecords(2,1);
     check($GLOBALS['db']->deleted&&!$GLOBALS['db']->inTransaction(),'Unlinked account deleted and transaction committed');
-    foreach(['dean','school_research_coordinator','account_admin','student'] as $role){
+    foreach(['dean','account_admin','student'] as $role){
         \App\Helpers\Auth::$actor['role_slug']=$role;blocked(fn()=>$controller->deleteSubmit(),'forbidden');
     }
+    $GLOBALS['db']=new Fixture();\App\Helpers\Auth::$actor['role_slug']='school_research_coordinator';$_POST=['id'=>2];
+    blocked(fn()=>$controller->deleteSubmit(),'redirect');check($GLOBALS['db']->deleted,'SRC can delete unlinked user');
+    $GLOBALS['db']=new Fixture();$GLOBALS['db']->reference='studies';
+    blocked(fn()=>$controller->deleteSubmit(),'redirect');check(!$GLOBALS['db']->deleted,'SRC cannot delete user linked to studies');
     echo 'Passed '.$GLOBALS['checks'].' Librarian management checks.'.PHP_EOL;
 }

@@ -253,6 +253,8 @@ final class UserController
                 flash('error', 'Choose dean or school research coordinator.');
                 redirect('users', ['edit' => $id]);
             }
+        }
+        if (in_array($roleSlug, [Role::SCHOOL_ADMINISTRATOR, Role::SCHOOL_RESEARCH_COORDINATOR], true)) {
             $identity = strtoupper(trim((string) ($_POST['school_id'] ?? $target['school_id'])));
             $existing = $identity !== '' ? User::findBySchoolId($identity) : null;
             if ($identity === '' || strlen($identity) > 32 || ($existing && (int) $existing['id'] !== $id)) {
@@ -288,7 +290,7 @@ final class UserController
 
     public function deleteSubmit(): void
     {
-        Auth::requireRole(Role::SCHOOL_ADMINISTRATOR);
+        Auth::requireRole([Role::SCHOOL_ADMINISTRATOR, Role::SCHOOL_RESEARCH_COORDINATOR]);
         Csrf::requireValid();
         $id = (int) ($_POST['id'] ?? 0);
         try {
