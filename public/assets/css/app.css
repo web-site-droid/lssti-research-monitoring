@@ -3647,6 +3647,43 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
 .student-scholar-list .student-abstract-link:hover { text-decoration: underline; }
 .scholar-results .scholar-hit { border: 0; }
 .scholar-results:empty { display: none; }
+/* Keep row actions reachable across every role's dashboard and review lists. */
+.app-main > .container { width: 100%; min-width: 0; box-sizing: border-box; }
+#main :is(.dashboard-study-table, #review-studies, #department-review-table, #people-table) {
+  width: 100%;
+  table-layout: fixed;
+}
+#main :is(.dashboard-study-table, #review-studies, #department-review-table, #people-table) :is(th, td) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+#main :is(.dashboard-study-table, #review-studies, #department-review-table, #people-table) th:last-child,
+#main :is(.dashboard-study-table, #review-studies, #department-review-table, #people-table) td.actions-cell {
+  position: sticky;
+  right: 0;
+  z-index: 3;
+  background: var(--card) !important;
+  box-shadow: -1px 0 0 var(--border), -8px 0 12px -10px #000;
+}
+#main :is(.dashboard-study-table, #review-studies, #department-review-table, #people-table) th:last-child { z-index: 4; }
+#main :is(.dashboard-study-table, #review-studies, #people-table) td.actions-cell:has(.menu.is-open) { z-index: 6; }
+#main :is(.dashboard-study-table, #review-studies) :is(th, td):last-child { width: 5rem; }
+#main :is(#people-table, #department-review-table) :is(th, td):last-child { width: 10rem; }
+#main :is(.dashboard-study-table, #review-studies) td.actions-cell { padding-inline: 0.6rem; }
+#main :is(.dashboard-study-table, #review-studies) .actions-cell .action-menu { float: none; }
+#main :is(.dashboard-study-table, #review-studies) .actions-cell { text-align: center; }
+@media (min-width: 960px) {
+  #main :is(.dashboard-study-table, #review-studies, #department-review-table, #people-table) { min-width: 0; }
+  #main :is(.dashboard-study-table, #review-studies, #department-review-table, #people-table) :is(th, td) {
+    width: auto;
+    padding: 0.9rem 0.65rem;
+  }
+  #main :is(.dashboard-study-table, #review-studies, #department-review-table) :is(th, td):first-child { width: 34%; }
+  #main :is(.dashboard-study-table, #review-studies) :is(th, td):last-child { width: 5rem; }
+  #main :is(#people-table, #department-review-table) :is(th, td):last-child { width: 10rem; }
+  #main :is(.dashboard-study-table, #review-studies) .badge.study-status { white-space: normal; }
+  #main :is(.dashboard-study-table, #review-studies) .status-help-label { white-space: normal; flex: 0 1 auto; }
+}
 @media (max-width: 600px) {
   .student-scholar-list, .scholar-results { padding: 1rem; }
   .scholar-results .scholar-hit { grid-template-columns: 1fr; gap: 0.5rem; }

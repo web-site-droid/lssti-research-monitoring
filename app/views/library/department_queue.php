@@ -31,7 +31,7 @@
             </td>
             <td><?= e(trim(($paper['submitter_first'] ?? '') . ' ' . ($paper['submitter_last'] ?? ''))) ?></td>
             <td><?= status_badge((string) $paper['status']) ?></td>
-            <td><a class="btn btn-secondary" href="<?= e(url(($decision ?? 'pending') === 'accepted' ? 'studies/view' : 'library/review', ['id' => $paper['id']])) ?>"><?= ($decision ?? 'pending') === 'accepted' ? 'View progress' : 'Review study' ?></a></td>
+            <td class="actions-cell"><a class="btn btn-secondary" href="<?= e(url(($decision ?? 'pending') === 'accepted' ? 'studies/view' : 'library/review', ['id' => $paper['id']])) ?>"><?= ($decision ?? 'pending') === 'accepted' ? 'View progress' : 'Review study' ?></a></td>
         </tr>
     <?php endforeach; ?>
     </tbody>

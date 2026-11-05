@@ -139,7 +139,7 @@ $schoolWideFilterEmpty = 'No papers in this department.';
 <p id="dash-studies-empty" class="empty-state" hidden data-empty-dept="No papers in that department." data-empty-text="No studies match.">No studies match.</p>
 <div class="table-scroll<?= count($directorStudies) > 10 ? ' is-scroll' : '' ?>">
 <div class="table-wrap dash-board">
-<table class="dash-table<?= $isSrcDash ? ' src-study-table' : '' ?>" id="dash-studies" data-sortable>
+<table class="dashboard-study-table dash-table<?= $isSrcDash ? ' src-study-table' : '' ?>" id="dash-studies" data-sortable>
     <thead>
         <tr>
             <th>Title</th>
@@ -281,7 +281,7 @@ $schoolWideFilterEmpty = 'No papers in this department.';
     <p id="adviser-dept-table-empty" class="empty-state" hidden data-empty-text="No studies match.">No studies match.</p>
     <div class="table-scroll<?= count($deptCatalog) > 10 ? ' is-scroll' : '' ?>">
     <div class="table-wrap">
-    <table class="dash-table" id="adviser-dept-table" data-sortable>
+    <table class="dashboard-study-table dash-table" id="adviser-dept-table" data-sortable>
         <thead>
             <tr>
                 <th>Title</th>
@@ -340,7 +340,7 @@ $schoolWideFilterEmpty = 'No papers in this department.';
     <p id="adviser-other-table-empty" class="empty-state" hidden data-empty-dept="No studies in that department." data-empty-text="No studies match.">No studies in that department.</p>
     <div class="table-scroll<?= count($otherDeptCatalog) > 10 ? ' is-scroll' : '' ?>">
     <div class="table-wrap">
-    <table class="dash-table" id="adviser-other-table" data-sortable>
+    <table class="dashboard-study-table dash-table" id="adviser-other-table" data-sortable>
         <thead>
             <tr>
                 <th>Title</th>
@@ -421,7 +421,7 @@ $deanQueue = $uploads ?? [];
     <p id="dean-dept-table-empty" class="empty-state" hidden data-empty-text="No studies match.">No studies match.</p>
     <div class="table-scroll<?= count($deptCatalog) > 10 ? ' is-scroll' : '' ?>">
     <div class="table-wrap">
-    <table class="dash-table" id="dean-dept-table" data-sortable>
+    <table class="dashboard-study-table dash-table" id="dean-dept-table" data-sortable>
         <thead>
             <tr>
                 <th>Title</th>
@@ -500,7 +500,7 @@ $deanQueue = $uploads ?? [];
     <p id="dean-other-table-empty" class="empty-state" hidden data-empty-dept="No studies in that department." data-empty-text="No studies match.">No studies in that department.</p>
     <div class="table-scroll<?= count($otherDeptCatalog) > 10 ? ' is-scroll' : '' ?>">
     <div class="table-wrap">
-    <table class="dash-table" id="dean-other-table" data-sortable>
+    <table class="dashboard-study-table dash-table" id="dean-other-table" data-sortable>
         <thead>
             <tr>
                 <th>Title</th>
@@ -582,7 +582,7 @@ $pendingUploads = $uploads ?? [];
     <p id="drc-dept-table-empty" class="empty-state" hidden data-empty-text="No studies match.">No studies match.</p>
     <div class="table-scroll<?= count($deptCatalog) > 10 ? ' is-scroll' : '' ?>">
     <div class="table-wrap">
-    <table class="dash-table" id="drc-dept-table" data-sortable data-page-size="6">
+    <table class="dashboard-study-table dash-table" id="drc-dept-table" data-sortable data-page-size="6">
         <thead>
             <tr>
                 <th>Title</th>
@@ -666,7 +666,7 @@ $pendingUploads = $uploads ?? [];
     <p id="drc-other-table-empty" class="empty-state" hidden data-empty-dept="No studies in that department." data-empty-text="No studies match.">No studies in that department.</p>
     <div class="table-scroll<?= count($otherDeptCatalog) > 10 ? ' is-scroll' : '' ?>">
     <div class="table-wrap">
-    <table class="dash-table" id="drc-other-table" data-sortable>
+    <table class="dashboard-study-table dash-table" id="drc-other-table" data-sortable>
         <thead>
             <tr>
                 <th>Title</th>
