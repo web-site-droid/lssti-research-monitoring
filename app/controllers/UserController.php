@@ -122,13 +122,14 @@ final class UserController
         $actor = Auth::user();
         $roleSlug = $actor['role_slug'] ?? '';
         if (in_array($roleSlug, [Role::RESEARCH_ADVISER, Role::DEAN, Role::DEPT_RESEARCH_COORDINATOR], true)) {
-            $target = User::findById($id);
+            $role = User::findRole($data['role_id']);
             $programId = (int) ($actor['program_id'] ?? 0);
             $allowed = $this->creatableSlugs($roleSlug);
             if (
-                !$target
-                || !in_array($target['role_slug'] ?? '', $allowed, true)
-                || (int) ($target['program_id'] ?? 0) !== $programId
+                !$role
+                || !in_array($role['slug'] ?? '', $allowed, true)
+                || $programId <= 0
+                || !Program::find($programId)
             ) {
                 flash('error', $roleSlug === Role::DEAN
                     ? 'Choose student, research adviser, or dept research coordinator. Accounts stay in your department.'
