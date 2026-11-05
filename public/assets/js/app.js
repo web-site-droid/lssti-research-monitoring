@@ -1410,3 +1410,64 @@ function cellText(row, index) {
   var cell = row.children[index];
   return cell ? cell.textContent.trim() : '';
 }
+
+(function () {
+  var active = null;
+  var tip = document.createElement('div');
+  tip.className = 'status-tooltip';
+  tip.id = 'study-status-tooltip';
+  tip.setAttribute('role', 'tooltip');
+  tip.hidden = true;
+  document.body.appendChild(tip);
+  function hide() {
+    if (active) active.removeAttribute('aria-describedby');
+    active = null;
+    tip.hidden = true;
+  }
+  function show(button) {
+    if (active && active !== button) hide();
+    active = button;
+    tip.replaceChildren();
+    ['current', 'next'].forEach(function (key) {
+      var label = document.createElement('strong');
+      label.textContent = key === 'current' ? 'Currently' : 'Next step';
+      var text = document.createElement('p');
+      text.textContent = button.getAttribute('data-status-' + key) || '';
+      tip.appendChild(label);
+      tip.appendChild(text);
+    });
+    button.setAttribute('aria-describedby', tip.id);
+    tip.hidden = false;
+    var rect = button.getBoundingClientRect();
+    var width = tip.offsetWidth;
+    var height = tip.offsetHeight;
+    tip.style.left = Math.max(12, Math.min(rect.left, window.innerWidth - width - 12)) + 'px';
+    var below = rect.bottom + 8;
+    tip.style.top = Math.max(12, below + height < window.innerHeight - 12 ? below : rect.top - height - 8) + 'px';
+  }
+  document.addEventListener('pointerover', function (event) {
+    var button = event.target.closest('.status-help');
+    if (button) show(button);
+  });
+  document.addEventListener('pointerout', function (event) {
+    if (!active) return;
+    var next = event.relatedTarget;
+    if (next && (active.contains(next) || tip.contains(next))) return;
+    if (active.contains(event.target) || tip.contains(event.target)) hide();
+  });
+  document.addEventListener('focusin', function (event) {
+    var button = event.target.closest('.status-help');
+    if (button) show(button);
+  });
+  document.addEventListener('focusout', function (event) {
+    if (active && active.contains(event.target)) hide();
+  });
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest('.status-help');
+    if (button) show(button);
+    else if (!tip.contains(event.target)) hide();
+  });
+  document.addEventListener('keydown', function (event) { if (event.key === 'Escape') hide(); });
+  window.addEventListener('resize', hide);
+  document.addEventListener('scroll', hide, true);
+})();

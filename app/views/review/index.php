@@ -71,7 +71,7 @@ $ownDepartment = $adviserQueue || $deanQueue;
             <?php endif; ?>
             <td>
                 <?php if ($adviserQueue): ?>
-                    <span class="status-pill <?= $accepted ? 'is-on' : 'is-study' ?>"><?= $accepted ? 'Accepted' : 'Pending' ?></span>
+                    <?= status_badge((string) $s['status'], $accepted ? 'Accepted' : 'Pending') ?>
                 <?php else: ?>
                     <?= e($s['school_year'] ?? '') ?>
                 <?php endif; ?>

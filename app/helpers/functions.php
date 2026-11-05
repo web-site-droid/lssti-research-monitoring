@@ -271,6 +271,23 @@ function study_status_label(?string $status): string
     return $status === '' ? '—' : ucwords(str_replace('_', ' ', $status));
 }
 
+function study_status_guidance(string $status): array
+{
+    return match ($status) {
+        'draft' => ['With the student for preparation.', 'Student submits to the Research Adviser.'],
+        'submitted', 'resubmitted' => ['With the Research Adviser for review.', 'Adviser approves; the student then forwards it to the Department Research Coordinator.'],
+        'adviser_reviewed' => ['Approved by the Research Adviser; waiting for the student to forward it.', 'Student sends it to the Department Research Coordinator.'],
+        'pending' => ['With the Department Research Coordinator for review.', 'After approval, it goes to the Dean.'],
+        'dean_review' => ['With the Dean for review.', 'After approval, it goes to the School Research Coordinator.'],
+        'under_review', 'ethics_review' => ['With the School Research Coordinator for academic and compliance review.', 'Once cleared, it goes to the Librarian for final publication.'],
+        'library_review', 'admin_review' => ['With the Librarian for final publication review.', 'After final approval, it is published in the repository.'],
+        'revision_requested' => ['With the student for requested revisions.', 'Student uploads a revised version and resubmits to the Research Adviser.'],
+        'approved' => ['Published in the repository.', 'Review is complete; the study is available under department access rules.'],
+        'archived' => ['Not approved; the study has been archived.', 'No automatic next review step.'],
+        default => ['The current review location is unavailable.', 'Open the study details for more information.'],
+    };
+}
+
 function status_badge(?string $status, ?string $label = null): string
 {
     $status = strtolower(trim((string) $status));
@@ -278,7 +295,11 @@ function status_badge(?string $status, ?string $label = null): string
     $text = $label !== null && $label !== ''
         ? $label
         : study_status_label($status);
-    return '<span class="badge study-status is-' . e($class) . '">' . e($text) . '</span>';
+    [$current, $next] = study_status_guidance($status);
+    return '<button type="button" class="badge study-status status-help is-' . e($class) . '"'
+        . ' data-status-current="' . e($current) . '" data-status-next="' . e($next) . '"'
+        . ' aria-label="' . e($text . '. Current: ' . $current . ' Next: ' . $next) . '">'
+        . '<span class="status-help-label">' . e($text) . '</span><span class="status-help-icon" aria-hidden="true">i</span></button>';
 }
 
 function paper_find_attrs(array $paper): string
