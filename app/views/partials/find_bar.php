@@ -93,16 +93,26 @@ krsort($years);
                 </select>
             </label>
             <label class="find-field find-field-range">
-                <span><?= icon('calendar') ?> Date Range</span>
+                <span><?= icon('calendar') ?> School Year Range</span>
                 <span class="find-range">
-                    <input type="month" data-find-from aria-label="From month">
+                    <select data-find-from aria-label="From school year">
+                        <option value="">From school year</option>
+                        <?php foreach (array_reverse($years) as $year): ?>
+                            <option value="<?= e($year) ?>"><?= e($year) ?></option>
+                        <?php endforeach; ?>
+                    </select>
                     <span>to</span>
-                    <input type="month" data-find-to aria-label="To month">
+                    <select data-find-to aria-label="To school year">
+                        <option value="">To school year</option>
+                        <?php foreach (array_reverse($years) as $year): ?>
+                            <option value="<?= e($year) ?>"><?= e($year) ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </span>
             </label>
             <label class="find-field">
-                <span><?= icon('calendar') ?> Publication Year</span>
-                <select data-find-year aria-label="Publication year">
+                <span><?= icon('calendar') ?> School Year</span>
+                <select data-find-year aria-label="School year">
                     <option value="">Any year</option>
                     <?php foreach ($years as $year): ?>
                         <option value="<?= e($year) ?>"><?= e($year) ?></option>

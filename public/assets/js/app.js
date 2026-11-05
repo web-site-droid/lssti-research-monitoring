@@ -465,11 +465,17 @@ function initFindBars() {
       applied.to = field('to') ? field('to').value : '';
       applied.status = field('status') ? field('status').value : '';
     }
-    function monthOk(value) {
+    function schoolYearOk(value) {
       if (!applied.from && !applied.to) return true;
-      if (!value) return false;
-      if (applied.from && value < applied.from) return false;
-      if (applied.to && value > applied.to) return false;
+      var start = parseInt(value, 10);
+      if (!Number.isFinite(start)) return false;
+      var from = applied.from ? parseInt(applied.from, 10) : null;
+      var to = applied.to ? parseInt(applied.to, 10) : null;
+      if (from !== null && to !== null && from > to) {
+        var swap = from; from = to; to = swap;
+      }
+      if (from !== null && start < from) return false;
+      if (to !== null && start > to) return false;
       return true;
     }
     function matches(node) {
@@ -479,7 +485,7 @@ function initFindBars() {
       var typeOk = !applied.type || node.getAttribute('data-type') === applied.type;
       var yearOk = !applied.year || node.getAttribute('data-year') === applied.year;
       var statusOk = !applied.status || node.getAttribute(statusAttr) === applied.status;
-      return textOk && deptOk && typeOk && yearOk && monthOk(node.getAttribute('data-month') || '') && statusOk;
+      return textOk && deptOk && typeOk && yearOk && schoolYearOk(node.getAttribute('data-year') || '') && statusOk;
     }
     function showHits(pool) {
       var box = bar.querySelector('[data-find-hits]');
