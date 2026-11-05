@@ -3430,7 +3430,53 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
   margin-top: 0.2rem;
 }
 
-.badge.study-status { white-space: normal; max-width: 24rem; line-height: 1.45; text-align: left; }
+.badge.study-status {
+  white-space: normal;
+  max-width: 22rem;
+  line-height: 1.5;
+  text-align: left;
+  text-transform: none;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.review-title-link { color: var(--text); text-decoration: none; font-weight: 600; }
+.review-title-link:hover { color: #9ec5fe; text-decoration: underline; }
+.review-study-meta { display: block; margin-top: 0.45rem; color: var(--text-muted); font-size: 0.78rem; font-weight: 400; }
+.adviser-results { border: 1px solid var(--border); border-radius: 12px; margin-top: 1.25rem; }
+.adviser-results .table-wrap { border: 0; border-radius: 0; margin: 0; }
+.adviser-results-table { table-layout: fixed; min-width: 58rem; }
+.adviser-results-table.is-own-dept th:nth-child(1),
+.adviser-results-table.is-own-dept td:nth-child(1) { width: 38%; min-width: 0; }
+.adviser-results-table.is-own-dept th:nth-child(2),
+.adviser-results-table.is-own-dept td:nth-child(2) { width: 15%; }
+.adviser-results-table.is-own-dept th:nth-child(3),
+.adviser-results-table.is-own-dept td:nth-child(3) { width: 17%; }
+.adviser-results-table.is-own-dept th:nth-child(4),
+.adviser-results-table.is-own-dept td:nth-child(4) { width: 23%; }
+.adviser-results-table.is-own-dept th:nth-child(5),
+.adviser-results-table.is-own-dept td:nth-child(5) { width: 7%; }
+.adviser-results-table thead th {
+  background: #112034 !important;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1rem;
+}
+.adviser-results-table tbody td { padding: 1.2rem 1rem; vertical-align: top; font-size: 0.85rem; line-height: 1.6; }
+.adviser-results-table tbody tr:hover td { background: #14243a !important; }
+.adviser-results-table .study-status { display: inline-flex; }
+.adviser-results-table .study-status.is-approved { background: #16382b !important; color: #a7dfbf !important; }
+.adviser-results-table .study-status.is-revision_requested { background: #3a2e19 !important; color: #f0d19a !important; }
+.adviser-results-table .study-status.is-archived { background: #3a2028 !important; color: #efb0bc !important; }
+.adviser-results-table .study-status.is-submitted,
+.adviser-results-table .study-status.is-pending,
+.adviser-results-table .study-status.is-dean_review,
+.adviser-results-table .study-status.is-under_review,
+.adviser-results-table .study-status.is-admin_review { background: #1b304c !important; color: #b6cef1 !important; }
 .review-table td.review-study-title { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; min-width: 16rem; line-height: 1.5; }
 .stat-card-link { display: block; color: inherit; text-decoration: none; transition: border-color 0.15s, background 0.15s; }
 .stat-card-link:hover { color: inherit; border-color: #9ec5fe; background: var(--card-2); }

@@ -38,9 +38,9 @@ $ownDepartment = $adviserQueue || $deanQueue;
     <?php endforeach; ?>
 </div>
 <?php endif; ?>
-<div class="table-scroll<?= count($studies) > 10 ? ' is-scroll' : '' ?>">
+<div class="table-scroll<?= $adviserQueue ? ' adviser-results' : '' ?><?= count($studies) > 10 ? ' is-scroll' : '' ?>">
 <div class="table-wrap dash-board">
-<table class="dash-table review-table<?= $ownDepartment ? ' is-own-dept' : '' ?>" id="review-studies">
+<table class="dash-table review-table<?= $ownDepartment ? ' is-own-dept' : '' ?><?= $adviserQueue ? ' adviser-results-table' : '' ?>" id="review-studies">
     <thead>
         <tr>
             <th>Title</th>
@@ -60,7 +60,10 @@ $ownDepartment = $adviserQueue || $deanQueue;
     <?php foreach ($studies as $s): ?>
         <?php $accepted = $adviserQueue && !in_array($s['status'], ['submitted', 'revision_requested'], true); ?>
         <tr<?= paper_find_attrs($s) ?> data-decision="<?= $adviserQueue ? ($accepted ? 'accepted' : 'pending') : '' ?>">
-            <td class="review-study-title"><?= e($s['title']) ?></td>
+            <td class="review-study-title">
+                <a class="review-title-link" href="<?= e(url('studies/view', ['id' => $s['id']])) ?>"><?= e($s['title']) ?></a>
+                <span class="review-study-meta"><?= e($s['school_year'] ?? '') ?> &middot; <?= e(study_type_label($s['study_type'] ?? '')) ?></span>
+            </td>
             <td><?= e(trim(($s['submitter_last'] ?? '') . ', ' . ($s['submitter_first'] ?? ''), ' ,') ?: '—') ?></td>
             <td><?= author_cell($s['authors'] ?? '', (string) $s['title']) ?></td>
             <?php if (!$ownDepartment): ?>
