@@ -33,3 +33,14 @@ connection. Rotate the previously exposed database password through its host.
 No push, deployment, live database connection, or database change is part of this
 checkpoint task. Files containing sensitive data may exist in earlier Git history;
 this checkpoint does not sanitize that history.
+
+## Publishing the backup branch
+
+`vercel.json` disables Vercel's automatic Git deployments specifically for
+`checkpoint/developer-handoff`. Keep this rule in place while the branch is used
+as a remote backup. It does not disable manual CLI or dashboard deployments.
+Pushing this branch does not merge it into the production branch (`main`).
+
+Before creating another test branch or enabling previews, verify that preview
+environment variables use a separate test database. The inherited Vercel database
+variables were shown as applying to all environments.
