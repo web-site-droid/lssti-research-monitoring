@@ -13,7 +13,7 @@ foreach ($studies as $study) {
 ?>
 <div class="page-header">
     <h1><?= !empty($publishedOnly) ? 'Published studies' : 'Study' ?></h1>
-    <p class="lead"><?= !empty($publishedOnly) ? 'Published papers, organized by submission month and day. Papers awaiting publication are in Home and Review.' : 'Studies are stored in a month folder, then in a folder for each day.' ?></p>
+    <p class="lead"><?= !empty($publishedOnly) ? 'Published papers, organized by submission month and day. Papers still in the workflow remain in Home and your review queue.' : 'Studies are stored in a month folder, then in a folder for each day.' ?></p>
 </div>
 <?php if ($success = flash('success')): ?><p class="alert alert-success"><?= e($success) ?></p><?php endif; ?>
 <?php if ($error = flash('error')): ?><p class="alert alert-error"><?= e($error) ?></p><?php endif; ?>
