@@ -131,7 +131,7 @@ ksort($departments);
                 <form method="post" action="<?= e(url('users/delete')) ?>" data-confirm="<?= e('Delete ' . $u['school_id'] . ' (' . trim($u['first_name'] . ' ' . $u['last_name']) . ')? This permanently removes the account. Accounts linked to academic records must be deactivated instead.') ?>">
                     <?= \App\Helpers\Csrf::field() ?>
                     <input type="hidden" name="id" value="<?= (int) $u['id'] ?>">
-                    <button type="submit" class="btn btn-danger btn-sm"><?= icon('x') ?> Delete</button>
+                    <button type="submit" class="btn btn-danger btn-sm"><?= icon('trash') ?> Delete</button>
                 </form>
                 <?php endif; ?>
                 <?php endif; ?>

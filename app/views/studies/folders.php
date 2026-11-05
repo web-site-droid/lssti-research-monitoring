@@ -111,7 +111,7 @@ foreach ($studies as $study) {
                                         <form method="post" action="<?= e(url('studies/delete-published')) ?>" data-confirm="<?= e('Permanently delete the published study “' . $study['title'] . '”? Its manuscript versions, reviews and related study records will be removed. This cannot be undone.') ?>">
                                             <?= \App\Helpers\Csrf::field() ?>
                                             <input type="hidden" name="study_id" value="<?= (int) $study['id'] ?>">
-                                            <button type="submit" class="btn btn-danger btn-icon-only" aria-label="Delete published study" title="Delete published study"><?= icon('x') ?></button>
+                                            <button type="submit" class="btn btn-danger btn-icon-only" aria-label="Delete published study" title="Delete published study"><?= icon('trash') ?></button>
                                         </form>
                                     <?php endif; ?>
                                     <?= action_menu(ob_get_clean()) ?>
