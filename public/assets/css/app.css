@@ -3647,6 +3647,24 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
 .student-scholar-list .student-abstract-link:hover { text-decoration: underline; }
 .scholar-results .scholar-hit { border: 0; }
 .scholar-results:empty { display: none; }
+.study-status-guide { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; margin: 0 0 1.25rem; padding: 1rem; border: 1px solid var(--border); border-radius: 10px; color: var(--text-muted); font-size: 0.8rem; line-height: 1.6; }
+.study-status-guide > span { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0.35rem; }
+.study-state-dot { display: inline-block; width: 0.55rem; height: 0.55rem; border-radius: 50%; flex-shrink: 0; }
+.study-state-dot.is-published { background: #9ae6b4; }
+.study-state-dot.is-awaiting { background: #f6d48b; }
+.study-state-dot.is-review { background: #a8c8f2; }
+#folder-table .col-title { width: 30%; }
+#folder-table .col-authors { width: 21%; }
+#folder-table .col-dept { width: 13%; }
+#folder-table .col-status { width: 24%; }
+#folder-table .col-action { width: 12%; }
+#folder-table td.publication-state-cell { white-space: normal; overflow: visible; }
+#folder-table .publication-state-cell .study-status { white-space: normal; max-width: 100%; }
+#folder-table .publication-state-cell .status-help-label { white-space: normal; flex: 0 1 auto; }
+#folder-table .badge.is-approved { background: #173d2b !important; color: #a5e9bd !important; }
+#folder-table .badge:is(.is-admin_review, .is-library_review) { background: #3c3018 !important; color: #f6d48b !important; }
+#folder-table tr[data-status="approved"] td:first-child { border-left: 3px solid #6fbf91; }
+#folder-table tr:is([data-status="admin_review"], [data-status="library_review"]) td:first-child { border-left: 3px solid #d8ad55; }
 .account-admin-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
 .account-admin-heading h2 { margin: 0; }
 #account-admin-create { width: min(42rem, calc(100vw - 2rem)); }

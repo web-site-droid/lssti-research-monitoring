@@ -17,6 +17,11 @@ foreach ($studies as $study) {
 </div>
 <?php if ($success = flash('success')): ?><p class="alert alert-success"><?= e($success) ?></p><?php endif; ?>
 <?php if ($error = flash('error')): ?><p class="alert alert-error"><?= e($error) ?></p><?php endif; ?>
+<div class="study-status-guide" aria-label="Study status guide">
+    <span><span class="study-state-dot is-published" aria-hidden="true"></span><strong>Published</strong> &mdash; available in the repository</span>
+    <span><span class="study-state-dot is-awaiting" aria-hidden="true"></span><strong>Awaiting publication</strong> &mdash; needs final Librarian approval</span>
+    <span><span class="study-state-dot is-review" aria-hidden="true"></span><strong>In progress</strong> &mdash; still in the review process</span>
+</div>
 <?php partial('find_bar', [
     'table' => '#folder-table',
     'papers' => $studies,
@@ -27,9 +32,9 @@ foreach ($studies as $study) {
         'pending' => 'Pending',
         'dean_review' => 'Dean review',
         'under_review' => 'Under review',
-        'library_review' => 'Librarian review',
-        'admin_review' => 'Librarian review',
-        'approved' => 'Approved',
+        'library_review' => 'Awaiting publication (legacy)',
+        'admin_review' => 'Awaiting publication',
+        'approved' => 'Published',
         'revision_requested' => 'Revision requested',
         'archived' => 'Archived',
     ],
@@ -94,7 +99,11 @@ foreach ($studies as $study) {
                                 <td><?= e($study['short_title'] ?: $study['title']) ?></td>
                                 <td><?= e($study['authors'] ?: '—') ?></td>
                                 <td><?= e($study['program_code']) ?></td>
-                                <td><?= e(ucwords(str_replace('_', ' ', $study['status']))) ?></td>
+                                <td class="publication-state-cell"><?= status_badge((string) $study['status'], match ($study['status']) {
+                                    'approved' => 'Published',
+                                    'admin_review', 'library_review' => 'Awaiting publication',
+                                    default => null,
+                                }) ?></td>
                                 <td class="actions-cell">
                                     <?php ob_start(); ?>
                                     <button type="button" class="btn btn-secondary btn-icon-only" data-study-quick
