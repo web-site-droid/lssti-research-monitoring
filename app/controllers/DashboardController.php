@@ -51,16 +51,14 @@ final class DashboardController
         }
         if ($role === 'school_administrator') {
             $programs = Program::active();
-            $directorStudies = Study::listAllSchoolWide();
+            $directorStudies = array_values(array_filter(Study::listAllSchoolWide(), static fn (array $study): bool =>
+                in_array($study['status'] ?? '', ['admin_review', 'library_review', 'approved'], true)
+            ));
             $uploads = array_values(array_filter(
                 $directorStudies,
-                static fn (array $s): bool => ($s['status'] ?? '') === 'admin_review'
+                static fn (array $s): bool => in_array($s['status'] ?? '', ['admin_review', 'library_review'], true)
             ));
-            if (($_GET['catalog'] ?? '') === 'earlier') {
-                $directorStudies = array_values(array_filter($directorStudies, static fn (array $study): bool =>
-                    !in_array($study['status'] ?? '', ['draft', 'admin_review', 'library_review', 'approved', 'archived'], true)
-                ));
-            }
+            $stats['department_studies'] = count($directorStudies);
             $success = flash('success');
             $error = flash('error');
         }

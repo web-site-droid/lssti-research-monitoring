@@ -44,7 +44,7 @@
                 'pending' => url('review', ['decision' => 'pending']),
                 'accepted' => url('review', ['decision' => 'accepted']),
                 'department_studies' => url('dashboard') . '#dash-studies',
-                'other_studies' => url('dashboard', ['catalog' => 'earlier']) . '#dash-studies',
+                'other_studies' => url('study'),
                 default => null,
             };
         }
@@ -113,13 +113,13 @@ $schoolWideFilterEmpty = 'No papers in this department.';
 <?php if (!empty($success)): ?><p class="alert alert-success"><?= e($success) ?></p><?php endif; ?>
 <?php if (!empty($error)): ?><p class="alert alert-error"><?= e($error) ?></p><?php endif; ?>
 <section class="card card-elevated">
-    <h2 class="section-title"><?= $isAdminDash && ($_GET['catalog'] ?? '') === 'earlier' ? 'Earlier-stage studies' : 'All departments — full manuscripts' ?></h2>
+    <h2 class="section-title"><?= $isAdminDash ? 'Librarian review & published studies' : 'All departments — full manuscripts' ?></h2>
     <?php if ($isSrcDash): ?>
         <p class="muted">Every research paper school-wide. Full files are available. Open review for ethics, plagiarism, and send to the librarian.</p>
     <?php elseif ($isLibDash): ?>
         <p class="muted">Every research paper school-wide. Full files are available.</p>
     <?php elseif ($isAdminDash): ?>
-        <p class="muted">Every research paper school-wide. Full files are available. Publish studies waiting at librarian review.</p>
+        <p class="muted">All departments: studies awaiting Librarian review and approved publications. Full manuscripts are available.</p>
     <?php endif; ?>
 <?php partial('find_bar', [
     'table' => '#dash-studies',

@@ -268,6 +268,7 @@ function study_type_options(): array
 function study_status_label(?string $status): string
 {
     $status = strtolower(trim((string) $status));
+    if (in_array($status, ['admin_review', 'library_review'], true)) return 'Librarian Review';
     return $status === '' ? '—' : ucwords(str_replace('_', ' ', $status));
 }
 
