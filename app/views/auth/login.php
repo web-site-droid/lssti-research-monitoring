@@ -9,6 +9,10 @@
 
     <section class="login-panel" aria-labelledby="login-heading">
         <div class="login-panel-inner">
+            <nav class="login-account-switch" aria-label="Choose sign-in account type">
+                <a href="<?= e(url('login')) ?>" <?= !$adminLogin ? 'aria-current="page"' : '' ?>><?= icon('users') ?><span>Students &amp; Staff</span></a>
+                <a href="<?= e(url('admin/login')) ?>" <?= $adminLogin ? 'aria-current="page"' : '' ?>><?= icon('key') ?><span>Admin</span></a>
+            </nav>
             <h2 id="login-heading" class="login-panel-title"><?= $adminLogin ? 'Admin sign in' : 'Sign in to your account' ?></h2>
 
             <?php if (!empty($error)): ?>
@@ -53,7 +57,6 @@
                 </div>
                 <button type="submit" class="btn btn-primary login-submit"><?= icon('login') ?> Sign in</button>
                 <p class="login-help">Forgot your password or locked out? Visit the Research Office on campus.</p>
-                <p class="login-help"><a href="<?= e(url($adminLogin ? 'login' : 'admin/login')) ?>"><?= $adminLogin ? 'Student and staff sign in' : 'Admin sign in' ?></a></p>
             </form>
         </div>
     </section>
