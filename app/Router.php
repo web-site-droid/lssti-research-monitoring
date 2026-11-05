@@ -60,6 +60,7 @@ final class Router
             'password/change/submit' => [AuthController::class, 'changePasswordSubmit', 'auth' => true],
 
             'users' => [UserController::class, 'index', 'auth' => true, 'roles' => $people],
+            'users/delete' => [UserController::class, 'deleteSubmit', 'auth' => true, 'roles' => [Role::SCHOOL_ADMINISTRATOR]],
             'users/create' => [UserController::class, 'createForm', 'auth' => true, 'roles' => $people],
             'users/create/submit' => [UserController::class, 'createSubmit', 'auth' => true, 'roles' => $people],
             'users/edit' => [UserController::class, 'editForm', 'auth' => true, 'roles' => $people],

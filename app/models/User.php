@@ -88,11 +88,12 @@ final class User
 
     public static function update(int $id, array $data): void
     {
+        $identitySql = array_key_exists('school_id', $data) ? ', school_id = :sid' : '';
         $stmt = db()->prepare(
             'UPDATE users SET first_name = :fn, middle_name = :mn, last_name = :ln, role_id = :rid, program_id = :pid, is_active = :active, updated_at = NOW()
-             WHERE id = :id'
+             ' . $identitySql . ' WHERE id = :id'
         );
-        $stmt->execute([
+        $params = [
             'fn' => $data['first_name'],
             'mn' => $data['middle_name'] ?: null,
             'ln' => $data['last_name'],
@@ -100,7 +101,46 @@ final class User
             'pid' => $data['program_id'] ?? null,
             'active' => $data['is_active'],
             'id' => $id,
-        ]);
+        ];
+        if ($identitySql !== '') $params['sid'] = $data['school_id'];
+        $stmt->execute($params);
+    }
+
+    public static function deleteWithoutAcademicRecords(int $id, int $actorId): array
+    {
+        $pdo = db();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare('SELECT u.id, u.school_id, r.slug AS role_slug FROM users u JOIN roles r ON r.id=u.role_id WHERE u.id=:id FOR UPDATE');
+            $stmt->execute(['id'=>$id]);
+            $account = $stmt->fetch();
+            if (!$account) throw new \RuntimeException('Account not found.');
+            if ($id === $actorId) throw new \RuntimeException('You cannot delete your signed-in account.');
+            if ($account['role_slug'] === Role::ACCOUNT_ADMIN) throw new \RuntimeException('Admin accounts cannot be deleted through People.');
+            $references = [
+                'studies' => ['submitter_user_id', 'adviser_user_id'],
+                'study_versions' => ['uploaded_by'],
+                'review_assignments' => ['reviewer_user_id', 'assigned_by'],
+                'review_comments' => ['reviewer_user_id'],
+                'review_scores' => ['reviewer_user_id'],
+                'plagiarism_results' => ['recorded_by'],
+                'read_logs' => ['user_id'],
+            ];
+            foreach ($references as $table => $columns) {
+                foreach ($columns as $column) {
+                    $stmt = $pdo->prepare("SELECT 1 FROM $table WHERE $column=:id LIMIT 1");
+                    $stmt->execute(['id'=>$id]);
+                    if ($stmt->fetchColumn()) throw new \RuntimeException('This account has study, review, or reading records. Deactivate it using Edit instead of deleting it.');
+                }
+            }
+            $stmt = $pdo->prepare('DELETE FROM users WHERE id=:id');
+            $stmt->execute(['id'=>$id]);
+            $pdo->commit();
+            return $account;
+        } catch (\Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
     }
 
     public static function resetPassword(int $id, string $plain): void

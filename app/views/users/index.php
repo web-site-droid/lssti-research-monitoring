@@ -127,6 +127,13 @@ ksort($departments);
                     data-program-label="<?= e(trim((string) (($u['program_code'] ?? '') . ' — ' . ($u['program_name'] ?? '')), ' —')) ?>"
                     data-created="<?= (int) ($u['created_by'] ?? 0) ?>"
                     data-active="<?= (int) $u['is_active'] ?>"><?= icon('pencil') ?> Edit</button>
+                <?php if ($adminMode && (int) $u['id'] !== (int) \App\Helpers\Auth::user()['id']): ?>
+                <form method="post" action="<?= e(url('users/delete')) ?>" data-confirm="<?= e('Delete ' . $u['school_id'] . ' (' . trim($u['first_name'] . ' ' . $u['last_name']) . ')? This permanently removes the account. Accounts linked to academic records must be deactivated instead.') ?>">
+                    <?= \App\Helpers\Csrf::field() ?>
+                    <input type="hidden" name="id" value="<?= (int) $u['id'] ?>">
+                    <button type="submit" class="btn btn-danger btn-sm"><?= icon('x') ?> Delete</button>
+                </form>
+                <?php endif; ?>
                 <?php endif; ?>
                 </div>
             </td>
@@ -166,7 +173,8 @@ ksort($departments);
         <div class="profile-landscape">
             <div>
                 <label for="edit-school-id">ID no.</label>
-                <input id="edit-school-id" readonly>
+                <input id="edit-school-id" <?= $adminMode ? 'name="school_id" maxlength="32" required' : 'readonly' ?>>
+                <?php if ($adminMode): ?><p class="muted">Changing this also changes the ID no. used to sign in.</p><?php endif; ?>
             </div>
             <div>
                 <label for="edit-first-name">First name <span class="req">*</span></label>

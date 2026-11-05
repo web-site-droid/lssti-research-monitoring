@@ -253,6 +253,13 @@ final class UserController
                 flash('error', 'Choose dean or school research coordinator.');
                 redirect('users', ['edit' => $id]);
             }
+            $identity = strtoupper(trim((string) ($_POST['school_id'] ?? $target['school_id'])));
+            $existing = $identity !== '' ? User::findBySchoolId($identity) : null;
+            if ($identity === '' || strlen($identity) > 32 || ($existing && (int) $existing['id'] !== $id)) {
+                flash('error', 'Enter a unique ID no. of up to 32 characters.');
+                redirect('users', ['edit' => $id]);
+            }
+            $data['school_id'] = $identity;
         }
         $canChangeDepartment = $roleSlug === Role::SCHOOL_ADMINISTRATOR
             || Role::canManageDepartments($roleSlug, (string) ($actor['role_name'] ?? ''))
@@ -267,9 +274,34 @@ final class UserController
         } else {
             $data['program_id'] = $target['program_id'] ?? null;
         }
-        User::update($id, $data);
-        Audit::log('user.update', 'user', $id);
+        try {
+            User::update($id, $data);
+        } catch (\PDOException $error) {
+            if ((int) ($error->errorInfo[1] ?? 0) !== 1062) throw $error;
+            flash('error', 'That ID no. is already in use. Choose another one.');
+            redirect('users', ['edit' => $id]);
+        }
+        Audit::log('user.update', 'user', $id, isset($data['school_id']) ? ['old_id_no' => $target['school_id'], 'new_id_no' => $data['school_id']] : null);
         flash('success', 'User updated.');
+        redirect('users');
+    }
+
+    public function deleteSubmit(): void
+    {
+        Auth::requireRole(Role::SCHOOL_ADMINISTRATOR);
+        Csrf::requireValid();
+        $id = (int) ($_POST['id'] ?? 0);
+        try {
+            $account = User::deleteWithoutAcademicRecords($id, (int) Auth::user()['id']);
+        } catch (\PDOException $error) {
+            flash('error', 'This account could not be deleted because it is linked to existing records. Deactivate it using Edit instead.');
+            redirect('users');
+        } catch (\RuntimeException $error) {
+            flash('error', $error->getMessage());
+            redirect('users');
+        }
+        Audit::log('user.delete', 'user', $id, ['school_id' => $account['school_id'], 'role' => $account['role_slug']]);
+        flash('success', 'Account deleted.');
         redirect('users');
     }
 
