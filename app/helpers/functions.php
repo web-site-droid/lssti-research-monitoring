@@ -267,22 +267,8 @@ function study_type_options(): array
 
 function study_status_label(?string $status): string
 {
-    return match (strtolower(trim((string) $status))) {
-        'draft' => 'Draft - awaiting student submission',
-        'submitted' => 'Submitted - pending Research Adviser approval',
-        'resubmitted' => 'Resubmitted - pending Research Adviser approval',
-        'adviser_reviewed' => 'Approved by Adviser - awaiting student forwarding to Department Research Coordinator',
-        'pending' => 'Pending - with Department Research Coordinator',
-        'dean_review' => 'Pending - with Dean; Department Research Coordinator approved',
-        'under_review' => 'Under review - with School Research Coordinator; Dean approved',
-        'ethics_review' => 'Ethics review - with School Research Coordinator',
-        'library_review', 'admin_review' => 'Pending publication - with Librarian; School Research Coordinator approved',
-        'revision_requested' => 'Revision requested - with Student',
-        'approved' => 'Approved - published in the repository',
-        'archived' => 'Not approved - archived',
-        '' => 'Status unavailable',
-        default => ucwords(str_replace('_', ' ', (string) $status)),
-    };
+    $status = strtolower(trim((string) $status));
+    return $status === '' ? '—' : ucwords(str_replace('_', ' ', $status));
 }
 
 function status_badge(?string $status, ?string $label = null): string
