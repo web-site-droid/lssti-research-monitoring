@@ -60,9 +60,9 @@ $ownDepartment = $adviserQueue || $deanQueue;
     <?php foreach ($studies as $s): ?>
         <?php $accepted = $adviserQueue && !in_array($s['status'], ['submitted', 'revision_requested'], true); ?>
         <tr<?= paper_find_attrs($s) ?> data-decision="<?= $adviserQueue ? ($accepted ? 'accepted' : 'pending') : '' ?>">
-            <td><?= e($s['short_title'] ?: $s['title']) ?></td>
+            <td class="review-study-title"><?= e($s['title']) ?></td>
             <td><?= e(trim(($s['submitter_last'] ?? '') . ', ' . ($s['submitter_first'] ?? ''), ' ,') ?: '—') ?></td>
-            <td><?= author_cell($s['authors'] ?? '', (string) ($s['short_title'] ?: $s['title'])) ?></td>
+            <td><?= author_cell($s['authors'] ?? '', (string) $s['title']) ?></td>
             <?php if (!$ownDepartment): ?>
             <td><?= e($s['program_code']) ?></td>
             <?php endif; ?>
