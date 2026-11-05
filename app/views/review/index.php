@@ -3,7 +3,7 @@ $adviserQueue = !empty($adviserQueue);
 $deanQueue = !empty($deanQueue);
 $adminQueue = !empty($adminQueue);
 $srcQueue = !empty($srcQueue);
-$tableOnly = $adviserQueue || $deanQueue || $srcQueue;
+$tableOnly = $adviserQueue || $deanQueue || $srcQueue || $adminQueue;
 $ownDepartment = $adviserQueue || $deanQueue;
 ?>
 <div class="page-header">
@@ -21,7 +21,7 @@ $ownDepartment = $adviserQueue || $deanQueue;
 </div>
 <?php if (!empty($success)): ?><p class="alert alert-success"><?= e($success) ?></p><?php endif; ?>
 <?php if (!empty($error)): ?><p class="alert alert-error"><?= e($error) ?></p><?php endif; ?>
-<?php if ($deanQueue || $srcQueue): ?>
+<?php if ($deanQueue || $srcQueue || $adminQueue): ?>
 <nav class="adviser-section-nav" aria-label="Review lists">
     <?php foreach (['pending' => 'Pending', 'accepted' => 'Accepted'] as $value => $label): ?>
     <a href="<?= e(url('review', ['decision' => $value])) ?>" <?= ($decisionFilter ?? '') === $value ? 'aria-current="page"' : '' ?>><?= e($label) ?></a>
@@ -49,7 +49,7 @@ $ownDepartment = $adviserQueue || $deanQueue;
 <?php endif; ?>
 <div class="table-scroll<?= $tableOnly ? ' adviser-results' : '' ?><?= count($studies) > 10 ? ' is-scroll' : '' ?>">
 <div class="table-wrap dash-board">
-<table class="dash-table review-table<?= $ownDepartment ? ' is-own-dept adviser-results-table' : '' ?><?= $srcQueue ? ' src-study-table' : '' ?>" id="review-studies">
+<table class="dash-table review-table<?= $ownDepartment ? ' is-own-dept adviser-results-table' : '' ?><?= ($srcQueue || $adminQueue) ? ' src-study-table' : '' ?>" id="review-studies">
     <thead>
         <tr>
             <th>Title</th>
@@ -58,7 +58,7 @@ $ownDepartment = $adviserQueue || $deanQueue;
             <?php if (!$ownDepartment): ?>
             <th>Department</th>
             <?php endif; ?>
-            <th><?= $adviserQueue ? 'Decision' : (($deanQueue || $srcQueue) ? 'Status' : 'Academic year') ?></th>
+            <th><?= $adviserQueue ? 'Decision' : (($deanQueue || $srcQueue || $adminQueue) ? 'Status' : 'Academic year') ?></th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -81,7 +81,7 @@ $ownDepartment = $adviserQueue || $deanQueue;
             <td>
                 <?php if ($adviserQueue): ?>
                     <?= status_badge((string) $s['status'], $accepted ? 'Accepted' : 'Pending') ?>
-                <?php elseif ($deanQueue || $srcQueue): ?>
+                <?php elseif ($deanQueue || $srcQueue || $adminQueue): ?>
                     <?= status_badge((string) $s['status']) ?>
                 <?php else: ?>
                     <?= e($s['school_year'] ?? '') ?>

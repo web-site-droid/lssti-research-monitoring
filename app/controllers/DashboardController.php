@@ -53,6 +53,11 @@ final class DashboardController
                 $directorStudies,
                 static fn (array $s): bool => ($s['status'] ?? '') === 'admin_review'
             ));
+            if (($_GET['catalog'] ?? '') === 'earlier') {
+                $directorStudies = array_values(array_filter($directorStudies, static fn (array $study): bool =>
+                    !in_array($study['status'] ?? '', ['draft', 'admin_review', 'library_review', 'approved', 'archived'], true)
+                ));
+            }
             $success = flash('success');
             $error = flash('error');
         }

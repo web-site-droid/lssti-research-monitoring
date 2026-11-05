@@ -23,15 +23,19 @@ final class ReviewController
         $adviserQueue = $role === 'research_adviser';
         $deanQueue = $role === 'dean';
         $srcQueue = $role === 'school_research_coordinator';
+        $adminQueue = $role === 'school_administrator';
         $queue = match ($role) {
             'research_adviser' => ['submitted', 'revision_requested', 'adviser_reviewed', 'pending', 'dean_review', 'under_review', 'library_review', 'admin_review', 'approved'],
             'dean' => ['dean_review'],
             'school_research_coordinator' => ['under_review', 'library_review', 'admin_review', 'approved', 'archived'],
-            'school_administrator' => ['admin_review', 'library_review', 'under_review', 'approved', 'archived'],
+            'school_administrator' => ['admin_review', 'library_review', 'approved', 'archived'],
             default => ['under_review'],
         };
         $pending = array_values(array_filter($studies, static fn ($s) => in_array($s['status'], $queue, true)));
-        $decision = ($adviserQueue || $deanQueue || $srcQueue) ? (string) ($_GET['decision'] ?? '') : '';
+        $decision = ($adviserQueue || $deanQueue || $srcQueue || $adminQueue) ? (string) ($_GET['decision'] ?? '') : '';
+        if ($adminQueue && !in_array($decision, ['pending', 'accepted'], true)) {
+            $decision = 'pending';
+        }
         if ($srcQueue && !in_array($decision, ['pending', 'accepted'], true)) {
             $decision = '';
         }
@@ -39,7 +43,12 @@ final class ReviewController
             $decision = 'pending';
         }
         if (in_array($decision, ['pending', 'accepted'], true)) {
-            $pending = array_values(array_filter($studies, static function (array $study) use ($decision, $user, $deanQueue, $srcQueue): bool {
+            $pending = array_values(array_filter($studies, static function (array $study) use ($decision, $user, $deanQueue, $srcQueue, $adminQueue): bool {
+                if ($adminQueue) {
+                    return $decision === 'pending'
+                        ? in_array($study['status'] ?? '', ['admin_review', 'library_review'], true)
+                        : in_array($study['status'] ?? '', ['approved', 'archived'], true);
+                }
                 if ($srcQueue) {
                     return $decision === 'pending'
                         ? ($study['status'] ?? '') === 'under_review'

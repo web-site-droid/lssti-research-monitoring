@@ -39,6 +39,15 @@
             'other_studies' => '#adviser-discover',
             default => null,
         } : null;
+        if (($user['role_slug'] ?? '') === 'school_administrator') {
+            $statHref = match ($key) {
+                'pending' => url('review', ['decision' => 'pending']),
+                'accepted' => url('review', ['decision' => 'accepted']),
+                'department_studies' => url('dashboard') . '#dash-studies',
+                'other_studies' => url('dashboard', ['catalog' => 'earlier']) . '#dash-studies',
+                default => null,
+            };
+        }
         if (($user['role_slug'] ?? '') === 'school_research_coordinator') {
             $statHref = match ($key) {
                 'pending' => url('review', ['decision' => 'pending']),
@@ -104,7 +113,7 @@ $schoolWideFilterEmpty = 'No papers in this department.';
 <?php if (!empty($success)): ?><p class="alert alert-success"><?= e($success) ?></p><?php endif; ?>
 <?php if (!empty($error)): ?><p class="alert alert-error"><?= e($error) ?></p><?php endif; ?>
 <section class="card card-elevated">
-    <h2 class="section-title">All departments — full manuscripts</h2>
+    <h2 class="section-title"><?= $isAdminDash && ($_GET['catalog'] ?? '') === 'earlier' ? 'Earlier-stage studies' : 'All departments — full manuscripts' ?></h2>
     <?php if ($isSrcDash): ?>
         <p class="muted">Every research paper school-wide. Full files are available. Open review for ethics, plagiarism, and send to the librarian.</p>
     <?php elseif ($isLibDash): ?>
@@ -114,32 +123,15 @@ $schoolWideFilterEmpty = 'No papers in this department.';
     <?php endif; ?>
 <?php partial('find_bar', [
     'table' => '#dash-studies',
-    'cards' => $isSrcDash ? '' : '#dash-read-cards',
     'empty' => '#dash-studies-empty',
     'papers' => $directorStudies,
     'programs' => $programs,
     'statusOptions' => ['' => 'Any status', 'pending' => 'Pending', 'accepted' => 'Accepted'],
 ]); ?>
-<?php if (!$isSrcDash): ?>
-<p class="muted">Click a card to read the whole file and play it aloud.</p>
-<div class="paper-cards" id="dash-read-cards">
-    <?php foreach ($directorStudies as $paper): ?>
-        <?php if ((int) ($paper['current_version_id'] ?? 0) > 0):
-            $cardStatus = (string) ($paper['status'] ?? '');
-            $cardPending = $isSrcDash ? ['under_review'] : ($isLibDash ? ['library_review'] : ['admin_review', 'library_review']);
-            $cardAccepted = $isSrcDash
-                ? ['library_review', 'admin_review', 'approved', 'archived']
-                : ($isLibDash ? ['admin_review', 'approved', 'archived'] : ['approved', 'archived']);
-            $cardGate = in_array($cardStatus, $cardPending, true) ? 'pending' : (in_array($cardStatus, $cardAccepted, true) ? 'accepted' : '');
-            partial('paper_read_card', ['paper' => $paper, 'gate' => $cardGate]);
-        endif; ?>
-        <?php endforeach; ?>
-</div>
-<?php endif; ?>
 <p id="dash-studies-empty" class="empty-state" hidden data-empty-dept="No papers in that department." data-empty-text="No studies match.">No studies match.</p>
 <div class="table-scroll<?= count($directorStudies) > 10 ? ' is-scroll' : '' ?>">
 <div class="table-wrap dash-board">
-<table class="dashboard-study-table dash-table<?= $isSrcDash ? ' src-study-table' : '' ?>" id="dash-studies" data-sortable>
+<table class="dashboard-study-table dash-table src-study-table" id="dash-studies" data-sortable>
     <thead>
         <tr>
             <th>Title</th>
