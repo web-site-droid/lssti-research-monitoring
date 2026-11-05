@@ -3430,9 +3430,9 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
   margin-top: 0.2rem;
 }
 
-.status-help { border: 1px solid transparent; cursor: help; font-family: inherit; }
-.status-help-label { text-decoration: underline dotted; text-underline-offset: 3px; }
-.status-help-icon { display: inline-flex; align-items: center; justify-content: center; width: 0.9rem; height: 0.9rem; margin-left: 0.4rem; border: 1px solid currentColor; border-radius: 50%; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; }
+.status-help { border: 1px solid transparent; cursor: help; font-family: inherit; display: inline-flex; align-items: center; gap: 0.4rem; vertical-align: middle; appearance: none; }
+.status-help-label { display: inline-block; white-space: nowrap; flex: 0 0 auto; text-decoration: underline dotted; text-underline-offset: 3px; }
+.status-help-icon { display: inline-flex; align-items: center; justify-content: center; width: 0.9rem; height: 0.9rem; border: 1px solid currentColor; border-radius: 50%; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; opacity: 0.8; }
 .status-help:hover, .status-help:focus-visible { border-color: currentColor; }
 .status-help:focus-visible { outline: 2px solid #9ec5fe; outline-offset: 3px; }
 .status-tooltip { position: fixed; z-index: 10000; width: 20rem; max-width: calc(100vw - 24px); box-sizing: border-box; padding: 1rem; border: 1px solid #405570; border-radius: 10px; background: #142338; color: #f2f4f8; box-shadow: 0 8px 30px #0006; font-size: 0.85rem; line-height: 1.5; }
@@ -3441,9 +3441,14 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
 .status-tooltip p { margin: 0.25rem 0 0.75rem; color: #e0e6ee; }
 .status-tooltip p:last-child { margin-bottom: 0; }
 .badge.study-status {
-  white-space: normal;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  width: max-content;
+  flex-shrink: 0;
+  white-space: nowrap;
   max-width: 22rem;
-  line-height: 1.5;
+  line-height: 1.35;
   text-align: left;
   text-transform: none;
   border-radius: 6px;
