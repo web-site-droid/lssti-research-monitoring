@@ -64,25 +64,27 @@ final class AccountAdminController
             flash('error', $error->getMessage()); redirect('admin/setup');
         }
         Audit::log('admin.setup', 'user', $id);
-        flash('success', 'Admin created. Sign out and sign in with its ID no. and temporary password.');
+        flash('success', 'Admin created. Sign out, open Admin sign in, and enter its username and temporary password.');
         redirect('admin/setup');
     }
 
     private function accountData(string $back): array
     {
+        $identity = $back === 'admin/setup' ? 'username' : 'school_id';
+        $identityLabel = $identity === 'username' ? 'Username' : 'ID no.';
         $data = [
-            'school_id' => strtoupper(trim((string) ($_POST['school_id'] ?? ''))),
+            'school_id' => strtoupper(trim((string) ($_POST[$identity] ?? ''))),
             'first_name' => trim((string) ($_POST['first_name'] ?? '')),
             'middle_name' => trim((string) ($_POST['middle_name'] ?? '')),
             'last_name' => trim((string) ($_POST['last_name'] ?? '')),
             'password' => (string) ($_POST['password'] ?? ''), 'is_active' => 1,
         ];
         if ($data['school_id'] === '' || strlen($data['school_id']) > 32 || $data['first_name'] === '' || $data['last_name'] === '' || strlen($data['password']) < 8) {
-            flash('error', 'Enter an ID no. (up to 32 characters), first and last names, and a temporary password of at least 8 characters.');
+            flash('error', 'Enter ' . $identityLabel . ' (up to 32 characters), first and last names, and a temporary password of at least 8 characters.');
             redirect($back);
         }
         if (User::findBySchoolId($data['school_id'])) {
-            flash('error', 'ID no. already has an account.'); redirect($back);
+            flash('error', $identityLabel . ' already has an account.'); redirect($back);
         }
         return $data;
     }

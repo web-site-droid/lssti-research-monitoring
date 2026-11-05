@@ -1,35 +1,35 @@
-<?php $pageTitle = 'Sign in · ' . APP_NAME; ?>
+<?php $adminLogin = !empty($adminLogin); $pageTitle = ($adminLogin ? 'Admin sign in' : 'Sign in') . ' · ' . APP_NAME; ?>
 <div class="login-shell">
     <aside class="login-hero" aria-label="About this system">
         <img class="login-logo" src="<?= e(asset_url('images/lssti-seal.png')) ?>" alt="LSSTI Research Repository" width="80" height="80">
         <p class="login-school">LSSTI</p>
         <h1 class="login-title">Digital Research Repository</h1>
-        <p class="login-tagline">For students, faculty, and staff on the school network. Sign in with your official ID no..</p>
+        <p class="login-tagline"><?= $adminLogin ? 'Admin access for Librarian accounts and activity logs. Sign in with your username and password.' : 'For students, faculty, and staff on the school network. Sign in with your official ID no.' ?></p>
     </aside>
 
     <section class="login-panel" aria-labelledby="login-heading">
         <div class="login-panel-inner">
-            <h2 id="login-heading" class="login-panel-title">Sign in to your account</h2>
+            <h2 id="login-heading" class="login-panel-title"><?= $adminLogin ? 'Admin sign in' : 'Sign in to your account' ?></h2>
 
             <?php if (!empty($error)): ?>
                 <div class="alert alert-error login-alert" role="alert"><?= e($error) ?></div>
             <?php endif; ?>
 
-            <form method="post" action="<?= e(url('login/submit')) ?>" class="login-form">
+            <form method="post" action="<?= e(url($adminLogin ? 'admin/login/submit' : 'login/submit')) ?>" class="login-form">
                 <?= \App\Helpers\Csrf::field() ?>
                 <?php if (!empty($next)): ?>
                     <input type="hidden" name="next" value="<?= e($next) ?>">
                 <?php endif; ?>
                 <div class="form-field">
-                    <label for="school_id">ID no. <span class="req">*</span></label>
+                    <label for="login-identity"><?= $adminLogin ? 'Username' : 'ID no.' ?> <span class="req">*</span></label>
                     <input
                         type="text"
-                        id="school_id"
-                        name="school_id"
+                        id="login-identity"
+                        name="<?= $adminLogin ? 'username' : 'school_id' ?>"
                         class="form-control"
                         required
                         autocomplete="username"
-                        placeholder="e.g. STU-0001"
+                        placeholder="<?= $adminLogin ? 'Enter your username' : 'e.g. STU-0001' ?>"
                         autofocus
                     >
                 </div>
@@ -53,6 +53,7 @@
                 </div>
                 <button type="submit" class="btn btn-primary login-submit"><?= icon('login') ?> Sign in</button>
                 <p class="login-help">Forgot your password or locked out? Visit the Research Office on campus.</p>
+                <p class="login-help"><a href="<?= e(url($adminLogin ? 'login' : 'admin/login')) ?>"><?= $adminLogin ? 'Student and staff sign in' : 'Admin sign in' ?></a></p>
             </form>
         </div>
     </section>

@@ -38,7 +38,7 @@ $initials = strtoupper(substr((string) ($user['first_name'] ?? 'U'), 0, 1) . sub
             ?>
             <div class="profile-landscape">
             <div>
-            <label for="school_id">ID no.</label>
+            <label for="school_id"><?= ($user['role_slug'] ?? '') === \App\Helpers\Role::ACCOUNT_ADMIN ? 'Username' : 'ID no.' ?></label>
             <input id="school_id" value="<?= e($user['school_id']) ?>" readonly>
             </div>
             <div>

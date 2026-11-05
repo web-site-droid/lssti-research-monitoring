@@ -5,6 +5,8 @@ namespace App\Helpers {
     final class Auth {
         public static array $actor = ['id'=>1, 'role_slug'=>'account_admin', 'must_change_password'=>0];
         public static function user(): array { return self::$actor; }
+        public static function check(): bool { return false; }
+        public static function login(array $user): void { $GLOBALS['logged_in']=$user; }
         public static function requireLogin(): void {}
         public static function requireRole($roles): void {
             if (!in_array(self::$actor['role_slug'], (array) $roles, true)) throw new \RuntimeException('forbidden');
@@ -15,13 +17,15 @@ namespace App\Helpers {
 }
 namespace App\Models {
     final class User {
+        public static ?array $loginUser=null;
         public static array $created = [];
         public static array $rows = [
             ['id'=>1, 'role_slug'=>'school_administrator'], ['id'=>2, 'role_slug'=>'student'],
             ['id'=>3, 'role_slug'=>'account_admin'], ['id'=>4, 'role_slug'=>'librarian'],
         ];
         public static function all(): array { return self::$rows; }
-        public static function findBySchoolId($id) { return $id==='TAKEN' ? ['id'=>5] : null; }
+        public static function findBySchoolId($id) { return self::$loginUser !== null ? ($id===self::$loginUser['school_id'] ? self::$loginUser : null) : ($id==='TAKEN' ? ['id'=>5] : null); }
+        public static function passwordMatches($hash,$password): bool { return password_verify($password,$hash); }
         public static function findRoleBySlug($slug): ?array {
             if ($slug==='school_administrator') return ['id'=>1];
             return $GLOBALS['fixture']->roleCreated ? ['id'=>10] : null;
@@ -32,6 +36,7 @@ namespace App\Models {
             return 20;
         }
     }
+    final class LoginLog { public static function record(...$args): void {} }
 }
 namespace {
     final class Fixture {
@@ -51,6 +56,7 @@ namespace {
     }
     function db(): Fixture {return $GLOBALS['fixture'];}
     function flash(...$args) {return null;}
+    function is_post(): bool {return true;}
     function view($name,$data): void {$GLOBALS['view']=[$name,$data];}
     function e($value): string {return htmlspecialchars((string)$value,ENT_QUOTES,'UTF-8');}
     function url($route,$params=[]): string {return 'index.php?'.http_build_query(['route'=>$route]+$params);}
@@ -90,7 +96,7 @@ namespace {
     foreach($GLOBALS['fixture']->params as $params)check($params===['uid'=>1],'Bound user filter');
     expect(fn()=>$controller->setupSubmit(),'forbidden');
     Auth::$actor['role_slug']='school_administrator';expect(fn()=>$controller->create(),'forbidden');
-    $_POST['school_id']='ADMIN-NEW';expect(fn()=>$controller->setupSubmit(),'redirect:admin/setup');
+    $_POST['username']='ADMIN-NEW';expect(fn()=>$controller->setupSubmit(),'redirect:admin/setup');
     check(User::$created['role_id']===10 && User::$created['program_id']===null,'Setup creates distinct Admin');
     expect(fn()=>LibrarianAccounts::createAdmin($_POST,1),'An Admin account already exists. Setup is closed.');
     check(!$GLOBALS['fixture']->inTransaction(),'Setup failure rolls back');
@@ -106,5 +112,20 @@ namespace {
     check(str_contains($html,'id="account-admin-create"')&&str_contains($html,'admin%2Faccounts%2Fcreate'),'Creation dialog rendered');
     $exists=true;ob_start();require __DIR__.'/../app/views/account_admin/setup.php';$closed=ob_get_clean();
     check(!str_contains($closed,'<form')&&str_contains($closed,'already configured'),'Closed setup has no creation form');
+    require __DIR__.'/../app/controllers/AuthController.php';
+    $authController=new \App\Controllers\AuthController();
+    User::$loginUser=['id'=>30,'school_id'=>'MYADMIN','role_slug'=>'account_admin','is_active'=>1,'must_change_password'=>0,'password_hash'=>password_hash('Temporary!123',PASSWORD_DEFAULT)];
+    $_POST=['username'=>'myadmin','password'=>'Temporary!123'];
+    expect(fn()=>$authController->adminLoginSubmit(),'redirect:admin/accounts');
+    check(($GLOBALS['logged_in']['id']??null)===30,'Username login accepts Admin');
+    unset($GLOBALS['logged_in']);$_POST['password']='wrong';
+    expect(fn()=>$authController->adminLoginSubmit(),'redirect:admin/login');
+    check(!isset($GLOBALS['logged_in']),'Invalid password does not log in');
+    $_POST['password']='Temporary!123';User::$loginUser['role_slug']='school_administrator';
+    expect(fn()=>$authController->adminLoginSubmit(),'redirect:admin/login');
+    check(!isset($GLOBALS['logged_in']),'Librarian cannot use Admin login');
+    User::$loginUser['role_slug']='account_admin';$_POST=['school_id'=>'MYADMIN','password'=>'Temporary!123'];
+    expect(fn()=>$authController->loginSubmit(),'redirect:admin/login');
+    check(!isset($GLOBALS['logged_in']),'Admin is directed to username login');
     echo 'Passed '.$GLOBALS['checks'].' Admin authorization checks.'.PHP_EOL;
 }

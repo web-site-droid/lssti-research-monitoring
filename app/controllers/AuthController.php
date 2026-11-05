@@ -12,32 +12,50 @@ use App\Models\User;
 
 final class AuthController
 {
-    public function loginForm(): void
+    public function adminLoginForm(): void
+    {
+        $this->loginForm(true);
+    }
+
+    public function adminLoginSubmit(): void
+    {
+        $this->loginSubmit(true);
+    }
+
+    public function loginForm(bool $adminLogin = false): void
     {
         if (Auth::check()) {
             redirect($this->safeNext((string) ($_GET['next'] ?? '')) ?? 'dashboard');
         }
         view('auth/login', [
+            'adminLogin' => $adminLogin,
             'error' => flash('error'),
             'next' => $this->safeNext((string) ($_GET['next'] ?? '')) ?? '',
         ], 'auth');
     }
 
-    public function loginSubmit(): void
+    public function loginSubmit(bool $adminLogin = false): void
     {
+        $loginRoute = $adminLogin ? 'admin/login' : 'login';
         if (!is_post()) {
-            redirect('login');
+            redirect($loginRoute);
         }
         Csrf::requireValid();
 
-        $schoolId = strtoupper(trim((string) ($_POST['school_id'] ?? '')));
+        $schoolId = strtoupper(trim((string) ($_POST[$adminLogin ? 'username' : 'school_id'] ?? '')));
         $password = (string) ($_POST['password'] ?? '');
         $user = User::findBySchoolId($schoolId);
 
-        if (!$user || !(int) $user['is_active'] || !User::passwordMatches((string) $user['password_hash'], $password)) {
+        if (!$user || !(int) $user['is_active']
+            || ($adminLogin && ($user['role_slug'] ?? '') !== \App\Helpers\Role::ACCOUNT_ADMIN)
+            || !User::passwordMatches((string) $user['password_hash'], $password)) {
             LoginLog::record($user['id'] ?? null, $schoolId, 'login_failed');
-            flash('error', 'Invalid ID no. or password.');
-            redirect('login');
+            flash('error', $adminLogin ? 'Invalid username or password.' : 'Invalid ID no. or password.');
+            redirect($loginRoute);
+        }
+        if (!$adminLogin && ($user['role_slug'] ?? '') === \App\Helpers\Role::ACCOUNT_ADMIN) {
+            flash('error', 'Use Admin sign in with your username and password.');
+            redirect('admin/login');
         }
         if (!str_starts_with((string) $user['password_hash'], '$2y$') && !str_starts_with((string) $user['password_hash'], '$argon2')) {
             User::updatePassword((int) $user['id'], $password, false);
