@@ -3430,6 +3430,7 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
   margin-top: 0.2rem;
 }
 
+.badge.study-status { white-space: normal; max-width: 24rem; line-height: 1.45; text-align: left; }
 .review-table td.review-study-title { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; min-width: 16rem; line-height: 1.5; }
 .stat-card-link { display: block; color: inherit; text-decoration: none; transition: border-color 0.15s, background 0.15s; }
 .stat-card-link:hover { color: inherit; border-color: #9ec5fe; background: var(--card-2); }

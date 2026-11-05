@@ -265,14 +265,32 @@ function study_type_options(): array
     ];
 }
 
+function study_status_label(?string $status): string
+{
+    return match (strtolower(trim((string) $status))) {
+        'draft' => 'Draft - awaiting student submission',
+        'submitted', 'resubmitted' => 'With Research Adviser',
+        'adviser_reviewed' => 'Adviser approved - student must forward to Department Research Coordinator',
+        'pending' => 'With Department Research Coordinator',
+        'dean_review' => 'With Dean',
+        'under_review', 'ethics_review' => 'With School Research Coordinator',
+        'library_review', 'admin_review' => 'With Librarian - awaiting final publication',
+        'revision_requested' => 'With Student - revisions requested',
+        'approved' => 'Published in the repository',
+        'archived' => 'Not approved - archived',
+        '' => 'Status unavailable',
+        default => ucwords(str_replace('_', ' ', (string) $status)),
+    };
+}
+
 function status_badge(?string $status, ?string $label = null): string
 {
     $status = strtolower(trim((string) $status));
     $class = preg_replace('/[^a-z0-9_-]/', '', $status) ?: 'other';
     $text = $label !== null && $label !== ''
         ? $label
-        : ($status === '' ? '—' : ucwords(str_replace('_', ' ', $status)));
-    return '<span class="badge is-' . e($class) . '">' . e($text) . '</span>';
+        : study_status_label($status);
+    return '<span class="badge study-status is-' . e($class) . '">' . e($text) . '</span>';
 }
 
 function paper_find_attrs(array $paper): string

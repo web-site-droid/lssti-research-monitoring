@@ -49,7 +49,7 @@ $ownDepartment = $adviserQueue || $deanQueue;
             <?php if (!$ownDepartment): ?>
             <th>Department</th>
             <?php endif; ?>
-            <th><?= $adviserQueue ? 'Decision' : 'Academic year' ?></th>
+            <th><?= $adviserQueue ? 'Current stage' : 'Academic year' ?></th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -68,7 +68,7 @@ $ownDepartment = $adviserQueue || $deanQueue;
             <?php endif; ?>
             <td>
                 <?php if ($adviserQueue): ?>
-                    <span class="status-pill <?= $accepted ? 'is-on' : 'is-study' ?>"><?= $accepted ? 'Accepted' : 'Pending' ?></span>
+                    <?= status_badge((string) $s['status']) ?>
                 <?php else: ?>
                     <?= e($s['school_year'] ?? '') ?>
                 <?php endif; ?>
