@@ -30,13 +30,21 @@ final class ReviewController
             default => ['under_review'],
         };
         $pending = array_values(array_filter($studies, static fn ($s) => in_array($s['status'], $queue, true)));
-        $decision = $adviserQueue ? (string) ($_GET['decision'] ?? '') : '';
+        $decision = ($adviserQueue || $deanQueue) ? (string) ($_GET['decision'] ?? '') : '';
+        if ($deanQueue && !in_array($decision, ['pending', 'accepted'], true)) {
+            $decision = 'pending';
+        }
         if (in_array($decision, ['pending', 'accepted'], true)) {
-            $pending = array_values(array_filter($studies, static function (array $study) use ($decision, $user): bool {
+            $pending = array_values(array_filter($studies, static function (array $study) use ($decision, $user, $deanQueue): bool {
                 if ((int) ($study['program_id'] ?? 0) !== (int) ($user['program_id'] ?? 0)) {
                     return false;
                 }
                 $status = $study['status'] ?? '';
+                if ($deanQueue) {
+                    return $decision === 'pending'
+                        ? $status === 'dean_review'
+                        : in_array($status, ['under_review', 'library_review', 'admin_review', 'approved', 'archived'], true);
+                }
                 return $decision === 'pending'
                     ? in_array($status, ['submitted', 'revision_requested'], true)
                     : !in_array($status, ['submitted', 'revision_requested', 'draft'], true);

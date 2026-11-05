@@ -39,6 +39,15 @@
             'other_studies' => '#adviser-discover',
             default => null,
         } : null;
+        if (($user['role_slug'] ?? '') === 'dean') {
+            $statHref = match ($key) {
+                'pending' => url('review', ['decision' => 'pending']),
+                'accepted' => url('review', ['decision' => 'accepted']),
+                'department_studies' => '#dean-dept-table',
+                'other_studies' => '#dean-other-table',
+                default => null,
+            };
+        }
         if (($user['role_slug'] ?? '') === 'dept_research_coordinator') {
             $statHref = match ($key) {
                 'pending' => url('library', ['decision' => 'pending']),
@@ -392,25 +401,12 @@ $deanQueue = $uploads ?? [];
     <p class="muted">All studies in your department — full manuscript available. Items at dean review can be sent to the school research coordinator.</p>
     <?php partial('find_bar', [
         'table' => '#dean-dept-table',
-        'cards' => '#dean-read-cards',
         'empty' => '#dean-dept-table-empty',
         'papers' => $deptCatalog,
         'programs' => $programs ?? [],
         'statusOptions' => ['' => 'Any status', 'pending' => 'Pending', 'accepted' => 'Accepted'],
         'showDepartment' => false,
     ]); ?>
-    <p class="muted">Click a card to read the whole file and play it aloud.</p>
-    <div class="paper-cards" id="dean-read-cards">
-        <?php foreach ($deptCatalog as $paper): ?>
-            <?php if ((int) ($paper['current_version_id'] ?? 0) > 0):
-                $cardStatus = (string) ($paper['status'] ?? '');
-                $cardGate = $cardStatus === 'dean_review'
-                    ? 'pending'
-                    : (in_array($cardStatus, ['under_review', 'library_review', 'admin_review', 'approved', 'archived'], true) ? 'accepted' : '');
-                partial('paper_read_card', ['paper' => $paper, 'gate' => $cardGate]);
-            endif; ?>
-        <?php endforeach; ?>
-    </div>
     <p id="dean-dept-table-empty" class="empty-state" hidden data-empty-text="No studies match.">No studies match.</p>
     <div class="table-scroll<?= count($deptCatalog) > 10 ? ' is-scroll' : '' ?>">
     <div class="table-wrap">

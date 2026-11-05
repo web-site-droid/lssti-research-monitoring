@@ -3430,15 +3430,15 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
   margin-top: 0.2rem;
 }
 
-#drc-dept-table, #drc-other-table, #department-review-table { table-layout: fixed; min-width: 56rem; }
-#drc-dept-table th:first-child, #drc-other-table th:first-child { width: 38%; }
+:is(#drc-dept-table, #dean-dept-table), :is(#drc-other-table, #dean-other-table), #department-review-table { table-layout: fixed; min-width: 56rem; }
+:is(#drc-dept-table, #dean-dept-table) th:first-child, :is(#drc-other-table, #dean-other-table) th:first-child { width: 38%; }
 #department-review-table th:first-child { width: 46%; }
 #department-review-table th:nth-child(2) { width: 20%; }
 #department-review-table th:nth-child(3) { width: 18%; }
 #department-review-table th:last-child { width: 16%; }
-#drc-dept-table th, #drc-other-table th, #department-review-table th { background: #112034 !important; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 1rem; }
-#drc-dept-table td, #drc-other-table td, #department-review-table td { padding: 1.1rem 1rem; vertical-align: top; line-height: 1.6; font-size: 0.85rem; }
-#drc-dept-table td:first-child, #drc-other-table td:first-child { font-weight: 600; white-space: normal; overflow-wrap: anywhere; }
+:is(#drc-dept-table, #dean-dept-table) th, :is(#drc-other-table, #dean-other-table) th, #department-review-table th { background: #112034 !important; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 1rem; }
+:is(#drc-dept-table, #dean-dept-table) td, :is(#drc-other-table, #dean-other-table) td, #department-review-table td { padding: 1.1rem 1rem; vertical-align: top; line-height: 1.6; font-size: 0.85rem; }
+:is(#drc-dept-table, #dean-dept-table) td:first-child, :is(#drc-other-table, #dean-other-table) td:first-child { font-weight: 600; white-space: normal; overflow-wrap: anywhere; }
 #department-review-table .btn { white-space: nowrap; }
 .adviser-section-nav a[aria-current="page"] { color: #dceaff; border-color: #597a9f; background: #1b304c; }
 .adviser-section-nav + .find-board { margin-top: 1rem; }
