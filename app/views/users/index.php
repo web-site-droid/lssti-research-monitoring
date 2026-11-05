@@ -14,7 +14,7 @@ $editRoles = $editRoles ?? $roles ?? [];
         } elseif (!empty($canManageDepartments)) {
             echo 'Add people and assign a department.';
         } elseif ($deanMode) {
-            echo 'View accounts you added in your department and assign or reset their temporary passwords. Account details cannot be edited.';
+            echo 'View accounts you added in your department. Select View account to see their details.';
         } elseif ($coordinatorMode) {
             echo 'Research advisers and students in your department' . ($departmentLabel !== '' ? ' (' . e($departmentLabel) . ')' : '') . '.';
         } elseif ($adviserMode) {
@@ -26,6 +26,7 @@ $editRoles = $editRoles ?? $roles ?? [];
 </div>
 <?php if (!empty($success)): ?><p class="alert alert-success"><?= e($success) ?></p><?php endif; ?>
 <?php if (!empty($error)): ?><p class="alert alert-error"><?= e($error) ?></p><?php endif; ?>
+<?php if (!$deanMode): ?>
 <section class="card card-elevated import-card">
     <h2 class="section-title">Import from Excel</h2>
     <p class="lead"><?php
@@ -62,6 +63,7 @@ $editRoles = $editRoles ?? $roles ?? [];
 <p class="toolbar">
     <button type="button" class="btn btn-primary" data-open-add <?= $deptMode && $departmentLabel === '' ? 'disabled' : '' ?>><?= icon('user-plus') ?> <?= $deptMode ? 'Add account' : 'Add person' ?></button>
 </p>
+<?php endif; ?>
 <?php
 $departments = [];
 foreach ($users as $person) {
@@ -95,7 +97,7 @@ ksort($departments);
 </div>
 <p id="people-table-empty" class="empty-state" hidden>No accounts match.</p>
 <div class="table-wrap">
-<table class="data-table" data-sortable id="people-table">
+<table class="data-table<?= $deanMode ? ' dean-people-table' : '' ?>" data-sortable id="people-table">
     <thead><tr><th>School ID</th><th>Name</th><th>Role</th><th>Department</th><th>Active</th><th data-nosort>Actions</th></tr></thead>
     <tbody>
     <?php foreach ($users as $u): ?>
@@ -109,17 +111,12 @@ ksort($departments);
             <td class="actions-cell">
                 <div class="actions">
                 <?php if ($deanMode): ?>
-                <details class="dean-password-reset">
-                    <summary>Set / reset password</summary>
-                    <form method="post" action="<?= e(url('users/reset-password')) ?>" class="stack">
-                        <?= \App\Helpers\Csrf::field() ?>
-                        <input type="hidden" name="id" value="<?= (int) $u['id'] ?>">
-                        <label for="dean-password-<?= (int) $u['id'] ?>">New temporary password</label>
-                        <input id="dean-password-<?= (int) $u['id'] ?>" name="password" value="<?= e(\App\Helpers\UserImport::DEFAULT_PASSWORD) ?>" minlength="8" required autocomplete="off">
-                        <p class="muted">Share this temporary password with the user. They must change it after signing in.</p>
-                        <button type="submit" class="btn btn-secondary"><?= icon('key') ?> Reset password</button>
-                    </form>
-                </details>
+                <button type="button" class="btn btn-secondary btn-sm" data-dean-view
+                    data-account-name="<?= e(trim($u['first_name'] . ' ' . ($u['middle_name'] ?? '') . ' ' . $u['last_name'])) ?>"
+                    data-account-school-id="<?= e($u['school_id']) ?>"
+                    data-account-role="<?= e($u['role_name']) ?>"
+                    data-account-department="<?= e(trim(($u['program_code'] ?? '') . ' - ' . ($u['program_name'] ?? ''), ' -')) ?>"
+                    data-account-active="<?= (int) $u['is_active'] ? 'Active' : 'Inactive' ?>"><?= icon('eye') ?> View account</button>
                 <?php else: ?>
                 <button type="button" class="btn btn-secondary btn-sm" data-edit-account
                     data-id="<?= (int) $u['id'] ?>"
@@ -140,6 +137,22 @@ ksort($departments);
     </tbody>
 </table>
 </div>
+<?php if ($deanMode): ?>
+<?php $pageScripts = array_merge($pageScripts ?? [], ['dean-people.js']); ?>
+<dialog id="dean-account-dialog" class="preview-modal dean-account-dialog" aria-labelledby="dean-account-title">
+        <div class="preview-modal-head">
+            <h2 id="dean-account-title">Account details</h2>
+            <button type="button" class="btn btn-secondary btn-icon-only" data-dean-view-close aria-label="Close"><?= icon('x') ?></button>
+        </div>
+        <p class="muted">Read-only account information</p>
+        <dl class="dean-account-details">
+            <?php foreach (['name' => 'Full name', 'school-id' => 'School ID', 'role' => 'Role', 'department' => 'Department', 'active' => 'Account status'] as $key => $label): ?>
+            <div><dt><?= e($label) ?></dt><dd data-dean-detail="<?= e($key) ?>"></dd></div>
+            <?php endforeach; ?>
+        </dl>
+        <div class="actions"><button type="button" class="btn btn-secondary" data-dean-view-close>Close</button></div>
+</dialog>
+<?php endif; ?>
 <?php if (!$deanMode): ?>
 <dialog id="edit-account" class="preview-modal profile-modal" data-open-edit="<?= (int) ($openEdit ?? 0) ?>" data-actor-id="<?= (int) ((\App\Helpers\Auth::user()['id'] ?? 0)) ?>" data-manage-dept="<?= !empty($canManageDepartments) ? '1' : '0' ?>" data-assign-dept="<?= !empty($canAssignUserDepartment) ? '1' : '0' ?>">
     <form method="post" action="<?= e(url('users/edit/submit')) ?>" class="profile-editor stack">
@@ -230,6 +243,7 @@ ksort($departments);
     </form>
 </dialog>
 <?php endif; ?>
+<?php if (!$deanMode): ?>
 <dialog id="add-account" class="preview-modal profile-modal" data-open-add="<?= !empty($openAdd) ? '1' : '0' ?>">
     <form method="post" action="<?= e(url('users/create/submit')) ?>" class="profile-editor stack">
         <?= \App\Helpers\Csrf::field() ?>
@@ -307,3 +321,4 @@ ksort($departments);
         <?php endif; ?>
     </form>
 </dialog>
+<?php endif; ?>

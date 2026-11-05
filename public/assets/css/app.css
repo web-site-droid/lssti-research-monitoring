@@ -3442,9 +3442,16 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
 #department-review-table .btn { white-space: nowrap; }
 .adviser-section-nav a[aria-current="page"] { color: #dceaff; border-color: #597a9f; background: #1b304c; }
 .adviser-section-nav + .find-board { margin-top: 1rem; }
-.dean-password-reset { max-width: 22rem; text-align: left; }
-.dean-password-reset summary { color: #b6cef1; cursor: pointer; padding: 0.5rem 0; white-space: nowrap; }
-.dean-password-reset form { margin-top: 0.65rem; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--card-2); min-width: 15rem; }
+.dean-people-table { min-width: 50rem; }
+.dean-people-table th { background: #112034 !important; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 1rem; }
+.dean-people-table td { padding: 1rem; vertical-align: middle; }
+.dean-people-table .actions { margin: 0; }
+.dean-people-table .btn { white-space: nowrap; }
+.dean-account-dialog { width: min(30rem, calc(100vw - 2rem)); padding: 1.5rem; }
+.dean-account-details { margin: 1.25rem 0; }
+.dean-account-details > div { padding: 0.85rem 0; border-bottom: 1px solid var(--border); }
+.dean-account-details dt { color: var(--text-muted); font-size: 0.75rem; margin-bottom: 0.3rem; }
+.dean-account-details dd { color: var(--text); margin: 0; font-weight: 500; overflow-wrap: anywhere; }
 .status-help { border: 1px solid transparent; cursor: help; font-family: inherit; display: inline-flex; align-items: center; gap: 0.4rem; vertical-align: middle; appearance: none; }
 .status-help-label { display: inline-block; white-space: nowrap; flex: 0 0 auto; text-decoration: underline dotted; text-underline-offset: 3px; }
 .status-help-icon { display: inline-flex; align-items: center; justify-content: center; width: 0.9rem; height: 0.9rem; border: 1px solid currentColor; border-radius: 50%; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; opacity: 0.8; }

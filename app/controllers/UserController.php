@@ -93,11 +93,13 @@ final class UserController
 
     public function createForm(): void
     {
+        $this->denyDeanAccountChanges();
         redirect('users', ['add' => 1]);
     }
 
     public function createSubmit(): void
     {
+        $this->denyDeanAccountChanges();
         Csrf::requireValid();
         $data = [
             'school_id' => trim($_POST['school_id'] ?? ''),
@@ -172,7 +174,7 @@ final class UserController
     public function editForm(): void
     {
         if ((Auth::user()['role_slug'] ?? '') === Role::DEAN) {
-            flash('error', 'Deans can view their added accounts and reset passwords, but cannot edit accounts.');
+            flash('error', 'Dean account access is view-only.');
             redirect('users');
         }
         $id = (int) ($_GET['id'] ?? 0);
@@ -270,6 +272,7 @@ final class UserController
 
     public function resetPasswordSubmit(): void
     {
+        $this->denyDeanAccountChanges();
         Csrf::requireValid();
         $id = (int) ($_POST['id'] ?? 0);
         $actor = Auth::user();
@@ -314,6 +317,7 @@ final class UserController
 
     public function importTemplate(): void
     {
+        $this->denyDeanAccountChanges();
         $binary = Spreadsheet::xlsx(UserImport::templateSheets());
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment; filename="LSSTI-account-format.xlsx"');
@@ -325,6 +329,7 @@ final class UserController
 
     public function importSubmit(): void
     {
+        $this->denyDeanAccountChanges();
         Csrf::requireValid();
         $file = $_FILES['file'] ?? null;
         if (!is_array($file) || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
@@ -477,6 +482,14 @@ final class UserController
     }
 
     /** @return list<string> */
+    private function denyDeanAccountChanges(): void
+    {
+        if ((Auth::user()['role_slug'] ?? '') === Role::DEAN) {
+            flash('error', 'Dean account access is view-only.');
+            redirect('users');
+        }
+    }
+
     private function creatableSlugs(string $actorSlug): array
     {
         return match ($actorSlug) {
