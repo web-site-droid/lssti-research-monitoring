@@ -4,6 +4,7 @@ $status = $study['status'] ?? 'draft';
 $skipAdviser = !empty($skipAdviser);
 $step = Workflow::studyProgressStep($status, $skipAdviser);
 $labels = Workflow::progressLabels($skipAdviser);
+$published = $status === 'approved';
 $detail = match ($status) {
     'approved' => 'The librarian published this study.',
     'admin_review' => 'Waiting for the librarian to publish.',
@@ -23,15 +24,16 @@ $detail = match ($status) {
 ?>
 <ol class="progress-track" aria-label="Study progress">
     <?php foreach ($labels as $i => $label): ?>
-        <?php $n = $i + 1; $active = $n <= $step; ?>
-        <li class="progress-step <?= $active ? 'is-active' : '' ?> <?= $n === $step ? 'is-current' : '' ?>">
+        <?php $n = $i + 1; $active = $n <= $step; $complete = $published || $n < $step; ?>
+        <li class="progress-step <?= $active ? 'is-active' : '' ?> <?= $complete ? 'is-complete' : '' ?> <?= !$published && $n === $step ? 'is-current' : '' ?>">
             <div class="progress-rail">
-                <span class="progress-dot"><?= $n ?></span>
+                <span class="progress-dot"><?= $complete ? icon('check') : $n ?></span>
                 <?php if ($n < count($labels)): ?><span class="progress-line <?= $n < $step ? 'is-active' : '' ?>"></span><?php endif; ?>
             </div>
-            <span class="progress-label"><?= e($label) ?></span>
+            <span class="progress-label"><?= e($label) ?><?php if ($complete): ?><span class="visually-hidden"> — completed</span><?php endif; ?></span>
+            <?php if ($published && $n === count($labels)): ?><span class="progress-step-result">Finished</span><?php endif; ?>
         </li>
     <?php endforeach; ?>
 </ol>
-<p class="status-line">Now: <?= status_badge((string) $status, (string) ($labels[$step - 1] ?? $labels[0])) ?></p>
+<p class="status-line"><?= $published ? 'Completed: ' : 'Now: ' ?><?= status_badge((string) $status, $published ? 'Published' : (string) ($labels[$step - 1] ?? $labels[0])) ?></p>
 <p class="muted"><?= e($detail) ?></p>

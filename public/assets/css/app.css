@@ -3647,6 +3647,11 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
 .student-scholar-list .student-abstract-link:hover { text-decoration: underline; }
 .scholar-results .scholar-hit { border: 0; }
 .scholar-results:empty { display: none; }
+.published-track-day { margin-top: 1.5rem; }
+.published-track-day > h3 { color: var(--text-muted); font-size: 0.9rem; margin: 0 0 0.75rem; }
+.progress-step.is-complete .progress-dot { background: #214c38; color: #b4edcb; }
+.progress-dot .btn-icon { width: 1rem; height: 1rem; }
+.progress-step-result { color: #9ae6b4; font-size: 0.75rem; font-weight: 600; margin-top: 0.2rem; }
 .scholar-results mark.search-term { background: #f1cf77; color: #132034; font-weight: 700; border-radius: 2px; padding: 0 0.1em; }
 #dept-paper-cards[hidden] { display: none !important; }
 /* Student results stay in a list, with feedback for mouse and keyboard navigation. */

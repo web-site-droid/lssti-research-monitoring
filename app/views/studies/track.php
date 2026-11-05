@@ -50,6 +50,13 @@ foreach ($tableStudies as $study) {
     }
 }
 $hasAny = $tableStudies !== [] || $waitingStudies !== [];
+usort($approved, static fn (array $a, array $b): int => strcmp((string) ($b['approved_at'] ?? ''), (string) ($a['approved_at'] ?? '')));
+$publishedByDay = [];
+foreach ($approved as $paper) {
+    $day = !empty($paper['approved_at']) ? substr((string) $paper['approved_at'], 0, 10) : '';
+    $publishedByDay[$day][] = $paper;
+}
+$showPublished = $inReview === [] && $approved !== [];
 ?>
 <?php if ($waitingView): ?>
 <?php if ($waitingStudies === []): ?>
@@ -126,12 +133,12 @@ $hasAny = $tableStudies !== [] || $waitingStudies !== [];
 </ul>
 <?php endif; ?>
 <div class="track-fuse" role="group" aria-label="Study lists">
-    <button type="button" class="is-on" data-track-panel="review" aria-pressed="true">In review</button>
-    <button type="button" data-track-panel="approved" aria-pressed="false">Approved</button>
+    <button type="button" class="<?= !$showPublished ? 'is-on' : '' ?>" data-track-panel="review" aria-pressed="<?= !$showPublished ? 'true' : 'false' ?>">In review</button>
+    <button type="button" class="<?= $showPublished ? 'is-on' : '' ?>" data-track-panel="approved" aria-pressed="<?= $showPublished ? 'true' : 'false' ?>">Published</button>
 </div>
 <div class="card card-elevated track-board">
 <div class="paper-tables track-panels">
-    <section class="paper-group" data-panel="review">
+    <section class="paper-group" data-panel="review" <?= $showPublished ? 'hidden' : '' ?>>
         <?php if ($inReview === []): ?>
             <p class="empty-state">No studies in review.</p>
         <?php else: ?>
@@ -157,31 +164,25 @@ $hasAny = $tableStudies !== [] || $waitingStudies !== [];
         </div>
         <?php endif; ?>
     </section>
-    <section class="paper-group" data-panel="approved" hidden>
-        <h2 class="visually-hidden">Approved</h2>
+    <section class="paper-group" data-panel="approved" <?= !$showPublished ? 'hidden' : '' ?>>
+        <h2 class="section-title">Published by date</h2>
         <?php if ($approved === []): ?>
-            <p class="empty-state">No approved studies yet.</p>
+            <p class="empty-state">No published studies yet.</p>
         <?php else: ?>
-        <div class="table-wrap">
-            <table class="data-table paper-table">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($approved as $study): ?>
-                        <tr>
-                            <td><a href="<?= e(url('studies/view', ['id' => $study['id']])) ?>"><?= e($study['short_title']) ?></a></td>
-                            <td><?= e(study_type_label($study['study_type'] ?? '')) ?></td>
-                            <td><?= e($statusLabel($study['status'])) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+        <?php foreach ($publishedByDay as $day => $papers): ?>
+        <section class="published-track-day">
+            <h3><?= $day !== '' ? e(date('F j, Y', strtotime($day))) : 'Publication date unavailable' ?></h3>
+            <ul class="track-list">
+            <?php foreach ($papers as $study): ?>
+                <li>
+                    <p class="study-main"><a class="study-title" href="<?= e(url('studies/view', ['id' => $study['id']])) ?>"><?= e($study['title']) ?></a></p>
+                    <p class="publication-timestamp">Published: <?= e(publication_timestamp_label($study['approved_at'] ?? null)) ?></p>
+                    <?php partial('study_progress', ['study' => $study, 'skipAdviser' => $adviserTrack]); ?>
+                </li>
+            <?php endforeach; ?>
+            </ul>
+        </section>
+        <?php endforeach; ?>
         <?php endif; ?>
     </section>
 </div>
