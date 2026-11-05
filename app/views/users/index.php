@@ -80,7 +80,7 @@ ksort($departments);
 ?>
 <div class="people-filters">
     <label class="table-search">Search accounts
-        <input type="search" data-table-filter="#people-table" placeholder="<?= ($adviserMode || $coordinatorMode) ? 'Name, school ID, or role' : 'Name, school ID, role, or department' ?>">
+        <input type="search" data-table-filter="#people-table" placeholder="<?= ($adviserMode || $coordinatorMode) ? 'Name, ID no., or role' : 'Name, ID no., role, or department' ?>">
     </label>
     <?php if (!$adviserMode && !$coordinatorMode): ?>
     <label class="table-search is-filter" for="people-dept-filter">Department
@@ -96,7 +96,7 @@ ksort($departments);
 <p id="people-table-empty" class="empty-state" hidden>No accounts match.</p>
 <div class="table-wrap">
 <table class="data-table<?= $deanMode ? ' dean-people-table' : '' ?>" data-sortable id="people-table">
-    <thead><tr><th>School ID</th><th>Name</th><th>Role</th><th>Department</th><th>Active</th><th data-nosort>Actions</th></tr></thead>
+    <thead><tr><th>ID no.</th><th>Name</th><th>Role</th><th>Department</th><th>Active</th><th data-nosort>Actions</th></tr></thead>
     <tbody>
     <?php foreach ($users as $u): ?>
         <?php $programCode = trim((string) ($u['program_code'] ?? '')); ?>
@@ -144,7 +144,7 @@ ksort($departments);
         </div>
         <p class="muted">Read-only account information</p>
         <dl class="dean-account-details">
-            <?php foreach (['name' => 'Full name', 'school-id' => 'School ID', 'role' => 'Role', 'department' => 'Department', 'active' => 'Account status'] as $key => $label): ?>
+            <?php foreach (['name' => 'Full name', 'school-id' => 'ID no.', 'role' => 'Role', 'department' => 'Department', 'active' => 'Account status'] as $key => $label): ?>
             <div><dt><?= e($label) ?></dt><dd data-dean-detail="<?= e($key) ?>"></dd></div>
             <?php endforeach; ?>
         </dl>
@@ -165,7 +165,7 @@ ksort($departments);
         <?php endif; ?>
         <div class="profile-landscape">
             <div>
-                <label for="edit-school-id">School ID</label>
+                <label for="edit-school-id">ID no.</label>
                 <input id="edit-school-id" readonly>
             </div>
             <div>
@@ -253,7 +253,7 @@ ksort($departments);
         <?php else: ?>
         <div class="profile-landscape">
             <div>
-                <label for="add-school-id">School ID <span class="req">*</span></label>
+                <label for="add-school-id">ID no. <span class="req">*</span></label>
                 <input id="add-school-id" name="school_id" required autocomplete="off">
             </div>
             <div>

@@ -22,7 +22,7 @@ $uploadMb = \App\Helpers\FileUpload::maxMb();
         <ol class="guide-steps">
             <li>Your adviser checks the paper first.</li>
             <li>After that, send it from <strong>Waiting</strong> to the dept research coordinator.</li>
-            <li>Then it goes Dean → School Research Coordinator → School Administrator.</li>
+            <li>Then it goes Dean → School Research Coordinator → Librarian.</li>
             <li>Watch progress on <strong>Track</strong>. If a revision is requested, open the study and upload a new file.</li>
         </ol>
         <p class="muted">Home lists published papers in your department. Other students see title and abstract only, not the full file.</p>
@@ -56,7 +56,7 @@ $uploadMb = \App\Helpers\FileUpload::maxMb();
         <ol class="guide-steps">
             <li>Open <strong>Home</strong> for school-wide papers. Full files are available.</li>
             <li>Record ethics, format, and plagiarism checks.</li>
-            <li>Send cleared studies to the school administrator.</li>
+            <li>Send cleared studies to the librarian.</li>
         </ol>
     <?php elseif ($guideRole === Role::SCHOOL_ADMINISTRATOR): ?>
         <h3>What to do</h3>
@@ -69,5 +69,5 @@ $uploadMb = \App\Helpers\FileUpload::maxMb();
         <p>Use Home to open your dashboard, then follow the buttons for your role.</p>
     <?php endif; ?>
     <h3>Review path</h3>
-    <p class="guide-path">Student → Research Adviser → Dept Research Coordinator → Dean → School Research Coordinator → School Administrator</p>
+    <p class="guide-path">Student → Research Adviser → Dept Research Coordinator → Dean → School Research Coordinator → Librarian</p>
 </dialog>

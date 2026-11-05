@@ -18,8 +18,8 @@
         'pending' => 'With dept research coordinator',
         'dean_review' => 'With dean',
         'under_review' => 'With school research coordinator',
-        'library_review' => 'With school administrator',
-        'admin_review' => 'With school administrator',
+        'library_review' => 'With librarian',
+        'admin_review' => 'With librarian',
         default => ucwords(str_replace('_', ' ', (string) ($study['status'] ?? ''))),
     }) ?></p>
     <h3>Abstract</h3>
@@ -58,7 +58,7 @@
         <?= \App\Helpers\Csrf::field() ?>
         <input type="hidden" name="study_id" value="<?= (int) $study['id'] ?>">
         <label for="comment">Note</label>
-        <textarea id="comment" name="comment" rows="4" required placeholder="<?= $isLibrarianGate ? 'Okay. Ready for school administrator.' : 'Okay. Ready for the dean.' ?>"><?= $isLibrarianGate ? 'Okay. Ready for school administrator.' : 'Okay. Ready for the dean.' ?></textarea>
+        <textarea id="comment" name="comment" rows="4" required placeholder="<?= $isLibrarianGate ? 'Okay. Ready for librarian.' : 'Okay. Ready for the dean.' ?>"><?= $isLibrarianGate ? 'Okay. Ready for librarian.' : 'Okay. Ready for the dean.' ?></textarea>
         <button type="submit" class="btn btn-primary"><?= icon('save') ?> Save note</button>
     </form>
     <?php if ($canSend): ?>
@@ -66,16 +66,16 @@
             <?= \App\Helpers\Csrf::field() ?>
             <input type="hidden" name="study_id" value="<?= (int) $study['id'] ?>">
             <p class="muted"><?= $isLibrarianGate
-                ? 'The note is saved. Submit this study to the school administrator.'
+                ? 'The note is saved. Submit this study to the librarian.'
                 : 'The note is saved. Submit this study to the dean.' ?></p>
-            <button type="submit" class="btn btn-primary"><?= icon('send') ?> <?= $isLibrarianGate ? 'Submit to school admin' : 'Submit to dean' ?></button>
+            <button type="submit" class="btn btn-primary"><?= icon('send') ?> <?= $isLibrarianGate ? 'Submit to librarian' : 'Submit to dean' ?></button>
         </form>
     <?php elseif (($study['status'] ?? '') === 'pending'): ?>
         <p class="muted">Save an okay note before you submit this study to the dean.</p>
     <?php elseif (($study['status'] ?? '') === 'library_review'): ?>
-        <p class="muted">Save an okay note before you submit this study to the school administrator.</p>
+        <p class="muted">Save an okay note before you submit this study to the librarian.</p>
     <?php elseif (($study['status'] ?? '') === 'admin_review'): ?>
-        <p class="muted">Submitted to the school administrator for publish.</p>
+        <p class="muted">Submitted to the librarian for publish.</p>
     <?php endif; ?>
     <button type="button" class="btn btn-secondary" id="review-notes-toggle" aria-haspopup="dialog" aria-controls="review-notes">Notes</button>
     <dialog id="review-notes" class="preview-modal" aria-labelledby="review-notes-heading">

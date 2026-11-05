@@ -67,7 +67,7 @@ final class Role
         ];
     }
 
-    /** Accounts the school administrator may create. */
+    /** Accounts the librarian may create. */
     /** @return list<string> */
     public static function schoolAdminCreatableRoles(): array
     {
@@ -77,7 +77,7 @@ final class Role
         ];
     }
 
-    /** School administrator and school research coordinator may add or rename departments. */
+    /** Librarian and school research coordinator may add or rename departments. */
     public static function canManageDepartments(string $slug, string $name = ''): bool
     {
         $role = self::canonical($slug, $name);
@@ -148,7 +148,7 @@ final class Role
         ];
     }
 
-    /** Final publish by school administrator. */
+    /** Final publish by librarian. */
     /** @return list<string> */
     public static function finalApprovers(): array
     {
@@ -213,6 +213,9 @@ final class Role
 
     public static function label(string $slug, string $name = ''): string
     {
+        if (in_array(strtolower(trim($name)), ['school administrator', 'school admin'], true) && trim($slug) === '') {
+            return 'Librarian';
+        }
         return match (self::canonical($slug, $name)) {
             self::STUDENT => 'Student',
             self::RESEARCH_ADVISER => 'Research Adviser',
@@ -220,13 +223,13 @@ final class Role
             self::DEAN => 'Dean',
             self::SCHOOL_RESEARCH_COORDINATOR => 'School Research Coordinator',
             self::LIBRARIAN => 'Librarian',
-            self::SCHOOL_ADMINISTRATOR => 'School Administrator',
+            self::SCHOOL_ADMINISTRATOR => 'Librarian',
             default => ($name !== '' ? $name : $slug),
         };
     }
 
     /**
-     * Repair old role slugs/names and demo School IDs after an upload.
+     * Repair old role slugs/names and demo ID nos. after an upload.
      * Safe to run on every request; it only writes when something is outdated.
      */
     public static function repairStoredRoles(): void
@@ -239,13 +242,13 @@ final class Role
         try {
             $pdo = db();
             $pdo->exec(
-                "UPDATE roles SET name = 'School Administrator'
+                "UPDATE roles SET name = 'Librarian'
                  WHERE LOWER(name) IN ('research director', 'director')
                     OR LOWER(REPLACE(name, ' ', '_')) IN ('research_director')"
             );
             $renames = [
-                'research_director' => [self::SCHOOL_ADMINISTRATOR, 'School Administrator'],
-                'director' => [self::SCHOOL_ADMINISTRATOR, 'School Administrator'],
+                'research_director' => [self::SCHOOL_ADMINISTRATOR, 'Librarian'],
+                'director' => [self::SCHOOL_ADMINISTRATOR, 'Librarian'],
                 'adviser' => [self::RESEARCH_ADVISER, 'Research Adviser'],
                 'advisor' => [self::RESEARCH_ADVISER, 'Research Adviser'],
             ];
@@ -279,7 +282,7 @@ final class Role
                 self::DEAN => 'Dean',
                 self::SCHOOL_RESEARCH_COORDINATOR => 'School Research Coordinator',
                 self::LIBRARIAN => 'Librarian',
-                self::SCHOOL_ADMINISTRATOR => 'School Administrator',
+                self::SCHOOL_ADMINISTRATOR => 'Librarian',
             ];
             $upd = $pdo->prepare('UPDATE roles SET name = :name WHERE slug = :slug AND name <> :name2');
             foreach ($labels as $slug => $name) {

@@ -67,7 +67,7 @@
         <table class="dash-table report-table report-people">
             <thead>
                 <tr>
-                    <th>School ID</th>
+                    <th>ID no.</th>
                     <th>Name</th>
                     <th>Submitted</th>
                     <th>Approved</th>

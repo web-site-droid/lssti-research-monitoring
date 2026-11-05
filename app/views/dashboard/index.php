@@ -9,7 +9,7 @@
         } elseif ($roleSlug === 'dean') {
             echo 'Open full files for every paper in your department. Other departments show title and abstract only.';
         } elseif ($roleSlug === 'school_research_coordinator') {
-            echo 'View every research paper from all departments with full manuscript access. Complete ethics and plagiarism, then send cleared studies to the school administrator.';
+            echo 'View every research paper from all departments with full manuscript access. Complete ethics and plagiarism, then send cleared studies to the librarian.';
         } elseif ($roleSlug === 'librarian') {
             echo 'View every research paper from all departments with full manuscript access.';
         } elseif ($roleSlug === 'school_administrator') {
@@ -106,11 +106,11 @@ $schoolWideFilterEmpty = 'No papers in this department.';
 <section class="card card-elevated">
     <h2 class="section-title">All departments — full manuscripts</h2>
     <?php if ($isSrcDash): ?>
-        <p class="muted">Every research paper school-wide. Full files are available. Open review for ethics, plagiarism, and send to the school administrator.</p>
+        <p class="muted">Every research paper school-wide. Full files are available. Open review for ethics, plagiarism, and send to the librarian.</p>
     <?php elseif ($isLibDash): ?>
         <p class="muted">Every research paper school-wide. Full files are available.</p>
     <?php elseif ($isAdminDash): ?>
-        <p class="muted">Every research paper school-wide. Full files are available. Publish studies waiting at school admin review.</p>
+        <p class="muted">Every research paper school-wide. Full files are available. Publish studies waiting at librarian review.</p>
     <?php endif; ?>
 <?php partial('find_bar', [
     'table' => '#dash-studies',
@@ -205,13 +205,13 @@ $schoolWideFilterEmpty = 'No papers in this department.';
                         echo '<form method="post" action="' . e(url('review/approve')) . '" class="inline-form">'
                             . \App\Helpers\Csrf::field()
                             . '<input type="hidden" name="study_id" value="' . (int) $study['id'] . '">'
-                            . '<button type="submit" class="btn btn-primary btn-sm" aria-label="Send to school administrator" title="Send to school administrator">' . icon('send') . '</button></form>';
+                            . '<button type="submit" class="btn btn-primary btn-sm" aria-label="Send to librarian" title="Send to librarian">' . icon('send') . '</button></form>';
                     }
                     if ($canSendLibrary) {
                         echo '<form method="post" action="' . e(url('library/approve')) . '" class="inline-form">'
                             . \App\Helpers\Csrf::field()
                             . '<input type="hidden" name="study_id" value="' . (int) $study['id'] . '">'
-                            . '<button type="submit" class="btn btn-primary btn-sm" aria-label="Submit to school admin" title="Submit to school admin">' . icon('send') . '</button></form>';
+                            . '<button type="submit" class="btn btn-primary btn-sm" aria-label="Submit to librarian" title="Submit to librarian">' . icon('send') . '</button></form>';
                     }
                     if ($canFinalPublish) {
                         echo '<form method="post" action="' . e(url('review/final-publish')) . '" class="inline-form">'

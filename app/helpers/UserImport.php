@@ -25,7 +25,7 @@ final class UserImport
             [
                 'name' => 'Accounts',
                 'rows' => [
-                    ['School ID', 'First name', 'Middle name', 'Last name', 'Role', 'Department', 'Password', 'Active'],
+                    ['ID no.', 'First name', 'Middle name', 'Last name', 'Role', 'Department', 'Password', 'Active'],
                     ['SAMPLE-0001', 'Ana', 'S.', 'Researcher', 'student', 'BSCS', self::DEFAULT_PASSWORD, 'yes'],
                     ['SAMPLE-0002', 'Juan', '', 'Adviser', 'research_adviser', 'BSCS', '', 'yes'],
                 ],
@@ -36,13 +36,13 @@ final class UserImport
                     ['How to fill the Accounts sheet'],
                     ['One person per row. Do not change the column names in row 1.'],
                     ['Role must be one of: student, research_adviser, dept_research_coordinator, dean, school_research_coordinator, school_administrator.'],
-                    ['Aliases: Adviser, Dept Research Coordinator, Dean, School Research Coordinator, School Administrator.'],
+                    ['Aliases: Adviser, Dept Research Coordinator, Dean, School Research Coordinator, Librarian.'],
                     ['Password must be at least 8 characters. Leave it blank to use ' . self::DEFAULT_PASSWORD . '.'],
                     ['The person is asked to change that password at first sign-in.'],
                     ['Active is yes or no. A blank cell means yes.'],
-                    ['School ID, first name, last name, and role are required.'],
+                    ['ID no., first name, last name, and role are required.'],
                     ['Department is required for a student or research adviser. Use an existing code such as BSCS, or a new code. You can also type CODE - Department name. Leave it blank for other roles.'],
-                    ['SAMPLE-0001 and SAMPLE-0002 are examples and are skipped. Replace them with real school IDs.'],
+                    ['SAMPLE-0001 and SAMPLE-0002 are examples and are skipped. Replace them with real ID nos.'],
                     ['Save the file as an Excel workbook (.xlsx), then upload it on Accounts.'],
                 ],
             ],
@@ -63,7 +63,7 @@ final class UserImport
         $map = self::headerMap($header['cells']);
         foreach (['school_id', 'first_name', 'last_name', 'role'] as $required) {
             if (!isset($map[$required])) {
-                throw new RuntimeException('Use the downloadable format. The first row must include School ID, First name, Last name, and Role.');
+                throw new RuntimeException('Use the downloadable format. The first row must include ID no., First name, Last name, and Role.');
             }
         }
         if (count($sheetRows) > self::MAX_ROWS) {
@@ -111,7 +111,7 @@ final class UserImport
                     !empty($limit['director_departments'])
                 );
             if (in_array($slug, ['student', 'research_adviser', 'dept_research_coordinator', 'dean'], true) && !$programId) {
-                $notes[] = 'Row ' . $rowNumber . ': Use a department the school administrator added.';
+                $notes[] = 'Row ' . $rowNumber . ': Use a department the librarian added.';
                 continue;
             }
             $id = User::create([
@@ -140,6 +140,7 @@ final class UserImport
     {
         $aliases = [
             'school id' => 'school_id',
+            'id no' => 'school_id',
             'schoolid' => 'school_id',
             'id number' => 'school_id',
             'first name' => 'first_name',
@@ -192,13 +193,13 @@ final class UserImport
     private static function problem(array $cells, array $map, string $schoolId, array $roles, array $seen, bool $departmentLocked = false): ?string
     {
         if (strlen($schoolId) > 32) {
-            return 'School ID must be 32 characters or fewer.';
+            return 'ID no. must be 32 characters or fewer.';
         }
         if (isset($seen[strtoupper($schoolId)])) {
-            return 'School ID ' . $schoolId . ' is listed more than once.';
+            return 'ID no. ' . $schoolId . ' is listed more than once.';
         }
         if (User::findBySchoolId($schoolId)) {
-            return 'School ID ' . $schoolId . ' already has an account.';
+            return 'ID no. ' . $schoolId . ' already has an account.';
         }
         $first = self::cell($cells, $map, 'first_name');
         $last = self::cell($cells, $map, 'last_name');
@@ -301,7 +302,7 @@ final class UserImport
             'research adviser' => 'research_adviser',
             'research advisor' => 'research_adviser',
             'adviser panelist' => 'research_adviser',
-            'librarian' => 'school_research_coordinator',
+            'librarian' => 'school_administrator',
             'dept research coordinator' => 'dept_research_coordinator',
             'department research coordinator' => 'dept_research_coordinator',
             'dean' => 'dean',

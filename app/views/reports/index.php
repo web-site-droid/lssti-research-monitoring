@@ -38,7 +38,7 @@ if ($viewProgramCode !== '' && !isset($departments[$viewProgramCode])) {
     <h2 class="section-title">Who signed in</h2>
     <div class="people-filters">
         <label class="table-search">Search sign-ins
-            <input type="search" data-table-filter="#signins-table" placeholder="Name, school ID, role, or department">
+            <input type="search" data-table-filter="#signins-table" placeholder="Name, ID no., role, or department">
         </label>
         <label class="table-search is-filter" for="logs-dept-filter">Department
             <select id="logs-dept-filter" data-table-dept="#signins-table" <?= $readsOwnDepartment ? 'disabled' : '' ?>>
@@ -55,14 +55,14 @@ if ($viewProgramCode !== '' && !isset($departments[$viewProgramCode])) {
     <?php else: ?>
         <div class="table-wrap">
             <table class="data-table" data-sortable id="signins-table">
-                <thead><tr><th>Name</th><th>School ID</th><th>Role</th><th>Department</th><th>Last sign-in</th></tr></thead>
+                <thead><tr><th>Name</th><th>ID no.</th><th>Role</th><th>Department</th><th>Last sign-in</th></tr></thead>
                 <tbody>
                 <?php foreach ($signIns as $row): ?>
                     <?php $programCode = trim((string) ($row['program_code'] ?? '')); ?>
                     <tr data-program="<?= e($programCode) ?>">
                         <td><?= e($row['last_name'] . ', ' . $row['first_name']) ?></td>
                         <td><?= e($row['school_id']) ?></td>
-                        <td><?= e($row['role_name']) ?></td>
+                        <td><?= e(\App\Helpers\Role::label('', (string) $row['role_name'])) ?></td>
                         <td><?= $programCode !== '' ? e($programCode) : 'All departments' ?></td>
                         <td><?= e((string) $row['last_login']) ?></td>
                     </tr>
@@ -79,7 +79,7 @@ if ($viewProgramCode !== '' && !isset($departments[$viewProgramCode])) {
         : 'People who opened a full article in any department. Filter by the article’s department.' ?></p>
     <div class="people-filters">
         <label class="table-search">Search reads
-            <input type="search" data-table-filter="#reads-table" placeholder="Name, school ID, or article">
+            <input type="search" data-table-filter="#reads-table" placeholder="Name, ID no., or article">
         </label>
         <?php if (!$readsOwnDepartment): ?>
         <label class="table-search is-filter" for="logs-read-dept-filter">Article department
@@ -98,7 +98,7 @@ if ($viewProgramCode !== '' && !isset($departments[$viewProgramCode])) {
     <?php else: ?>
         <div class="table-wrap">
             <table class="data-table" data-sortable id="reads-table">
-                <thead><tr><th>Name</th><th>School ID</th><th>Role</th><th>Reader department</th><?php if (!$readsOwnDepartment): ?><th>Article department</th><?php endif; ?><th>Article</th><th>Read</th></tr></thead>
+                <thead><tr><th>Name</th><th>ID no.</th><th>Role</th><th>Reader department</th><?php if (!$readsOwnDepartment): ?><th>Article department</th><?php endif; ?><th>Article</th><th>Read</th></tr></thead>
                 <tbody>
                 <?php foreach ($reads as $row): ?>
                     <?php
@@ -108,7 +108,7 @@ if ($viewProgramCode !== '' && !isset($departments[$viewProgramCode])) {
                     <tr data-program="<?= e($articleCode) ?>">
                         <td><?= e($row['last_name'] . ', ' . $row['first_name']) ?></td>
                         <td><?= e($row['school_id']) ?></td>
-                        <td><?= e($row['role_name']) ?></td>
+                        <td><?= e(\App\Helpers\Role::label('', (string) $row['role_name'])) ?></td>
                         <td><?= $readerCode !== '' ? e($readerCode) : 'All departments' ?></td>
                         <?php if (!$readsOwnDepartment): ?>
                             <td><?= $articleCode !== '' ? e($articleCode) : '—' ?></td>
@@ -137,7 +137,7 @@ if ($viewProgramCode !== '' && !isset($departments[$viewProgramCode])) {
         : 'People who downloaded a full file in any department. Filter by the article’s department.' ?></p>
     <div class="people-filters">
         <label class="table-search">Search downloads
-            <input type="search" data-table-filter="#downloads-table" placeholder="Name, school ID, or file">
+            <input type="search" data-table-filter="#downloads-table" placeholder="Name, ID no., or file">
         </label>
         <?php if (!$readsOwnDepartment): ?>
         <label class="table-search is-filter" for="logs-download-dept-filter">Article department
@@ -156,7 +156,7 @@ if ($viewProgramCode !== '' && !isset($departments[$viewProgramCode])) {
     <?php else: ?>
         <div class="table-wrap">
             <table class="data-table" data-sortable id="downloads-table">
-                <thead><tr><th>Name</th><th>School ID</th><th>Role</th><th>Downloader department</th><?php if (!$readsOwnDepartment): ?><th>Article department</th><?php endif; ?><th>File</th><th>Downloaded</th></tr></thead>
+                <thead><tr><th>Name</th><th>ID no.</th><th>Role</th><th>Downloader department</th><?php if (!$readsOwnDepartment): ?><th>Article department</th><?php endif; ?><th>File</th><th>Downloaded</th></tr></thead>
                 <tbody>
                 <?php foreach ($downloads as $row): ?>
                     <?php
@@ -166,7 +166,7 @@ if ($viewProgramCode !== '' && !isset($departments[$viewProgramCode])) {
                     <tr data-program="<?= e($articleCode) ?>">
                         <td><?= e($row['last_name'] . ', ' . $row['first_name']) ?></td>
                         <td><?= e($row['school_id']) ?></td>
-                        <td><?= e($row['role_name']) ?></td>
+                        <td><?= e(\App\Helpers\Role::label('', (string) $row['role_name'])) ?></td>
                         <td><?= $readerCode !== '' ? e($readerCode) : 'All departments' ?></td>
                         <?php if (!$readsOwnDepartment): ?>
                             <td><?= $articleCode !== '' ? e($articleCode) : '—' ?></td>

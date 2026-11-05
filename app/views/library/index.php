@@ -15,8 +15,8 @@ ksort($programs);
     'statusOptions' => [
         '' => 'Any status',
         'pending' => 'With dept coordinator',
-        'library_review' => 'With school admin',
-        'admin_review' => 'With school admin',
+        'library_review' => 'With librarian',
+        'admin_review' => 'With librarian',
         'approved' => 'Approved',
     ],
     'statusAttr' => 'data-status',
@@ -47,11 +47,11 @@ ksort($programs);
         <?php
         $canSend = in_array($s['status'], ['pending', 'library_review'], true)
             && \App\Models\Study::hasLibraryReview((int) $s['id']);
-        $sendLabel = ($s['status'] ?? '') === 'library_review' ? 'Submit to school admin' : 'Submit to dean';
+        $sendLabel = ($s['status'] ?? '') === 'library_review' ? 'Submit to librarian' : 'Submit to dean';
         $statusLabel = match ($s['status']) {
             'pending' => 'With dept coordinator',
-            'library_review' => 'With school admin',
-            'admin_review' => 'With school admin',
+            'library_review' => 'With librarian',
+            'admin_review' => 'With librarian',
             'approved' => 'Approved',
             default => ucwords(str_replace('_', ' ', $s['status'])),
         };

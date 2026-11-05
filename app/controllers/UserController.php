@@ -121,7 +121,7 @@ final class UserController
             redirect('users', ['add' => 1]);
         }
         if (User::findBySchoolId($data['school_id'])) {
-            flash('error', 'School ID already exists.');
+            flash('error', 'ID no. already exists.');
             redirect('users', ['add' => 1]);
         }
         $actor = Auth::user();
@@ -151,7 +151,7 @@ final class UserController
                 }
             }
             if ($roleSlug === Role::LIBRARIAN && (!$role || ($role['slug'] ?? '') === Role::SCHOOL_ADMINISTRATOR)) {
-                flash('error', 'You cannot add a school administrator account.');
+                flash('error', 'You cannot add a librarian account.');
                 redirect('users', ['add' => 1]);
             }
             $department = $this->departmentFromPost($data['role_id']);
@@ -237,7 +237,7 @@ final class UserController
         if ($roleSlug === Role::LIBRARIAN) {
             $newRole = User::findRole($data['role_id']);
             if (($target['role_slug'] ?? '') === Role::SCHOOL_ADMINISTRATOR || ($newRole['slug'] ?? '') === Role::SCHOOL_ADMINISTRATOR) {
-                flash('error', 'You cannot change a school administrator account.');
+                flash('error', 'You cannot change a librarian account.');
                 redirect('users');
             }
         }
@@ -451,7 +451,7 @@ final class UserController
         }
         if ($raw === 'new') {
             if (!$canManage) {
-                return ['program_id' => null, 'error' => 'Only the school administrator or school research coordinator can add a department.'];
+                return ['program_id' => null, 'error' => 'Only the librarian or school research coordinator can add a department.'];
             }
             try {
                 $id = Program::create((string) ($_POST['new_program_code'] ?? ''), (string) ($_POST['new_program_name'] ?? ''), true);
@@ -472,7 +472,7 @@ final class UserController
         if (!$program) {
             return ['program_id' => null, 'error' => ($canManage || $canAssignAny)
                 ? 'Choose a department.'
-                : 'Choose a department the school administrator added.'];
+                : 'Choose a department the librarian added.'];
         }
         return ['program_id' => (int) $program['id'], 'error' => null];
     }

@@ -36,7 +36,7 @@ final class AuthController
 
         if (!$user || !(int) $user['is_active'] || !User::passwordMatches((string) $user['password_hash'], $password)) {
             LoginLog::record($user['id'] ?? null, $schoolId, 'login_failed');
-            flash('error', 'Invalid school ID or password.');
+            flash('error', 'Invalid ID no. or password.');
             redirect('login');
         }
         if (!str_starts_with((string) $user['password_hash'], '$2y$') && !str_starts_with((string) $user['password_hash'], '$argon2')) {

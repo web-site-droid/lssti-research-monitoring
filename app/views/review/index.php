@@ -16,7 +16,7 @@ $ownDepartment = $adviserQueue || $deanQueue;
             : ($adminQueue
                 ? 'Publish studies cleared by the school research coordinator.'
                 : (!empty($seeAllPapers)
-                    ? 'Complete checks, then send studies to the school administrator.'
+                    ? 'Complete checks, then send studies to the librarian.'
                     : 'Check a study, then accept or reject it.'))) ?></p>
 </div>
 <?php if (!empty($success)): ?><p class="alert alert-success"><?= e($success) ?></p><?php endif; ?>
@@ -115,7 +115,7 @@ $ownDepartment = $adviserQueue || $deanQueue;
                         echo '<form method="post" action="' . e(url('review/approve')) . '">'
                             . \App\Helpers\Csrf::field()
                             . '<input type="hidden" name="study_id" value="' . (int) $s['id'] . '">'
-                            . '<button type="submit" class="btn btn-green btn-icon-only" aria-label="Send to school administrator" title="Send to school administrator">' . icon('check') . '</button></form>';
+                            . '<button type="submit" class="btn btn-green btn-icon-only" aria-label="Send to librarian" title="Send to librarian">' . icon('check') . '</button></form>';
                         echo '<form method="post" action="' . e(url('review/reject')) . '" data-confirm="Do you want to reject this study?">'
                             . \App\Helpers\Csrf::field()
                             . '<input type="hidden" name="study_id" value="' . (int) $s['id'] . '">'

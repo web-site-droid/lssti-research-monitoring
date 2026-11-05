@@ -7,7 +7,7 @@
     <form method="post" action="<?= e(url('users/edit/submit')) ?>" class="stack">
         <?= \App\Helpers\Csrf::field() ?>
         <input type="hidden" name="id" value="<?= (int) $editUser['id'] ?>">
-        <label for="school_id">School ID</label>
+        <label for="school_id">ID no.</label>
         <input id="school_id" value="<?= e($editUser['school_id']) ?>" readonly>
         <label for="first_name">First name <span class="req">*</span></label>
         <input id="first_name" name="first_name" value="<?= e($editUser['first_name']) ?>" required>

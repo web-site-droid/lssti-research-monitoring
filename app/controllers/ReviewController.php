@@ -384,7 +384,7 @@ final class ReviewController
             Notification::create(
                 (int) $admin['id'],
                 'review',
-                'Study ready for school administrator',
+                'Study ready for librarian',
                 $study['short_title'],
                 'review/ethics?id=' . $id
             );
@@ -392,12 +392,12 @@ final class ReviewController
         Notification::create(
             (int) $study['submitter_user_id'],
             'review',
-            'Sent to school administrator',
-            'The school research coordinator cleared this study for the school administrator.',
+            'Sent to librarian',
+            'The school research coordinator cleared this study for the librarian.',
             'studies/view?id=' . $id
         );
         Audit::log('study.send_admin', 'study', $id);
-        flash('success', 'Sent to the school administrator.');
+        flash('success', 'Sent to the librarian.');
         redirect('review');
     }
 
@@ -407,7 +407,7 @@ final class ReviewController
         $id = (int) ($_POST['study_id'] ?? 0);
         $user = Auth::user();
         if (($user['role_slug'] ?? '') !== 'school_administrator') {
-            flash('error', 'Only the school administrator can publish.');
+            flash('error', 'Only the librarian can publish.');
             redirect('review');
         }
         $check = Study::canFinalPublish($id);
@@ -424,7 +424,7 @@ final class ReviewController
             (int) $study['submitter_user_id'],
             'approval',
             'Study published',
-            'The school administrator published this study.',
+            'The librarian published this study.',
             'studies/view?id=' . $id
         );
         Audit::log('study.approve', 'study', $id);

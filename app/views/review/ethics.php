@@ -48,7 +48,7 @@
             <form method="post" action="<?= e(url('review/approve')) ?>">
                 <?= \App\Helpers\Csrf::field() ?>
                 <input type="hidden" name="study_id" value="<?= (int) $study['id'] ?>">
-                <button type="submit" class="btn btn-green"><?= icon('check') ?> Send to school administrator</button>
+                <button type="submit" class="btn btn-green"><?= icon('check') ?> Send to librarian</button>
             </form>
             <form method="post" action="<?= e(url('review/reject')) ?>" data-confirm="Do you want to reject this study?">
                 <?= \App\Helpers\Csrf::field() ?>

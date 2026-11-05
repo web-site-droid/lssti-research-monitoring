@@ -10,13 +10,13 @@ $deptMode = !empty($deptMode) || $adviserMode || $deanMode;
         if ($deanMode) {
             echo 'Choose student, research adviser, or dept research coordinator. The account is added to your department' . ($departmentLabel !== '' ? ', ' . e($departmentLabel) : '') . '.';
         } elseif ($adviserMode) {
-            echo 'Choose student or adviser. The account is added to your department' . ($departmentLabel !== '' ? ', ' . e($departmentLabel) : '') . '. They sign in with the school ID and temporary password.';
+            echo 'Choose student or adviser. The account is added to your department' . ($departmentLabel !== '' ? ', ' . e($departmentLabel) : '') . '. They sign in with the ID no. and temporary password.';
         } elseif ($adminMode) {
             echo 'Choose dean or school research coordinator. A dean needs a department.';
         } else {
             echo !empty($canAddDepartment)
                 ? 'Create an account. You can choose an existing department or add a new one.'
-                : 'Create an account. For department-bound roles, choose a department the school administrator added.';
+                : 'Create an account. For department-bound roles, choose a department the librarian added.';
         }
     ?></p>
 </div>
@@ -27,7 +27,7 @@ $deptMode = !empty($deptMode) || $adviserMode || $deanMode;
     <section class="card card-elevated">
     <form method="post" action="<?= e(url('users/create/submit')) ?>" class="stack">
         <?= \App\Helpers\Csrf::field() ?>
-        <label for="school_id">School ID <span class="req">*</span></label>
+        <label for="school_id">ID no. <span class="req">*</span></label>
         <input id="school_id" name="school_id" required autocomplete="off">
         <label for="first_name">First name <span class="req">*</span></label>
         <input id="first_name" name="first_name" required>

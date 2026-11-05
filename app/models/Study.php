@@ -199,7 +199,7 @@ final class Study
     }
 
     /**
-     * School Research Coordinator, Librarian, School Administrator: all papers, all departments.
+     * School Research Coordinator, Librarian, Librarian: all papers, all departments.
      * Research adviser: full manuscript for their department, for assigned advisees, and for papers they uploaded.
      * Dean / dept research coordinator: full manuscript for their department; other departments title/abstract only.
      * Students: full file for studies uploaded in their own department. Other departments are title and abstract only.
@@ -320,7 +320,7 @@ final class Study
         return $stmt->fetchAll();
     }
 
-    /** All studies school-wide (school research coordinator / school admin catalog). */
+    /** All studies school-wide (school research coordinator / librarian catalog). */
     /** @return list<array<string,mixed>> */
     public static function listAllSchoolWide(): array
     {
@@ -795,7 +795,7 @@ final class Study
         return ['ok' => true, 'reason' => ''];
     }
 
-    /** School research coordinator sends the study to the school administrator (not final publish). */
+    /** School research coordinator sends the study to the librarian (not final publish). */
     public static function approve(int $studyId): bool
     {
         $check = self::canApprove($studyId);

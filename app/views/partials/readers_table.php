@@ -13,7 +13,7 @@ $timeKey = $timeKey ?? 'opened_at';
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>School ID</th>
+                    <th>ID no.</th>
                     <th>Role</th>
                     <th>Department</th>
                     <th><?= e($timeLabel) ?></th>
@@ -25,7 +25,7 @@ $timeKey = $timeKey ?? 'opened_at';
                 <tr>
                     <td><?= e(($row['last_name'] ?? '') . ', ' . ($row['first_name'] ?? '')) ?></td>
                     <td><?= e((string) ($row['school_id'] ?? '')) ?></td>
-                    <td><?= e((string) ($row['role_name'] ?? '')) ?></td>
+                    <td><?= e(\App\Helpers\Role::label('', (string) ($row['role_name'] ?? ''))) ?></td>
                     <td><?= $programCode !== '' ? e($programCode) : 'All departments' ?></td>
                     <td><?= e((string) ($row[$timeKey] ?? $row['opened_at'] ?? '')) ?></td>
                 </tr>

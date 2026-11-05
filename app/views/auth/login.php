@@ -4,7 +4,7 @@
         <img class="login-logo" src="<?= e(asset_url('images/lssti-seal.png')) ?>" alt="LSSTI Research Repository" width="80" height="80">
         <p class="login-school">LSSTI</p>
         <h1 class="login-title">Digital Research Repository</h1>
-        <p class="login-tagline">For students, faculty, and staff on the school network. Sign in with your official school ID.</p>
+        <p class="login-tagline">For students, faculty, and staff on the school network. Sign in with your official ID no..</p>
     </aside>
 
     <section class="login-panel" aria-labelledby="login-heading">
@@ -21,7 +21,7 @@
                     <input type="hidden" name="next" value="<?= e($next) ?>">
                 <?php endif; ?>
                 <div class="form-field">
-                    <label for="school_id">School ID <span class="req">*</span></label>
+                    <label for="school_id">ID no. <span class="req">*</span></label>
                     <input
                         type="text"
                         id="school_id"

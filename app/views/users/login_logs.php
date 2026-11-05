@@ -3,12 +3,12 @@
     <p class="lead">Recent sign-ins. Click a column heading to sort.</p>
 </div>
 <label class="table-search">Search history
-    <input type="search" data-table-filter="#signins-table" placeholder="Name or school ID">
+    <input type="search" data-table-filter="#signins-table" placeholder="Name or ID no.">
 </label>
 <p id="signins-table-empty" class="empty-state" hidden>No sign-ins match that search.</p>
 <div class="table-wrap">
 <table class="data-table" data-sortable id="signins-table">
-    <thead><tr><th>Time</th><th>Name</th><th>School ID</th></tr></thead>
+    <thead><tr><th>Time</th><th>Name</th><th>ID no.</th></tr></thead>
     <tbody>
     <?php foreach ($logs as $log): ?>
         <tr>
