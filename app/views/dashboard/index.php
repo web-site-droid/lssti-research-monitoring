@@ -735,6 +735,7 @@ $pendingUploads = $uploads ?? [];
         'showDepartment' => true,
     ]); ?>
     <ul id="suggestions" class="suggestions scholar-suggestions" role="listbox"></ul>
+    <p class="muted">Type for title suggestions. Press Enter to search titles, authors, abstracts, objectives, and keywords.</p>
 </div>
 <div id="results" class="results scholar-results" aria-live="polite" data-can-rate="1" data-logged="1" data-csrf="<?= e(\App\Helpers\Csrf::token()) ?>"></div>
 <dialog id="cite-modal" class="preview-modal" aria-labelledby="cite-title">
@@ -754,7 +755,7 @@ $pendingUploads = $uploads ?? [];
 <?php $pageScripts = ['search.js']; ?>
 
 <?php if (!$deptCatalog): ?>
-    <p class="empty-state">No approved papers yet.</p>
+    <p class="empty-state" id="dept-catalog-empty">No approved papers yet.</p>
 <?php else: ?>
     <p class="empty-state" id="dept-paper-empty" hidden>No studies in that department.</p>
     <div class="paper-cards student-scholar-list" id="dept-paper-cards" data-page-size="6">

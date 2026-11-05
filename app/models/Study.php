@@ -901,6 +901,8 @@ final class Study
         $q = trim($filters['q'] ?? '');
         $params = [];
         $sql = "SELECT s.*, p.code AS program_code,
+                       p.name AS program_name,
+                       (SELECT GROUP_CONCAT(k.keyword SEPARATOR ', ') FROM study_keywords k WHERE k.study_id=s.id) AS keyword_text,
                        COALESCE(rt.star_total, 0) AS star_total,
                        COALESCE(rt.star_votes, 0) AS star_votes,
                        COALESCE(rt.star_avg, 0) AS star_avg,
@@ -919,7 +921,9 @@ final class Study
 
         if ($q !== '') {
             $words = self::searchWords($q);
-            $hay = "CONCAT_WS(' ', s.title, s.short_title, p.code, p.name,
+            $extraText = !empty($filters['full_text']) ? "s.abstract, s.research_objectives,
+                (SELECT GROUP_CONCAT(k.keyword SEPARATOR ' ') FROM study_keywords k WHERE k.study_id=s.id)," : '';
+            $hay = "CONCAT_WS(' ', s.title, s.short_title, p.code, p.name, {$extraText}
                 IFNULL((SELECT GROUP_CONCAT(CONCAT(a.first_name, ' ', a.last_name) SEPARATOR ' ')
                         FROM study_authors a WHERE a.study_id = s.id), '')
             )";
@@ -930,7 +934,7 @@ final class Study
                 $params[$key] = '%' . self::likeEscape($word) . '%';
             }
             $sql .= ' AND (' . implode(' AND ', $parts) . ')';
-            if (mb_strlen($q) === 1) {
+            if (mb_strlen($q) === 1 && empty($filters['full_text'])) {
                 $sql .= ' AND s.title LIKE :initial';
                 $params['initial'] = self::likeEscape($q) . '%';
             }
@@ -939,6 +943,14 @@ final class Study
             $sql .= ' AND s.program_id = :pid';
             $params['pid'] = $filters['program_id'];
         }
+        if (!empty($filters['program_code'])) {
+            $sql .= ' AND p.code = :program_code'; $params['program_code'] = $filters['program_code'];
+        }
+        $yearFrom = (int) ($filters['school_year_from'] ?? 0);
+        $yearTo = (int) ($filters['school_year_to'] ?? 0);
+        if ($yearFrom && $yearTo && $yearFrom > $yearTo) [$yearFrom, $yearTo] = [$yearTo, $yearFrom];
+        if ($yearFrom) { $sql .= ' AND CAST(LEFT(s.school_year,4) AS UNSIGNED) >= :year_from'; $params['year_from']=$yearFrom; }
+        if ($yearTo) { $sql .= ' AND CAST(LEFT(s.school_year,4) AS UNSIGNED) <= :year_to'; $params['year_to']=$yearTo; }
         if (!empty($filters['school_year'])) {
             $sql .= ' AND s.school_year = :sy';
             $params['sy'] = $filters['school_year'];
@@ -992,9 +1004,11 @@ final class Study
             $sql .= match ($sort) {
                 'title' => ' ORDER BY s.title ASC',
                 'date' => ' ORDER BY s.approved_at DESC, s.title ASC',
+                'oldest' => ' ORDER BY s.approved_at ASC, s.title ASC',
+                'title-desc' => ' ORDER BY s.title DESC',
                 default => $q !== '' ? ' ORDER BY (s.title LIKE :title_match) DESC, star_total DESC, s.approved_at DESC, s.title ASC' : ' ORDER BY star_total DESC, s.approved_at DESC, s.title ASC',
             };
-            if ($q !== '' && !in_array($sort, ['title', 'date'], true)) {
+            if ($q !== '' && !in_array($sort, ['title', 'date', 'oldest', 'title-desc'], true)) {
                 $params['title_match'] = '%' . self::likeEscape($q) . '%';
             }
         }

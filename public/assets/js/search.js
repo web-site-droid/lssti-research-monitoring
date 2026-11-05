@@ -1,6 +1,8 @@
 (function () {
   var apiUrl = 'index.php?route=search/api';
   var suggestUrl = 'index.php?route=search/suggest';
+  var dashboardSearchActive = false;
+  var searchRequest = 0;
 
   function debounce(fn, ms) {
     var t;
@@ -17,8 +19,9 @@
   }
 
   function gatherFilters() {
-    return {
+    var filters = {
       q: fieldValue('q'),
+      full_text: '1',
       program_id: fieldValue('program_id'),
       school_year: fieldValue('school_year'),
       adviser_user_id: fieldValue('adviser_user_id'),
@@ -29,6 +32,18 @@
       date_to: fieldValue('date_to'),
       sort: fieldValue('sort') || 'relevance'
     };
+    var q = document.getElementById('q');
+    var bar = q && q.closest('[data-find-bar]');
+    if (bar) {
+      function value(name) { var field = bar.querySelector('[data-find-' + name + ']'); return field ? field.value : ''; }
+      filters.program_code = value('dept');
+      filters.study_type = value('type');
+      filters.school_year = value('year');
+      filters.school_year_from = value('from');
+      filters.school_year_to = value('to');
+      filters.sort = value('sort') === 'newest' ? 'date' : value('sort');
+    }
+    return filters;
   }
 
   function starMarks(avg) {
@@ -55,12 +70,17 @@
   }
 
   function highlight(text, query) {
-    var safe = escapeHtml(text || '');
-    searchWords(query).forEach(function (word) {
-      var pattern = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      safe = safe.replace(new RegExp('(' + pattern + ')', 'ig'), '<b>$1</b>');
+    var raw = String(text || '');
+    var words = searchWords(query).sort(function (a, b) { return b.length - a.length; });
+    if (!words.length) return escapeHtml(raw);
+    var pattern = words.map(function (word) { return word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|');
+    var result = '', last = 0;
+    raw.replace(new RegExp(pattern, 'ig'), function (match, offset) {
+      result += escapeHtml(raw.slice(last, offset)) + '<mark class="search-term">' + escapeHtml(match) + '</mark>';
+      last = offset + match.length;
+      return match;
     });
-    return safe;
+    return result + escapeHtml(raw.slice(last));
   }
 
   function snippetText(text, query) {
@@ -211,17 +231,14 @@
     }
     if (!featured) {
       var count = items.length === 1 ? '1 study' : items.length + ' studies';
-      var hasTitleMatch = items.some(function (item) { return isTitleSearch(query, item.title); });
       box.innerHTML = '<p class="scholar-count">' + count + '</p>' + items.map(function (item) {
-        var text = item.abstract || item.objectives || '';
-        var titleMatch = isTitleSearch(query, item.title);
+        var text = item.search_text || item.abstract || item.objectives || '';
         var meta = [item.authors, item.program_code, item.school_year, item.study_type_label].filter(Boolean).join(' · ');
-        var plain = hasTitleMatch && !titleMatch;
         return '<article class="scholar-hit" data-study="' + item.id + '">' +
-          '<div><h3>' + (item.full_access ? '<a href="index.php?route=reader&id=' + item.id + '">' : '') + (titleMatch ? '<b class="title-hit">' + escapeHtml(item.title) + '</b>' : (plain ? escapeHtml(item.title) : highlight(item.title, query))) + (item.full_access ? '</a>' : '') + '</h3>' +
-          '<p class="scholar-meta">' + (titleMatch || plain ? escapeHtml(meta) : highlight(meta, query)) + '</p>' +
+          '<div><h3>' + (item.full_access ? '<a href="index.php?route=reader&id=' + item.id + '">' : '') + highlight(item.title, query) + (item.full_access ? '</a>' : '') + '</h3>' +
+          '<p class="scholar-meta">' + highlight(meta, query) + '</p>' +
           '<p class="publication-timestamp">Published: ' + escapeHtml(item.published_at_label || 'Publication date unavailable') + '</p>' +
-          '<p class="scholar-snippet">' + (titleMatch || plain ? escapeHtml(snippetText(text, query)) : snippet(text, query)) + '</p>' +
+          '<p class="scholar-snippet">' + snippet(text, query) + '</p>' +
           '<p class="scholar-actions">' + saveControl(item) +
           '<button type="button" class="scholar-cite" data-cite="' + item.id + '">Cite</button></p></div>' +
           '<div class="scholar-tools"><span class="scholar-file-icons">' +
@@ -286,11 +303,59 @@
     return d.innerHTML;
   }
 
+  function dashboardResults(active) {
+    dashboardSearchActive = active;
+    ['dept-paper-cards', 'dept-paper-pager', 'dept-paper-empty', 'dept-catalog-empty'].forEach(function (id) {
+      var node = document.getElementById(id);
+      if (node && active) node.hidden = true;
+      else if (node && id === 'dept-paper-cards') node.hidden = false;
+    });
+    var q = document.getElementById('q');
+    var bar = q && q.closest('[data-find-bar]');
+    if (bar) { var hits = bar.querySelector('[data-find-hits]'); if (hits) hits.hidden = true; }
+  }
+
+  function clearDashboardSearch() {
+    searchRequest++;
+    dashboardResults(false);
+    var box = document.getElementById('results');
+    if (box) { box.innerHTML = ''; box.removeAttribute('aria-busy'); }
+    var grid = document.getElementById('dept-paper-cards');
+    if (grid && grid._applyTableFilter) grid._applyTableFilter();
+    var catalogEmpty = document.getElementById('dept-catalog-empty');
+    if (catalogEmpty) catalogEmpty.hidden = false;
+  }
+
   function runSearch() {
-    var params = new URLSearchParams(gatherFilters());
+    var filters = gatherFilters();
+    var q = document.getElementById('q');
+    var bar = q && q.closest('[data-find-bar]');
+    if (bar && !filters.q.trim()) { clearDashboardSearch(); return; }
+    var request = ++searchRequest;
+    var box = document.getElementById('results');
+    if (bar) dashboardResults(true);
+    box.setAttribute('aria-busy', 'true');
+    box.innerHTML = '<p class="scholar-count">Searching published studies…</p>';
+    var params = new URLSearchParams(filters);
     fetch(apiUrl + '&' + params.toString(), { credentials: 'same-origin' })
-      .then(function (r) { return r.json(); })
-      .then(function (data) { renderResults(data.results || [], !!data.featured, fieldValue('q')); });
+      .then(function (r) { if (!r.ok) throw new Error('Search failed'); return r.json(); })
+      .then(function (data) {
+        if (request !== searchRequest) return;
+        box.removeAttribute('aria-busy');
+        var items = data.results || [];
+        renderResults(items, !!data.featured, filters.q);
+        if (bar) {
+          dashboardResults(true);
+          var count = bar.querySelector('[data-find-count]');
+          var page = bar.querySelector('[data-find-page]');
+          if (count) count.textContent = items.length + (items.length === 1 ? ' result' : ' results');
+          if (page) page.textContent = 'Keyword search';
+        }
+      }).catch(function () {
+        if (request !== searchRequest) return;
+        box.removeAttribute('aria-busy');
+        box.innerHTML = '<p class="scholar-count">Search could not load. Press Enter to try again.</p>';
+      });
   }
 
   function runSuggest(term) {
@@ -302,7 +367,8 @@
     fetch(suggestUrl + '&term=' + encodeURIComponent(term), { credentials: 'same-origin' })
       .then(function (r) { return r.json(); })
       .then(function (data) {
-        list.innerHTML = (data.suggestions || []).map(function (s) {
+        if (fieldValue('q').trim() !== term) return;
+        list.innerHTML = (data.suggestions || []).filter(function (s) { return s.type === 'title'; }).map(function (s) {
           return '<li role="option" tabindex="0" data-value="' + escapeHtml(s.label) + '">' +
             escapeHtml(s.label) + ' <small>(' + escapeHtml(s.type) + ')</small></li>';
         }).join('');
@@ -320,37 +386,37 @@
   document.addEventListener('DOMContentLoaded', function () {
     var q = document.getElementById('q');
     if (!q) return;
-    var debouncedSearch = debounce(function () {
-      if (document.getElementById('suggestions')) {
-        document.getElementById('suggestions').innerHTML = '';
-      }
-      runSearch();
-    }, 300);
     var debouncedSuggest = debounce(function () {
       runSuggest(q.value.trim());
     }, 200);
     q.addEventListener('input', function () {
       if (q.closest('[data-find-bar]')) {
+        if (dashboardSearchActive) clearDashboardSearch();
         var list = document.getElementById('suggestions');
         if (list) list.innerHTML = '';
         return;
       }
       debouncedSuggest();
-      if (q.value.trim().length >= 1) {
-        debouncedSearch();
-      } else if (q.value.trim().length === 0) {
-        debouncedSearch();
-      }
+      searchRequest++;
+      var box = document.getElementById('results');
+      if (box) box.innerHTML = '';
     });
     q.addEventListener('keydown', function (event) {
       if (event.key !== 'Enter') return;
-      if (q.closest('[data-find-bar]')) return;
       event.preventDefault();
       if (document.getElementById('suggestions')) {
         document.getElementById('suggestions').innerHTML = '';
       }
       runSearch();
     });
+    var dashboardBar = q.closest('[data-find-bar]');
+    if (dashboardBar) {
+      dashboardBar.addEventListener('change', function () { if (dashboardSearchActive) runSearch(); });
+      var apply = dashboardBar.querySelector('[data-find-apply]');
+      var reset = dashboardBar.querySelector('[data-find-reset]');
+      if (apply) apply.addEventListener('click', function () { if (dashboardSearchActive) runSearch(); });
+      if (reset) reset.addEventListener('click', clearDashboardSearch);
+    }
     var go = document.getElementById('search-go');
     if (go) {
       go.addEventListener('click', function () {

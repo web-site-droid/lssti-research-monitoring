@@ -3647,6 +3647,8 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
 .student-scholar-list .student-abstract-link:hover { text-decoration: underline; }
 .scholar-results .scholar-hit { border: 0; }
 .scholar-results:empty { display: none; }
+.scholar-results mark.search-term { background: #f1cf77; color: #132034; font-weight: 700; border-radius: 2px; padding: 0 0.1em; }
+#dept-paper-cards[hidden] { display: none !important; }
 /* Student results stay in a list, with feedback for mouse and keyboard navigation. */
 .student-scholar-list .paper-card {
   position: relative;

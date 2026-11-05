@@ -38,6 +38,10 @@ final class SearchController
     {
         $filters = [
             'q' => $_GET['q'] ?? '',
+            'full_text' => ($_GET['full_text'] ?? '') === '1',
+            'program_code' => $_GET['program_code'] ?? '',
+            'school_year_from' => $_GET['school_year_from'] ?? '',
+            'school_year_to' => $_GET['school_year_to'] ?? '',
             'program_id' => $_GET['program_id'] ?? '',
             'school_year' => $_GET['school_year'] ?? '',
             'adviser_user_id' => $_GET['adviser_user_id'] ?? '',
@@ -92,6 +96,10 @@ final class SearchController
                 'authors' => Study::formatAuthorList($id, false),
                 'abstract' => $row['abstract'] ?? '',
                 'objectives' => $row['research_objectives'] ?? '',
+                'search_text' => implode("\n", array_filter([
+                    $row['abstract'] ?? '', $row['research_objectives'] ?? '',
+                    $row['keyword_text'] ?? '', $row['short_title'] ?? '', $row['program_name'] ?? '',
+                ])),
                 'stars' => (int) ($row['star_total'] ?? 0),
                 'star_avg' => round((float) ($row['star_avg'] ?? 0), 1),
                 'my_stars' => (int) ($mine[$id] ?? 0),

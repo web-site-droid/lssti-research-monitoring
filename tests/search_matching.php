@@ -25,4 +25,10 @@ if(isset($date->params['title_match'])||!str_contains($date->sql,'ORDER BY s.app
 if($suggest->params[':t']!=='the\\%\\_%')throw new RuntimeException('Suggestion text not escaped literally');
 \App\Models\Study::searchApproved(['q'=>'d']);$initial=$GLOBALS['db']->calls[5];
 if(($initial->params['initial']??'')!=='d%'||!str_contains($initial->sql,'s.title LIKE :initial'))throw new RuntimeException('Single letter must match title prefix');
-echo 'Passed 7 server search query checks.'.PHP_EOL;
+\App\Models\Study::searchApproved(['q'=>'reporter','full_text'=>true,'program_code'=>'BSCS','school_year_from'=>'2026-2027','school_year_to'=>'2024-2025']);
+$full=$GLOBALS['db']->calls[6];
+if(!str_contains($full->sql,'s.abstract, s.research_objectives')||!str_contains($full->sql,'GROUP_CONCAT(k.keyword')||!str_contains($full->sql,"s.status = 'approved'"))throw new RuntimeException('Enter search scope missing');
+if(($full->params['program_code']??'')!=='BSCS'||$full->params['year_from']!==2024||$full->params['year_to']!==2026)throw new RuntimeException('Filters lost on Enter');
+\App\Models\Study::searchApproved(['q'=>'d','full_text'=>true]);$letter=$GLOBALS['db']->calls[7];
+if(isset($letter->params['initial']))throw new RuntimeException('Enter search incorrectly restricted to title prefixes');
+echo 'Passed 10 server search query checks.'.PHP_EOL;
