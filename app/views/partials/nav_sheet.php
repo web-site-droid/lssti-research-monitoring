@@ -30,7 +30,7 @@ $who = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))
                 <a href="<?= e(url('users')) ?>" data-nav-match="users">People</a>
                 <a href="<?= e(url('reports')) ?>" data-nav-match="reports">Logs</a>
             <?php elseif ($role === Role::DEPT_RESEARCH_COORDINATOR): ?>
-                <a href="<?= e(url('dashboard')) ?>#drc-dept-table" data-nav-match="library library/review">Review</a>
+                <a href="<?= e(url('library')) ?>" data-nav-match="library library/review">Review</a>
             <?php elseif ($role === Role::LIBRARIAN): ?>
                 <a href="<?= e(url('reports')) ?>" data-nav-match="reports">Logs</a>
                 <a href="<?= e(url('users')) ?>" data-nav-match="users">People</a>

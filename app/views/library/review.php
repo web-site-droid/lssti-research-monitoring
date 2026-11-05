@@ -1,4 +1,4 @@
-<dialog id="library-review-modal" class="preview-modal profile-modal" data-back="<?= e(url('dashboard')) ?>" aria-labelledby="library-review-heading">
+<dialog id="library-review-modal" class="preview-modal profile-modal" data-back="<?= e(url((\App\Helpers\Auth::user()['role_slug'] ?? '') === 'dept_research_coordinator' ? 'library' : 'dashboard')) ?>" aria-labelledby="library-review-heading">
 <div class="preview-modal-head">
     <h2 id="library-review-heading"><?= e($study['title']) ?></h2>
     <button type="button" class="btn btn-secondary btn-icon-only" id="library-review-close" aria-label="Close"><?= icon('x') ?></button>

@@ -16,6 +16,21 @@ final class LibraryController
 {
     public function index(): void
     {
+        $user = Auth::user();
+        if (($user['role_slug'] ?? '') === Role::DEPT_RESEARCH_COORDINATOR) {
+            $programId = (int) ($user['program_id'] ?? 0);
+            $studies = $programId > 0 ? Study::listForUser($user, ['status' => 'pending']) : [];
+            $studies = array_values(array_filter($studies, static fn (array $study): bool =>
+                ($study['status'] ?? '') === 'pending' && (int) ($study['program_id'] ?? 0) === $programId
+            ));
+            view('library/department_queue', [
+                'user' => $user,
+                'studies' => $studies,
+                'success' => flash('success'),
+                'error' => flash('error'),
+            ]);
+            return;
+        }
         redirect('dashboard');
     }
 
@@ -151,7 +166,7 @@ final class LibraryController
         );
         Audit::log('library.approve', 'study', $id);
         flash('success', 'Submitted to the dean.');
-        redirect('dashboard');
+        redirect(($user['role_slug'] ?? '') === Role::DEPT_RESEARCH_COORDINATOR ? 'library' : 'dashboard');
     }
 
     public function acceptSubmit(): void
