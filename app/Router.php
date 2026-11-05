@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App;
 
 use App\Controllers\AuthController;
+use App\Controllers\AccountAdminController;
 use App\Controllers\DashboardController;
 use App\Controllers\FileController;
 use App\Controllers\LibraryController;
@@ -38,6 +39,11 @@ final class Router
         $reporters = array_values(array_unique(array_merge($reporters, [Role::SCHOOL_ADMINISTRATOR])));
 
         $this->routes = [
+            'admin/accounts' => [AccountAdminController::class, 'index', 'auth' => true, 'roles' => [Role::ACCOUNT_ADMIN]],
+            'admin/accounts/create' => [AccountAdminController::class, 'create', 'auth' => true, 'roles' => [Role::ACCOUNT_ADMIN]],
+            'admin/activity' => [AccountAdminController::class, 'activity', 'auth' => true, 'roles' => [Role::ACCOUNT_ADMIN]],
+            'admin/setup' => [AccountAdminController::class, 'setup', 'auth' => true, 'roles' => [Role::SCHOOL_ADMINISTRATOR]],
+            'admin/setup/submit' => [AccountAdminController::class, 'setupSubmit', 'auth' => true, 'roles' => [Role::SCHOOL_ADMINISTRATOR]],
             '' => [SearchController::class, 'landing', 'auth' => false],
             'dashboard' => [DashboardController::class, 'index', 'auth' => true],
             'login' => [AuthController::class, 'loginForm', 'auth' => false],
@@ -137,6 +143,14 @@ final class Router
         }
 
         $def = $this->routes[$route];
+        if ((Auth::user()['role_slug'] ?? '') === Role::ACCOUNT_ADMIN
+            && !in_array($route, ['admin/accounts', 'admin/accounts/create', 'admin/activity', 'dashboard',
+                'login', 'login/submit', 'logout', 'profile', 'profile/update', 'profile/photo',
+                'password/change', 'password/change/submit'], true)) {
+            http_response_code(403);
+            view('errors/forbidden', ['message' => 'Admin access is limited to Librarian accounts and activity logs.']);
+            return;
+        }
         $publicRoutes = ['login', 'login/submit', 'search', 'search/api', 'search/suggest', 'reader', 'file/manuscript'];
         if (!in_array($route, $publicRoutes, true)) {
             Auth::requireLogin();

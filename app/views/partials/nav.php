@@ -3,8 +3,13 @@ use App\Helpers\Role;
 $role = \App\Helpers\Role::canonical((string) ($user['role_slug'] ?? ''), (string) ($user['role_name'] ?? ''));
 ?>
 <nav class="main-nav<?= $role === Role::STUDENT ? ' nav-boxed' : '' ?>" aria-label="Main">
-    <a href="<?= e(url('dashboard')) ?>" data-nav-match="dashboard"><?= icon('clipboard') ?> Home</a>
-    <?php if ($role === Role::SCHOOL_ADMINISTRATOR): ?>
+    <?php if ($role !== Role::ACCOUNT_ADMIN): ?><a href="<?= e(url('dashboard')) ?>" data-nav-match="dashboard"><?= icon('clipboard') ?> Home</a><?php endif; ?>
+    <?php if ($role === Role::ACCOUNT_ADMIN): ?>
+        <a href="<?= e(url('admin/accounts')) ?>" data-nav-match="admin/accounts"><?= icon('users') ?> Librarian accounts</a>
+        <a href="<?= e(url('admin/activity')) ?>" data-nav-match="admin/activity"><?= icon('list') ?> Activity logs</a>
+        <a href="<?= e(url('profile')) ?>" data-nav-match="profile"><?= icon('eye') ?> Profile</a>
+    <?php elseif ($role === Role::SCHOOL_ADMINISTRATOR): ?>
+        <a href="<?= e(url('admin/setup')) ?>" data-nav-match="admin/setup">Admin setup</a>
         <a href="<?= e(url('study')) ?>" data-nav-match="study"><?= icon('book') ?> Study</a>
         <a href="<?= e(url('review')) ?>" data-nav-match="review"><?= icon('eye') ?> Review</a>
         <a href="<?= e(url('users')) ?>" data-nav-match="users"><?= icon('users') ?> People</a>

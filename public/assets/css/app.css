@@ -3647,6 +3647,12 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
 .student-scholar-list .student-abstract-link:hover { text-decoration: underline; }
 .scholar-results .scholar-hit { border: 0; }
 .scholar-results:empty { display: none; }
+.account-admin-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
+.account-admin-heading h2 { margin: 0; }
+#account-admin-create { width: min(42rem, calc(100vw - 2rem)); }
+#account-admin-create .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+#account-admin-create .form-grid > div:last-child { grid-column: 1 / -1; }
+@media (max-width: 600px) { #account-admin-create .form-grid { grid-template-columns: 1fr; } }
 /* Keep row actions reachable across every role's dashboard and review lists. */
 .app-main > .container { width: 100%; min-width: 0; box-sizing: border-box; }
 #main :is(.dashboard-study-table, #review-studies, #department-review-table, #people-table) {

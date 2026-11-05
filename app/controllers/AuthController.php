@@ -248,6 +248,9 @@ final class AuthController
     /** @param array<string, mixed> $user */
     private function destinationAfterLogin(array $user, ?string $next): string
     {
+        if (($user['role_slug'] ?? '') === \App\Helpers\Role::ACCOUNT_ADMIN) {
+            return 'admin/accounts';
+        }
         if ($next === 'studies/create' && ($user['role_slug'] ?? '') !== 'student') {
             flash('error', 'Only students can upload a study.');
             return 'dashboard';

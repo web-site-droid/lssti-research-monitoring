@@ -14,8 +14,12 @@ $who = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))
         <button type="button" class="nav-sheet-close" data-nav-close aria-label="Close"><?= icon('x') ?></button>
         <p class="nav-sheet-who" id="nav-sheet-who"><?= e($who) ?></p>
         <nav class="nav-sheet-list" aria-label="Menu">
-            <a href="<?= e(url('dashboard')) ?>" data-nav-match="dashboard">Home</a>
-            <?php if ($role === Role::SCHOOL_ADMINISTRATOR): ?>
+            <?php if ($role !== Role::ACCOUNT_ADMIN): ?><a href="<?= e(url('dashboard')) ?>" data-nav-match="dashboard">Home</a><?php endif; ?>
+            <?php if ($role === Role::ACCOUNT_ADMIN): ?>
+                <a href="<?= e(url('admin/accounts')) ?>" data-nav-match="admin/accounts">Librarian accounts</a>
+                <a href="<?= e(url('admin/activity')) ?>" data-nav-match="admin/activity">Activity logs</a>
+            <?php elseif ($role === Role::SCHOOL_ADMINISTRATOR): ?>
+                <a href="<?= e(url('admin/setup')) ?>" data-nav-match="admin/setup">Admin setup</a>
                 <a href="<?= e(url('study')) ?>" data-nav-match="study">Study</a>
                 <a href="<?= e(url('review')) ?>" data-nav-match="review">Review</a>
                 <a href="<?= e(url('users')) ?>" data-nav-match="users">People</a>

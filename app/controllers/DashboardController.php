@@ -13,6 +13,9 @@ final class DashboardController
     public function index(): void
     {
         $user = Auth::user();
+        if (($user['role_slug'] ?? '') === \App\Helpers\Role::ACCOUNT_ADMIN) {
+            redirect('admin/accounts');
+        }
         if ((int) ($user['must_change_password'] ?? 0) === 1) {
             redirect('password/change');
         }

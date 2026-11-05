@@ -206,6 +206,9 @@ final class Study
      */
     public static function canOpenFullManuscript(?array $user, array $study): bool
     {
+        if (($user['role_slug'] ?? '') === \App\Helpers\Role::ACCOUNT_ADMIN) {
+            return false;
+        }
         if (!$user) {
             return false;
         }

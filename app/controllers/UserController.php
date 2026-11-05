@@ -68,6 +68,9 @@ final class UserController
                 (int) ($account['created_by'] ?? 0) === (int) $actor['id']
             ));
         }
+        $users = array_values(array_filter($users, static fn (array $account): bool => ($account['role_slug'] ?? '') !== Role::ACCOUNT_ADMIN));
+        $roles = array_values(array_filter($roles, static fn (array $role): bool => ($role['slug'] ?? '') !== Role::ACCOUNT_ADMIN));
+        $editRoles = array_values(array_filter($editRoles, static fn (array $role): bool => ($role['slug'] ?? '') !== Role::ACCOUNT_ADMIN));
         view('users/index', [
             'users' => $users,
             'adviserMode' => $adviserMode,
@@ -116,6 +119,7 @@ final class UserController
             flash('error', 'Choose a role.');
             redirect('users', ['add' => 1]);
         }
+        $this->protectAdminAccount(0, $data['role_id']);
         if (strlen($data['password']) < 8) {
             flash('error', 'Password must be at least 8 characters.');
             redirect('users', ['add' => 1]);
@@ -187,6 +191,7 @@ final class UserController
             redirect('users');
         }
         $id = (int) ($_POST['id'] ?? 0);
+        $this->protectAdminAccount($id, (int) ($_POST['role_id'] ?? 0));
         $data = [
             'first_name' => trim($_POST['first_name'] ?? ''),
             'middle_name' => trim($_POST['middle_name'] ?? ''),
@@ -273,6 +278,7 @@ final class UserController
         $this->denyDeanAccountChanges();
         Csrf::requireValid();
         $id = (int) ($_POST['id'] ?? 0);
+        $this->protectAdminAccount($id);
         $actor = Auth::user();
         $roleSlug = $actor['role_slug'] ?? '';
         if (in_array($roleSlug, [Role::RESEARCH_ADVISER, Role::DEAN, Role::DEPT_RESEARCH_COORDINATOR], true)) {
@@ -478,6 +484,16 @@ final class UserController
     }
 
     /** @return list<string> */
+    private function protectAdminAccount(int $id, int $roleId = 0): void
+    {
+        $target = $id > 0 ? User::findById($id) : null;
+        $role = $roleId > 0 ? User::findRole($roleId) : null;
+        if (($target['role_slug'] ?? '') === Role::ACCOUNT_ADMIN || ($role['slug'] ?? '') === Role::ACCOUNT_ADMIN) {
+            flash('error', 'Admin accounts cannot be changed through People management.');
+            redirect('users');
+        }
+    }
+
     private function denyDeanAccountChanges(): void
     {
         if ((Auth::user()['role_slug'] ?? '') === Role::DEAN) {

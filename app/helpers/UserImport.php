@@ -98,6 +98,10 @@ final class UserImport
                 continue;
             }
             $slug = self::roleSlug($roleId, $roles);
+            if ($slug === Role::ACCOUNT_ADMIN) {
+                $notes[] = 'Row ' . $rowNumber . ': Admin accounts cannot be imported.';
+                continue;
+            }
             if ($allowed !== [] && !in_array($slug, $allowed, true)) {
                 $notes[] = 'Row ' . $rowNumber . ': Role is not allowed for this import (' . implode(', ', $allowed) . ').';
                 continue;

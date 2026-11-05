@@ -18,6 +18,7 @@ final class Role
     public const SCHOOL_RESEARCH_COORDINATOR = 'school_research_coordinator';
     public const LIBRARIAN = 'librarian';
     public const SCHOOL_ADMINISTRATOR = 'school_administrator';
+    public const ACCOUNT_ADMIN = 'account_admin';
 
     /** @return list<string> */
     public static function all(): array
@@ -217,6 +218,7 @@ final class Role
             return 'Librarian';
         }
         return match (self::canonical($slug, $name)) {
+            self::ACCOUNT_ADMIN => 'Admin',
             self::STUDENT => 'Student',
             self::RESEARCH_ADVISER => 'Research Adviser',
             self::DEPT_RESEARCH_COORDINATOR => 'Dept Research Coordinator',
