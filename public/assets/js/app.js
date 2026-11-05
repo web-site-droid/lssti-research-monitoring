@@ -437,8 +437,10 @@ function initFindBars() {
     var table = tableSel ? document.querySelector(tableSel) : null;
     var cardsSel = bar.getAttribute('data-find-cards') || '';
     var cards = cardsSel ? document.querySelector(cardsSel) : null;
-    var pager = document.querySelector(bar.getAttribute('data-find-pager') || '');
-    var empty = document.querySelector(bar.getAttribute('data-find-empty') || '');
+    var pagerSel = bar.getAttribute('data-find-pager') || '';
+    var emptySel = bar.getAttribute('data-find-empty') || '';
+    var pager = pagerSel ? document.querySelector(pagerSel) : null;
+    var empty = emptySel ? document.querySelector(emptySel) : null;
     var statusAttr = bar.getAttribute('data-status-attr') || 'data-gate';
     var pageSize = parseInt(bar.getAttribute('data-page-size') || '0', 10);
     var delegate = bar.getAttribute('data-find-mode') === 'delegate';

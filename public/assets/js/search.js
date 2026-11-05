@@ -346,6 +346,7 @@
     });
     q.addEventListener('keydown', function (event) {
       if (event.key !== 'Enter') return;
+      if (q.closest('[data-find-bar]')) return;
       event.preventDefault();
       if (document.getElementById('suggestions')) {
         document.getElementById('suggestions').innerHTML = '';
