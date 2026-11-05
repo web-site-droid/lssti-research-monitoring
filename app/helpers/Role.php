@@ -199,14 +199,14 @@ final class Role
             || $key === 'administrator'
             || $key === 'school_administrator'
         ) {
-            return self::LIBRARIAN;
+            return self::SCHOOL_ADMINISTRATOR;
         }
         return match ($key) {
             'adviser', 'advisor', 'teacher' => self::RESEARCH_ADVISER,
             'dept_coordinator', 'department_research_coordinator', 'drc' => self::DEPT_RESEARCH_COORDINATOR,
             'src', 'school_coordinator' => self::SCHOOL_RESEARCH_COORDINATOR,
             'library', 'librarian' => self::LIBRARIAN,
-            'school_administrator' => self::LIBRARIAN,
+            'school_administrator' => self::SCHOOL_ADMINISTRATOR,
             default => $key !== '' ? $key : $slug,
         };
     }
@@ -220,6 +220,7 @@ final class Role
             self::DEAN => 'Dean',
             self::SCHOOL_RESEARCH_COORDINATOR => 'School Research Coordinator',
             self::LIBRARIAN => 'Librarian',
+            self::SCHOOL_ADMINISTRATOR => 'School Administrator',
             default => ($name !== '' ? $name : $slug),
         };
     }
@@ -278,7 +279,7 @@ final class Role
                 self::DEAN => 'Dean',
                 self::SCHOOL_RESEARCH_COORDINATOR => 'School Research Coordinator',
                 self::LIBRARIAN => 'Librarian',
-                self::SCHOOL_ADMINISTRATOR => 'Librarian',
+                self::SCHOOL_ADMINISTRATOR => 'School Administrator',
             ];
             $upd = $pdo->prepare('UPDATE roles SET name = :name WHERE slug = :slug AND name <> :name2');
             foreach ($labels as $slug => $name) {

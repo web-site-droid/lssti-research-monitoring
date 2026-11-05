@@ -85,7 +85,7 @@ final class Workflow
     public static function progressLabels(bool $skipAdviser = false): array
     {
         return $skipAdviser
-            ? ['Prepare', 'Dept', 'Dean', 'Research Coord', 'School Admin', 'Publish']
-            : ['Prepare', 'Adviser', 'Dept', 'Dean', 'Research Coord', 'School Admin', 'Publish'];
+            ? ['Prepare', 'Dept', 'Dean', 'Research Coord', 'School Administrator', 'Publish']
+            : ['Prepare', 'Adviser', 'Dept', 'Dean', 'Research Coord', 'School Administrator', 'Publish'];
     }
 }
