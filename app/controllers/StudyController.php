@@ -28,6 +28,7 @@ final class StudyController
 
     public function folders(): void
     {
+        $publishedOnly = (Auth::user()['role_slug'] ?? '') === Role::SCHOOL_ADMINISTRATOR;
         $sql = "SELECT s.id, s.title, s.short_title, s.status, s.program_id, s.current_version_id,
                 s.adviser_user_id, s.submitter_user_id, s.abstract, s.research_objectives,
                 s.school_year, s.study_type, s.submitted_at, s.created_at, p.code AS program_code,
@@ -42,11 +43,12 @@ final class StudyController
                 ) AS authors
                 FROM studies s
                 INNER JOIN programs p ON p.id = s.program_id
-                WHERE s.status <> 'draft'
+                WHERE " . ($publishedOnly ? "s.status = 'approved'" : "s.status <> 'draft'") . "
                 ORDER BY COALESCE(s.submitted_at, s.created_at) DESC";
         view('studies/folders', [
             'studies' => db()->query($sql)->fetchAll(),
             'programs' => Program::active(),
+            'publishedOnly' => $publishedOnly,
         ]);
     }
 

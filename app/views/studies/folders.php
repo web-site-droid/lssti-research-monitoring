@@ -12,21 +12,23 @@ foreach ($studies as $study) {
 }
 ?>
 <div class="page-header">
-    <h1>Study</h1>
-    <p class="lead">Studies are stored in a month folder, then in a folder for each day.</p>
+    <h1><?= !empty($publishedOnly) ? 'Published studies' : 'Study' ?></h1>
+    <p class="lead"><?= !empty($publishedOnly) ? 'Published papers, organized by submission month and day. Papers awaiting publication are in Home and Review.' : 'Studies are stored in a month folder, then in a folder for each day.' ?></p>
 </div>
 <?php if ($success = flash('success')): ?><p class="alert alert-success"><?= e($success) ?></p><?php endif; ?>
 <?php if ($error = flash('error')): ?><p class="alert alert-error"><?= e($error) ?></p><?php endif; ?>
+<?php if (empty($publishedOnly)): ?>
 <div class="study-status-guide" aria-label="Study status guide">
     <span><span class="study-state-dot is-published" aria-hidden="true"></span><strong>Published</strong> &mdash; available in the repository</span>
     <span><span class="study-state-dot is-awaiting" aria-hidden="true"></span><strong>Awaiting publication</strong> &mdash; needs final Librarian approval</span>
     <span><span class="study-state-dot is-review" aria-hidden="true"></span><strong>In progress</strong> &mdash; still in the review process</span>
 </div>
+<?php endif; ?>
 <?php partial('find_bar', [
     'table' => '#folder-table',
     'papers' => $studies,
     'programs' => $programs,
-    'statusOptions' => [
+    'statusOptions' => !empty($publishedOnly) ? ['' => 'Published studies', 'approved' => 'Published'] : [
         '' => 'Any status',
         'submitted' => 'Submitted',
         'pending' => 'Pending',
@@ -49,7 +51,7 @@ foreach ($studies as $study) {
     <div class="study-folders-body">
         <aside class="study-folders-side" aria-label="Folders">
             <?php if (!$studyMonths): ?>
-                <p class="folder-empty">No submitted studies yet.</p>
+                <p class="folder-empty"><?= !empty($publishedOnly) ? 'No published studies yet.' : 'No submitted studies yet.' ?></p>
             <?php endif; ?>
             <?php foreach ($studyMonths as $month => $group): ?>
                 <?php $dayCount = count($group['days']); ?>
