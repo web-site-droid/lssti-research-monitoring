@@ -3647,6 +3647,33 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
 .student-scholar-list .student-abstract-link:hover { text-decoration: underline; }
 .scholar-results .scholar-hit { border: 0; }
 .scholar-results:empty { display: none; }
+/* Student results stay in a list, with feedback for mouse and keyboard navigation. */
+.student-scholar-list .paper-card {
+  position: relative;
+  isolation: isolate;
+}
+.student-scholar-list .paper-card::before {
+  content: '';
+  position: absolute;
+  inset: -0.65rem -0.75rem;
+  z-index: -1;
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  pointer-events: none;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+.student-scholar-list .paper-card:focus-within::before {
+  background: #14273d;
+  border-left-color: #94bff2;
+}
+.student-scholar-list .paper-card:focus-within h3 { color: #c5deff !important; }
+@media (hover: hover) {
+  .student-scholar-list .paper-card:hover::before { background: #14273d; border-left-color: #94bff2; }
+  .student-scholar-list .paper-card:hover h3 { color: #c5deff !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .student-scholar-list .paper-card::before { transition: none; }
+}
 .login-account-switch { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 0.4rem; margin: 0 0 1.5rem; padding: 0.35rem; background: #0a1626; border: 1px solid #405570; border-radius: 12px; }
 .login-account-switch a { display: flex; justify-content: center; align-items: center; gap: 0.5rem; min-height: 48px; padding: 0.65rem 0.5rem; color: #c4cfdd; border: 1px solid transparent; border-radius: 8px; text-decoration: none; font-size: 0.9rem; font-weight: 600; line-height: 1.4; text-align: center; }
 .login-account-switch a:hover { background: #203550; color: #fff; }
