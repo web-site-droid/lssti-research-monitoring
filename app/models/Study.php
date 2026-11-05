@@ -292,7 +292,7 @@ final class Study
         return $stmt->fetchAll();
     }
 
-    /** Approved studies from every department. The student's own department is listed first. */
+    /** Published studies across departments, with the student's department first. */
     /** @return list<array<string,mixed>> */
     public static function listApprovedCatalog(int $homeProgramId = 0): array
     {
@@ -311,11 +311,10 @@ final class Study
                     ) AS authors
              FROM studies s
              INNER JOIN programs p ON p.id = s.program_id
-             WHERE s.program_id = :home_pid
+             WHERE s.status = 'approved'
              ORDER BY CASE WHEN s.program_id = :home_pid_case THEN 0 ELSE 1 END, p.code ASC, s.updated_at DESC, s.title ASC"
         );
         $stmt->execute([
-            'home_pid' => $homeProgramId,
             'home_pid_case' => $homeProgramId,
         ]);
         return $stmt->fetchAll();

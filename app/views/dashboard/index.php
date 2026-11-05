@@ -729,7 +729,7 @@ $pendingUploads = $uploads ?? [];
         'programs' => $programs ?? [],
         'pageSize' => 6,
         'searchId' => 'q',
-        'showDepartment' => false,
+        'showDepartment' => true,
     ]); ?>
     <ul id="suggestions" class="suggestions scholar-suggestions" role="listbox"></ul>
 </div>
@@ -754,7 +754,7 @@ $pendingUploads = $uploads ?? [];
     <p class="empty-state">No approved papers yet.</p>
 <?php else: ?>
     <p class="empty-state" id="dept-paper-empty" hidden>No studies in that department.</p>
-    <div class="paper-cards" id="dept-paper-cards" data-page-size="6">
+    <div class="paper-cards student-scholar-list" id="dept-paper-cards" data-page-size="6">
         <?php foreach ($deptCatalog as $paper): ?>
             <?php $canRead = can_open_full_file($user, $paper); ?>
             <article class="paper-card<?= $canRead ? ' is-readable' : '' ?>"<?= paper_find_attrs($paper) ?>>
@@ -762,16 +762,19 @@ $pendingUploads = $uploads ?? [];
                 <h3><?= e($paper['title']) ?></h3>
                 <p class="paper-card-authors"><?= author_cell($paper['authors'] ?? '', (string) $paper['title']) ?></p>
                 <p class="paper-card-meta"><?= e(trim(($paper['program_code'] ?? '') . ' · ' . ($paper['school_year'] ?? '') . ' · ' . study_type_label($paper['study_type'] ?? ''), ' ·')) ?></p>
-                <?php if ($canRead): ?><span class="paper-card-hint">Open the whole file</span></a><?php endif; ?>
+                <?php if ($canRead): ?></a><?php endif; ?>
+                <p class="scholar-snippet"><?= e(mb_strimwidth((string) ($paper['abstract'] ?? ''), 0, 320, '...')) ?></p>
+                <?php if (!$canRead): ?><p class="scholar-access-note">Abstract only. Full manuscripts are available for your department.</p><?php endif; ?>
                 <div class="paper-card-actions">
-                <button type="button" class="btn btn-secondary btn-icon-only" data-study-quick
+                <button type="button" class="student-abstract-link" data-study-quick
                     data-title="<?= e($paper['title']) ?>"
                     data-meta="<?= e(trim(($paper['authors'] ?: '—') . ' · ' . ($paper['program_code'] ?? '') . ' · ' . ($paper['school_year'] ?? ''), ' ·')) ?>"
                     data-abstract="<?= e($paper['abstract'] ?? '') ?>"
                     data-objectives="<?= e($paper['research_objectives'] ?? '') ?>"
-                    aria-label="View abstract" title="View abstract"><?= icon('eye') ?></button>
+                    aria-label="View abstract" title="View abstract">View abstract</button>
                 <?php if ($canRead): ?>
-                    <a class="btn btn-secondary btn-icon-only" href="<?= e(url('file/manuscript', ['study_id' => $paper['id'], 'version_id' => $paper['current_version_id']])) ?>" aria-label="Download" title="Download"><?= icon('download') ?></a>
+                    <a href="<?= e(url('reader', ['id' => $paper['id']])) ?>">Read full text</a>
+                    <a href="<?= e(url('file/manuscript', ['study_id' => $paper['id'], 'version_id' => $paper['current_version_id']])) ?>" aria-label="Download manuscript">[PDF] Download</a>
                 <?php endif; ?>
                 </div>
             </article>

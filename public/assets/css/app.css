@@ -3429,3 +3429,96 @@ body.nav-open .nav-sheet:not([hidden]) { display: flex; }
   background: #fff;
   margin-top: 0.2rem;
 }
+
+/* Published student catalog and searches use a Scholar-style reading list. */
+.student-scholar-list,
+.scholar-results {
+  display: block;
+  width: min(60rem, 100%);
+  margin-inline: auto;
+  text-align: left;
+}
+.student-scholar-list .paper-card,
+.scholar-results .scholar-hit,
+.scholar-results .result-item {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0 0 1.75rem;
+  height: auto;
+}
+.student-scholar-list .paper-card:hover {
+  transform: none;
+  box-shadow: none;
+  border: 0;
+}
+.student-scholar-list .paper-card-open { padding: 0; }
+.student-scholar-list h3 {
+  color: #1a0dab;
+  font-size: 1.2rem;
+  font-weight: 400;
+  margin: 0 0 0.25rem;
+}
+.student-scholar-list a { text-decoration: none; }
+.student-scholar-list a:hover h3 { text-decoration: underline; }
+.student-scholar-list .paper-card-authors,
+.student-scholar-list .paper-card-meta { color: #006621; margin: 0.15rem 0; }
+.student-scholar-list .scholar-snippet { margin: 0.4rem 0; line-height: 1.55; }
+.student-scholar-list .paper-card-actions { border: 0; padding: 0.25rem 0; justify-content: flex-start; }
+
+/* Match the reference: plain white results, blue titles, green bylines. */
+.student-scholar-list,
+.scholar-results {
+  background: #fff;
+  color: #202124;
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 1.5rem 2rem;
+  box-sizing: border-box;
+}
+.student-scholar-list .paper-card {
+  display: block;
+  cursor: default;
+  margin-bottom: 1.8rem;
+}
+.student-scholar-list .paper-card:last-child { margin-bottom: 0; }
+.student-scholar-list .paper-card-open { display: block; }
+.student-scholar-list .paper-card h3,
+.scholar-results .scholar-hit h3,
+.scholar-results .scholar-hit h3 a {
+  color: #1a0dab !important;
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1.3;
+}
+.student-scholar-list .paper-card-authors,
+.student-scholar-list .paper-card-meta,
+.scholar-results .scholar-meta { color: #006621 !important; font-size: 0.95rem; }
+.student-scholar-list .scholar-snippet,
+.scholar-results .scholar-snippet { color: #202124 !important; font-size: 1rem; line-height: 1.5; }
+.student-scholar-list .scholar-access-note,
+.scholar-results .scholar-access-note { color: #666 !important; font-size: 0.8rem; margin: 0.2rem 0; }
+.student-scholar-list .paper-card-actions { gap: 1.1rem; margin-top: 0.25rem; }
+.student-scholar-list .paper-card-actions a,
+.student-scholar-list .student-abstract-link,
+.scholar-results .scholar-actions button,
+.scholar-results .scholar-save {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  color: #1a0dab !important;
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.student-scholar-list .paper-card-actions a:hover,
+.student-scholar-list .student-abstract-link:hover { text-decoration: underline; }
+.scholar-results .scholar-hit { border: 0; }
+.scholar-results:empty { display: none; }
+@media (max-width: 600px) {
+  .student-scholar-list, .scholar-results { padding: 1rem; }
+  .scholar-results .scholar-hit { grid-template-columns: 1fr; gap: 0.5rem; }
+}
