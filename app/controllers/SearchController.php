@@ -86,6 +86,7 @@ final class SearchController
                 'short_title' => $row['short_title'],
                 'program_code' => $row['program_code'],
                 'school_year' => $row['school_year'],
+                'published_at_label' => publication_timestamp_label($row['approved_at'] ?? null),
                 'study_type' => $row['study_type'],
                 'study_type_label' => study_type_label($row['study_type'] ?? ''),
                 'authors' => Study::formatAuthorList($id, false),

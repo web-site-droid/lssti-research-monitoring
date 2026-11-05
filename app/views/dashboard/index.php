@@ -763,6 +763,7 @@ $pendingUploads = $uploads ?? [];
                 <p class="paper-card-authors"><?= author_cell($paper['authors'] ?? '', (string) $paper['title']) ?></p>
                 <p class="paper-card-meta"><?= e(trim(($paper['program_code'] ?? '') . ' · ' . ($paper['school_year'] ?? '') . ' · ' . study_type_label($paper['study_type'] ?? ''), ' ·')) ?></p>
                 <?php if ($canRead): ?></a><?php endif; ?>
+                <p class="publication-timestamp">Published: <?= e(publication_timestamp_label($paper['approved_at'] ?? null)) ?></p>
                 <p class="scholar-snippet"><?= e(mb_strimwidth((string) ($paper['abstract'] ?? ''), 0, 320, '...')) ?></p>
                 <?php if (!$canRead): ?><p class="scholar-access-note">Abstract only. Full manuscripts are available for your department.</p><?php endif; ?>
                 <div class="paper-card-actions">

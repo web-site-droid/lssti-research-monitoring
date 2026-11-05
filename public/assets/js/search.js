@@ -222,6 +222,7 @@
         return '<article class="scholar-hit" data-study="' + item.id + '">' +
           '<div><h3>' + (item.full_access ? '<a href="index.php?route=reader&id=' + item.id + '">' : '') + (titleMatch ? '<b class="title-hit">' + escapeHtml(item.title) + '</b>' : (plain ? escapeHtml(item.title) : highlight(item.title, query))) + (item.full_access ? '</a>' : '') + '</h3>' +
           '<p class="scholar-meta">' + (titleMatch || plain ? escapeHtml(meta) : highlight(meta, query)) + '</p>' +
+          '<p class="publication-timestamp">Published: ' + escapeHtml(item.published_at_label || 'Publication date unavailable') + '</p>' +
           '<p class="scholar-snippet">' + (titleMatch || plain ? escapeHtml(snippetText(text, query)) : snippet(text, query)) + '</p>' +
           '<p class="scholar-actions">' + saveControl(item) +
           '<button type="button" class="scholar-cite" data-cite="' + item.id + '">Cite</button></p></div>' +

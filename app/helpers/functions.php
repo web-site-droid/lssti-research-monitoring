@@ -298,6 +298,18 @@ function can_open_full_file(?array $user, array $study): bool
         && \App\Models\Study::canOpenFullManuscript($user, $study);
 }
 
+function publication_timestamp_label(?string $value): string
+{
+    if ($value === null || trim($value) === '') {
+        return 'Publication date unavailable';
+    }
+    $date = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $value);
+    if (!$date || $date->format('Y-m-d H:i:s') !== $value) {
+        return 'Publication date unavailable';
+    }
+    return $date->format('F j, Y \a\t g:i A');
+}
+
 function study_type_label(?string $type): string
 {
     $options = study_type_options();
