@@ -21,12 +21,13 @@ $ownDepartment = $adviserQueue || $deanQueue;
 <?php if (!empty($error)): ?><p class="alert alert-error"><?= e($error) ?></p><?php endif; ?>
 <?php partial('find_bar', [
     'table' => '#review-studies',
-    'cards' => '#review-read-cards',
+    'cards' => $adviserQueue ? '' : '#review-read-cards',
     'papers' => $studies,
     'statusOptions' => $adviserQueue ? ['' => 'Any status', 'pending' => 'Pending', 'accepted' => 'Accepted'] : [],
     'statusAttr' => 'data-decision',
     'showDepartment' => !$ownDepartment,
 ]); ?>
+<?php if (!$adviserQueue): ?>
 <p class="muted">Click a card to read the whole file and play it aloud.</p>
 <div class="paper-cards" id="review-read-cards">
     <?php foreach ($studies as $paper): ?>
@@ -36,6 +37,7 @@ $ownDepartment = $adviserQueue || $deanQueue;
         endif; ?>
     <?php endforeach; ?>
 </div>
+<?php endif; ?>
 <div class="table-scroll<?= count($studies) > 10 ? ' is-scroll' : '' ?>">
 <div class="table-wrap dash-board">
 <table class="dash-table review-table<?= $ownDepartment ? ' is-own-dept' : '' ?>" id="review-studies">
