@@ -336,7 +336,7 @@
         return;
       }
       debouncedSuggest();
-      if (q.value.trim().length >= 2) {
+      if (q.value.trim().length >= 1) {
         debouncedSearch();
       } else if (q.value.trim().length === 0) {
         debouncedSearch();

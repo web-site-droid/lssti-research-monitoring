@@ -22,5 +22,7 @@ if(!str_contains($call->sql,'ORDER BY (s.title LIKE :title_match) DESC')||$call-
 \App\Models\Study::searchApproved(['q'=>'the'],'date');$date=$GLOBALS['db']->calls[1];
 if(isset($date->params['title_match'])||!str_contains($date->sql,'ORDER BY s.approved_at DESC'))throw new RuntimeException('Explicit date sorting changed');
 \App\Models\Study::suggest('the%_');$suggest=$GLOBALS['db']->calls[2];
-if($suggest->params[':t']!=='%the\\%\\_%')throw new RuntimeException('Suggestion text not escaped literally');
-echo 'Passed 6 server search query checks.'.PHP_EOL;
+if($suggest->params[':t']!=='the\\%\\_%')throw new RuntimeException('Suggestion text not escaped literally');
+\App\Models\Study::searchApproved(['q'=>'d']);$initial=$GLOBALS['db']->calls[5];
+if(($initial->params['initial']??'')!=='d%'||!str_contains($initial->sql,'s.title LIKE :initial'))throw new RuntimeException('Single letter must match title prefix');
+echo 'Passed 7 server search query checks.'.PHP_EOL;

@@ -27,3 +27,17 @@ assert.strictEqual(state.matches(paper('Artificial Intelligence', 'Jane Doe', ''
 state.queryEl.value = '';
 assert.strictEqual(state.matches(paper('Artificial Intelligence', 'Jane Doe', '')), true);
 console.log('Passed 8 dashboard search matching checks.');
+const rankStart = app.indexOf('    function suggestionRank(node, query) {');
+const rankEnd = app.indexOf('    function sortNodes(list) {', rankStart);
+vm.runInContext(app.slice(rankStart, rankEnd), state);
+const suggestions = [paper('The impact of technology', 'David', ''), paper('The development of a system', 'Jane', ''), paper('Design of a system', 'Jane', '')];
+suggestions.sort((a,b) => state.suggestionRank(a, 'd') - state.suggestionRank(b, 'd'));
+assert.strictEqual(suggestions[0].getAttribute('data-search-title'), 'Design of a system');
+assert.strictEqual(suggestions[1].getAttribute('data-search-title'), 'The development of a system');
+assert.strictEqual(suggestions[2].getAttribute('data-search-title'), 'The impact of technology');
+console.log('Passed 3 title-prefix suggestion ranking checks.');
+state.queryEl.value = 'd';
+assert.strictEqual(state.matches(paper('Design of a system', 'Jane', '')), true);
+assert.strictEqual(state.matches(paper('The development of a system', 'David', '')), false);
+assert.strictEqual(state.matches(paper('Artificial Intelligence', 'David', '')), false);
+console.log('Passed 3 single-letter prefix checks.');

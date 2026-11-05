@@ -930,6 +930,10 @@ final class Study
                 $params[$key] = '%' . self::likeEscape($word) . '%';
             }
             $sql .= ' AND (' . implode(' AND ', $parts) . ')';
+            if (mb_strlen($q) === 1) {
+                $sql .= ' AND s.title LIKE :initial';
+                $params['initial'] = self::likeEscape($q) . '%';
+            }
         }
         if (!empty($filters['program_id'])) {
             $sql .= ' AND s.program_id = :pid';
@@ -1058,13 +1062,15 @@ final class Study
         if ($term === '') {
             return [];
         }
-        $like = '%' . self::likeEscape($term) . '%';
+        $like = self::likeEscape($term) . '%';
         $deptSql = $programId > 0 ? ' AND s.program_id = :pid' : '';
         $titles = db()->prepare(
             "SELECT DISTINCT s.title AS label, 'title' AS type FROM studies s
-             WHERE s.status = 'approved' AND s.title LIKE :t{$deptSql} LIMIT :lim"
+             WHERE s.status = 'approved' AND s.title LIKE :t{$deptSql}
+             ORDER BY (s.title LIKE :prefix) DESC, s.title ASC LIMIT :lim"
         );
         $titles->bindValue(':t', $like);
+        $titles->bindValue(':prefix', self::likeEscape($term) . '%');
         if ($programId > 0) {
             $titles->bindValue(':pid', $programId, PDO::PARAM_INT);
         }

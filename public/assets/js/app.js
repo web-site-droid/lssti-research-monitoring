@@ -485,6 +485,9 @@ function initFindBars() {
       var cells = node.querySelectorAll('td');
       var searchable = [node.getAttribute('data-search-title') || (heading ? heading.textContent : ''), node.getAttribute('data-search-authors') || (authors ? authors.textContent : (cells[1] ? cells[1].textContent : '')), node.getAttribute('data-program') || ''].join(' ').toLowerCase();
       var textOk = !query || query.split(/\s+/).every(function (word) { return searchable.indexOf(word) !== -1; });
+      if (query.length === 1) {
+        textOk = (node.getAttribute('data-search-title') || (heading ? heading.textContent : '')).trim().toLowerCase().indexOf(query) === 0;
+      }
       var deptOk = !applied.dept || node.getAttribute('data-program') === applied.dept || node.getAttribute('data-all-depts') === '1';
       var typeOk = !applied.type || node.getAttribute('data-type') === applied.type;
       var yearOk = !applied.year || node.getAttribute('data-year') === applied.year;
@@ -500,15 +503,16 @@ function initFindBars() {
         box.innerHTML = '';
         return;
       }
-      var hits = pool.filter(matches).sort(function (a, b) {
-        var term = query.toLowerCase();
-        return Number(itemTitle(b).indexOf(term) !== -1) - Number(itemTitle(a).indexOf(term) !== -1);
+      var hits = pool.filter(matches).filter(function (node) {
+        return suggestionRank(node, query) <= 1;
+      }).sort(function (a, b) {
+        return suggestionRank(a, query) - suggestionRank(b, query);
       }).slice(0, 6);
       box.innerHTML = '';
       if (!hits.length) {
         var emptyHit = document.createElement('p');
         emptyHit.className = 'find-hit is-empty';
-        emptyHit.textContent = 'No papers match.';
+        emptyHit.textContent = 'No titles start with "' + query + '".';
         box.appendChild(emptyHit);
         box.hidden = false;
         return;
@@ -554,6 +558,15 @@ function initFindBars() {
     function itemTitle(node) {
       var heading = node.querySelector('h3, td');
       return (heading ? heading.textContent : node.textContent).trim().toLowerCase();
+    }
+    function suggestionRank(node, query) {
+      var title = (node.getAttribute('data-search-title') || itemTitle(node)).toLowerCase();
+      var term = query.trim().toLowerCase();
+      if (title === term) return 0;
+      if (title.indexOf(term) === 0) return 1;
+      if (title.split(/\s+/).some(function (word) { return word.indexOf(term) === 0; })) return 2;
+      if (title.indexOf(term) !== -1) return 3;
+      return 4;
     }
     function sortNodes(list) {
       var mode = sortEl ? sortEl.value : 'newest';
