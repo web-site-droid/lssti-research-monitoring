@@ -564,7 +564,6 @@ $pendingUploads = $uploads ?? [];
     <p class="muted">All studies in your department — full manuscript available. Pending items can be sent to the dean after a review note.</p>
     <?php partial('find_bar', [
         'table' => '#drc-dept-table',
-        'cards' => '#drc-read-cards',
         'pager' => '[data-table-pager="#drc-dept-table"]',
         'empty' => '#drc-dept-table-empty',
         'papers' => $deptCatalog,
@@ -573,18 +572,6 @@ $pendingUploads = $uploads ?? [];
         'pageSize' => 6,
         'showDepartment' => false,
     ]); ?>
-    <p class="muted">Click a card to read the whole file and play it aloud.</p>
-    <div class="paper-cards" id="drc-read-cards">
-        <?php foreach ($deptCatalog as $paper): ?>
-            <?php if ((int) ($paper['current_version_id'] ?? 0) > 0):
-                $cardStatus = (string) ($paper['status'] ?? '');
-                $cardGate = $cardStatus === 'pending'
-                    ? 'pending'
-                    : (in_array($cardStatus, ['dean_review', 'under_review', 'library_review', 'admin_review', 'approved', 'archived'], true) ? 'accepted' : '');
-                partial('paper_read_card', ['paper' => $paper, 'gate' => $cardGate]);
-            endif; ?>
-        <?php endforeach; ?>
-    </div>
     <p id="drc-dept-table-empty" class="empty-state" hidden data-empty-text="No studies match.">No studies match.</p>
     <div class="table-scroll<?= count($deptCatalog) > 10 ? ' is-scroll' : '' ?>">
     <div class="table-wrap">
