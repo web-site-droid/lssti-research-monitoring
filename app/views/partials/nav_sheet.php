@@ -19,7 +19,6 @@ $who = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))
                 <a href="<?= e(url('admin/accounts')) ?>" data-nav-match="admin/accounts">Librarian accounts</a>
                 <a href="<?= e(url('admin/activity')) ?>" data-nav-match="admin/activity">Activity logs</a>
             <?php elseif ($role === Role::SCHOOL_ADMINISTRATOR): ?>
-                <a href="<?= e(url('admin/setup')) ?>" data-nav-match="admin/setup">Admin setup</a>
                 <a href="<?= e(url('study')) ?>" data-nav-match="study">Study</a>
                 <a href="<?= e(url('review')) ?>" data-nav-match="review">Review</a>
                 <a href="<?= e(url('users')) ?>" data-nav-match="users">People</a>
