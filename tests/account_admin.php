@@ -101,6 +101,11 @@ namespace {
     expect(fn()=>LibrarianAccounts::createAdmin($_POST,1),'An Admin account already exists. Setup is closed.');
     check(!$GLOBALS['fixture']->inTransaction(),'Setup failure rolls back');
     Auth::$actor['role_slug']='account_admin';$router=new \App\Router();
+    $routeProperty=new \ReflectionProperty($router,'routes');$routeProperty->setAccessible(true);
+    $studyRoles=$routeProperty->getValue($router)['study']['roles'];
+    check(in_array(Role::SCHOOL_ADMINISTRATOR,$studyRoles,true),'Final-publisher Librarian can open Study');
+    check(in_array(Role::SCHOOL_RESEARCH_COORDINATOR,$studyRoles,true),'SRC retains Study access');
+    check(!in_array(Role::ACCOUNT_ADMIN,$studyRoles,true),'Account Admin remains excluded from Study');
     foreach(['review','settings','users','file/manuscript','reports','studies','admin/setup'] as $route){
         $router->dispatch($route);check($GLOBALS['view'][0]==='errors/forbidden','Route isolated: '.$route);http_response_code(200);
     }

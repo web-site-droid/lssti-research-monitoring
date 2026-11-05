@@ -71,7 +71,7 @@ final class Router
             'users/departments/save' => [UserController::class, 'departmentSave', 'auth' => true, 'roles' => [Role::SCHOOL_ADMINISTRATOR, Role::SCHOOL_RESEARCH_COORDINATOR]],
 
             'studies' => [StudyController::class, 'index', 'auth' => true],
-            'study' => [StudyController::class, 'folders', 'auth' => true, 'roles' => $academic],
+            'study' => [StudyController::class, 'folders', 'auth' => true, 'roles' => Role::allManuscriptViewers()],
             'studies/create' => [StudyController::class, 'createForm', 'auth' => true, 'roles' => [Role::STUDENT]],
             'studies/create/submit' => [StudyController::class, 'createSubmit', 'auth' => true, 'roles' => [Role::STUDENT]],
             'studies/upload-part' => [StudyController::class, 'uploadPart', 'auth' => true, 'roles' => [Role::STUDENT, Role::SCHOOL_ADMINISTRATOR]],
