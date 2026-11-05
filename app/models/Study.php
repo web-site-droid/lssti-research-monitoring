@@ -31,6 +31,23 @@ final class Study
         return $stmt->fetchAll();
     }
 
+    /** @param list<int> $studyIds @return array<int, list<array<string,mixed>>> */
+    public static function authorsForStudies(array $studyIds): array
+    {
+        $studyIds = array_values(array_unique(array_filter(array_map('intval', $studyIds), static fn (int $id): bool => $id > 0)));
+        if ($studyIds === []) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($studyIds), '?'));
+        $stmt = db()->prepare("SELECT * FROM study_authors WHERE study_id IN ({$placeholders}) ORDER BY study_id, sort_order");
+        $stmt->execute($studyIds);
+        $map = [];
+        foreach ($stmt->fetchAll() as $author) {
+            $map[(int) $author['study_id']][] = $author;
+        }
+        return $map;
+    }
+
     public static function keywords(int $studyId): array
     {
         $stmt = db()->prepare('SELECT keyword FROM study_keywords WHERE study_id = :id ORDER BY keyword');
@@ -1170,7 +1187,12 @@ final class Study
         if ($hideNames) {
             return 'Authors withheld (double-blind review)';
         }
-        $authors = self::authors($studyId);
+        return self::formatAuthors(self::authors($studyId));
+    }
+
+    /** @param list<array<string,mixed>> $authors */
+    public static function formatAuthors(array $authors): string
+    {
         $parts = [];
         foreach ($authors as $a) {
             $name = $a['last_name'] . ', ' . $a['first_name'];

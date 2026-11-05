@@ -74,15 +74,17 @@ final class SearchController
             'c' => count($results),
         ]);
 
+        $studyIds = array_map(static fn ($row) => (int) $row['id'], $results);
+        $authorsByStudy = Study::authorsForStudies($studyIds);
         $mine = [];
         if ($user && ($user['role_slug'] ?? '') === 'student') {
-            $mine = Study::userRatingsMap((int) $user['id'], array_map(static fn ($row) => (int) $row['id'], $results));
+            $mine = Study::userRatingsMap((int) $user['id'], $studyIds);
         }
         $savedIds = $user ? array_flip(Study::savedIds((int) $user['id'])) : [];
         $items = [];
         foreach ($results as $row) {
             $id = (int) $row['id'];
-            $authors = Study::authors($id);
+            $authors = $authorsByStudy[$id] ?? [];
             $fullAccess = Study::canOpenFullManuscript($user, $row);
             $items[] = [
                 'id' => $id,
@@ -93,7 +95,7 @@ final class SearchController
                 'published_at_label' => publication_timestamp_label($row['approved_at'] ?? null),
                 'study_type' => $row['study_type'],
                 'study_type_label' => study_type_label($row['study_type'] ?? ''),
-                'authors' => Study::formatAuthorList($id, false),
+                'authors' => Study::formatAuthors($authors),
                 'abstract' => $row['abstract'] ?? '',
                 'objectives' => $row['research_objectives'] ?? '',
                 'search_text' => implode("\n", array_filter([
