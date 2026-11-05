@@ -93,13 +93,11 @@ final class UserController
 
     public function createForm(): void
     {
-        $this->denyDeanAccountChanges();
         redirect('users', ['add' => 1]);
     }
 
     public function createSubmit(): void
     {
-        $this->denyDeanAccountChanges();
         Csrf::requireValid();
         $data = [
             'school_id' => trim($_POST['school_id'] ?? ''),

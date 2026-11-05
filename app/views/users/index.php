@@ -14,7 +14,7 @@ $editRoles = $editRoles ?? $roles ?? [];
         } elseif (!empty($canManageDepartments)) {
             echo 'Add people and assign a department.';
         } elseif ($deanMode) {
-            echo 'View accounts you added in your department. Select View account to see their details.';
+            echo 'Add accounts in your department and view their details. Existing accounts are read-only.';
         } elseif ($coordinatorMode) {
             echo 'Research advisers and students in your department' . ($departmentLabel !== '' ? ' (' . e($departmentLabel) . ')' : '') . '.';
         } elseif ($adviserMode) {
@@ -60,10 +60,10 @@ $editRoles = $editRoles ?? $roles ?? [];
         </ul>
     <?php endif; ?>
 </section>
+<?php endif; ?>
 <p class="toolbar">
     <button type="button" class="btn btn-primary" data-open-add <?= $deptMode && $departmentLabel === '' ? 'disabled' : '' ?>><?= icon('user-plus') ?> <?= $deptMode ? 'Add account' : 'Add person' ?></button>
 </p>
-<?php endif; ?>
 <?php
 $departments = [];
 foreach ($users as $person) {
@@ -243,7 +243,6 @@ ksort($departments);
     </form>
 </dialog>
 <?php endif; ?>
-<?php if (!$deanMode): ?>
 <dialog id="add-account" class="preview-modal profile-modal" data-open-add="<?= !empty($openAdd) ? '1' : '0' ?>">
     <form method="post" action="<?= e(url('users/create/submit')) ?>" class="profile-editor stack">
         <?= \App\Helpers\Csrf::field() ?>
@@ -321,4 +320,3 @@ ksort($departments);
         <?php endif; ?>
     </form>
 </dialog>
-<?php endif; ?>
