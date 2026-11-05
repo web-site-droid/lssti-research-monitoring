@@ -16,6 +16,32 @@ final class LibrarianAccounts
         return (bool) db()->query("SELECT 1 FROM users u JOIN roles r ON r.id=u.role_id WHERE r.slug='account_admin' LIMIT 1")->fetchColumn();
     }
 
+    public static function requireAnotherActive(int $id): void
+    {
+        $stmt = db()->prepare("SELECT COUNT(*) FROM users u JOIN roles r ON r.id=u.role_id WHERE r.slug='school_administrator' AND u.is_active=1 AND u.id<>:id");
+        $stmt->execute(['id'=>$id]);
+        if ((int) $stmt->fetchColumn() < 1) throw new \RuntimeException('Keep at least one active Librarian account.');
+    }
+
+    public static function updateAccount(int $id, array $data): void
+    {
+        $pdo = db(); $pdo->beginTransaction();
+        try {
+            $pdo->query("SELECT id FROM roles WHERE slug='school_administrator' FOR UPDATE")->fetchAll();
+            $stmt = $pdo->prepare('SELECT u.*, r.slug AS role_slug FROM users u JOIN roles r ON r.id=u.role_id WHERE u.id=:id FOR UPDATE');
+            $stmt->execute(['id'=>$id]); $target = $stmt->fetch();
+            if (!$target || $target['role_slug'] !== 'school_administrator') throw new \RuntimeException('Only Librarian accounts can be edited here.');
+            if ((int) $target['is_active'] === 1 && (int) $data['is_active'] === 0) self::requireAnotherActive($id);
+            $data['role_id'] = (int) $target['role_id'];
+            $data['program_id'] = $target['program_id'];
+            User::update($id, $data);
+            $pdo->commit();
+        } catch (\Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
+
     public static function createAdmin(array $data, int $actor): int
     {
         $pdo = db();

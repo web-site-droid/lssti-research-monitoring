@@ -43,6 +43,8 @@ final class Router
             'admin/login/submit' => [AuthController::class, 'adminLoginSubmit', 'auth' => false],
             'admin/accounts' => [AccountAdminController::class, 'index', 'auth' => true, 'roles' => [Role::ACCOUNT_ADMIN]],
             'admin/accounts/create' => [AccountAdminController::class, 'create', 'auth' => true, 'roles' => [Role::ACCOUNT_ADMIN]],
+            'admin/accounts/edit' => [AccountAdminController::class, 'edit', 'auth' => true, 'roles' => [Role::ACCOUNT_ADMIN]],
+            'admin/accounts/delete' => [AccountAdminController::class, 'delete', 'auth' => true, 'roles' => [Role::ACCOUNT_ADMIN]],
             'admin/activity' => [AccountAdminController::class, 'activity', 'auth' => true, 'roles' => [Role::ACCOUNT_ADMIN]],
             'admin/setup' => [AccountAdminController::class, 'setup', 'auth' => true, 'roles' => [Role::SCHOOL_ADMINISTRATOR]],
             'admin/setup/submit' => [AccountAdminController::class, 'setupSubmit', 'auth' => true, 'roles' => [Role::SCHOOL_ADMINISTRATOR]],
@@ -148,7 +150,7 @@ final class Router
 
         $def = $this->routes[$route];
         if ((Auth::user()['role_slug'] ?? '') === Role::ACCOUNT_ADMIN
-            && !in_array($route, ['admin/accounts', 'admin/accounts/create', 'admin/activity', 'dashboard',
+            && !in_array($route, ['admin/accounts', 'admin/accounts/create', 'admin/accounts/edit', 'admin/accounts/delete', 'admin/activity', 'dashboard',
                 'login', 'login/submit', 'admin/login', 'admin/login/submit', 'logout', 'profile', 'profile/update', 'profile/photo',
                 'password/change', 'password/change/submit'], true)) {
             http_response_code(403);

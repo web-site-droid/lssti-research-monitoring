@@ -106,17 +106,22 @@ final class User
         $stmt->execute($params);
     }
 
-    public static function deleteWithoutAcademicRecords(int $id, int $actorId): array
+    public static function deleteWithoutAcademicRecords(int $id, int $actorId, ?string $requiredRole = null): array
     {
         $pdo = db();
         $pdo->beginTransaction();
         try {
-            $stmt = $pdo->prepare('SELECT u.id, u.school_id, r.slug AS role_slug FROM users u JOIN roles r ON r.id=u.role_id WHERE u.id=:id FOR UPDATE');
+            $pdo->query("SELECT id FROM roles WHERE slug='school_administrator' FOR UPDATE")->fetchAll();
+            $stmt = $pdo->prepare('SELECT u.id, u.school_id, u.is_active, r.slug AS role_slug FROM users u JOIN roles r ON r.id=u.role_id WHERE u.id=:id FOR UPDATE');
             $stmt->execute(['id'=>$id]);
             $account = $stmt->fetch();
             if (!$account) throw new \RuntimeException('Account not found.');
+            if ($requiredRole !== null && $account['role_slug'] !== $requiredRole) throw new \RuntimeException('Only Librarian accounts can be deleted here.');
             if ($id === $actorId) throw new \RuntimeException('You cannot delete your signed-in account.');
             if ($account['role_slug'] === Role::ACCOUNT_ADMIN) throw new \RuntimeException('Admin accounts cannot be deleted through People.');
+            if ($account['role_slug'] === Role::SCHOOL_ADMINISTRATOR && (int) $account['is_active'] === 1) {
+                LibrarianAccounts::requireAnotherActive($id);
+            }
             $references = [
                 'studies' => ['submitter_user_id', 'adviser_user_id'],
                 'study_versions' => ['uploaded_by'],

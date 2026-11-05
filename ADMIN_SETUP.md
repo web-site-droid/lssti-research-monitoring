@@ -17,11 +17,11 @@ Admin login is `index.php?route=admin/login`. Existing Admin accounts can use th
 
 ## Admin pages
 
-- **Librarian accounts:** lists final-publisher Librarians and creates new ones with an initial temporary password. Posted role or department values cannot change the type of account created.
+- **Librarian accounts:** create Librarians; edit their ID no., names, and active status; delete eligible accounts with confirmation. Posted role/department values cannot change their role or department. At least one Librarian must remain active. Accounts with academic records must be deactivated rather than deleted.
 - **Activity logs:** latest 200 recorded audit/login events, optionally filtered to a Librarian. Includes recorded successful/failed sign-ins and sign-outs where associated with that user, and existing recorded actions. It is not a record of every page view.
 - **Profile/password:** the Admin manages their own profile and password through the existing account screens.
 
-The Admin cannot review/publish studies, open full manuscripts, access school-wide research reports, or use general People management. Existing account editing, disabling, or password resets are not added by this feature. Generic People/import routes cannot create or modify the special Admin role. Librarian account activity is scoped server-side to the final-publisher role; manually requesting another user's ID is rejected.
+The Admin cannot review/publish studies, open full manuscripts, access school-wide research reports, or use general People management. Password resets are not included in Librarian editing. Generic People/import routes cannot create or modify the special Admin role. Librarian account activity is scoped server-side to the final-publisher role; manually requesting another user's ID is rejected.
 
 The legacy `librarian` role is distinct from the final-publisher `school_administrator` role. This new interface manages the latter, which is the Librarian account used in the current workflow.
 

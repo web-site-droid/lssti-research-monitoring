@@ -59,6 +59,7 @@ namespace {
     function is_post(): bool {return true;}
     function view($name,$data): void {$GLOBALS['view']=[$name,$data];}
     function e($value): string {return htmlspecialchars((string)$value,ENT_QUOTES,'UTF-8');}
+    function icon($name): string {return '';}
     function url($route,$params=[]): string {return 'index.php?'.http_build_query(['route'=>$route]+$params);}
     function redirect($route,...$args): never {throw new \RuntimeException('redirect:'.$route);}
     function check(bool $ok,string $why): void {if(!$ok)throw new \RuntimeException($why);$GLOBALS['checks']++;}

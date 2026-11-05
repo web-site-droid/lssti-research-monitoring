@@ -14,6 +14,7 @@ namespace {
     final class Fixture {
         public array $target=['id'=>2,'school_id'=>'OLD-2','role_slug'=>'student','role_name'=>'Student','program_id'=>3,'created_by'=>1];
         public bool $transaction=false,$deleted=false,$duplicate=false;
+        public int $otherActive=1;
         public ?string $reference=null;
         public array $updates=[];
         public function beginTransaction(): void {$this->transaction=true;}
@@ -21,6 +22,7 @@ namespace {
         public function rollBack(): void {$this->transaction=false;}
         public function inTransaction(): bool {return $this->transaction;}
         public function prepare(string $sql): Statement {return new Statement($this,$sql);}
+        public function query(string $sql): Statement {return $this->prepare($sql);}
     }
     final class Statement {
         public array $params=[];
@@ -36,9 +38,11 @@ namespace {
             return $this->db->target;
         }
         public function fetchColumn() {
+            if(str_contains($this->sql,'COUNT(*)'))return $this->db->otherActive;
             if(str_contains($this->sql,'FROM roles'))return 1;
             return $this->db->reference!==null && str_contains($this->sql,'FROM '.$this->db->reference.' ');
         }
+        public function fetchAll(): array {return [];}
     }
     function db(): Fixture {return $GLOBALS['db'];}
     function flash(...$args): void {}
@@ -50,7 +54,9 @@ namespace {
     }
     require __DIR__.'/../app/helpers/Role.php';
     require __DIR__.'/../app/models/User.php';
+    require __DIR__.'/../app/models/LibrarianAccounts.php';
     require __DIR__.'/../app/controllers/UserController.php';
+    require __DIR__.'/../app/controllers/AccountAdminController.php';
     $GLOBALS['checks']=0;$GLOBALS['db']=new Fixture();
     $controller=new \App\Controllers\UserController();
     $_POST=['id'=>2,'school_id'=>' new-2 ','first_name'=>'Test','last_name'=>'Student','role_id'=>3,'program_id'=>3,'is_active'=>1];
@@ -83,5 +89,19 @@ namespace {
     blocked(fn()=>$controller->deleteSubmit(),'redirect');check($GLOBALS['db']->deleted,'SRC can delete unlinked user');
     $GLOBALS['db']=new Fixture();$GLOBALS['db']->reference='studies';
     blocked(fn()=>$controller->deleteSubmit(),'redirect');check(!$GLOBALS['db']->deleted,'SRC cannot delete user linked to studies');
+    $admin=new \App\Controllers\AccountAdminController();\App\Helpers\Auth::$actor['role_slug']='account_admin';
+    $GLOBALS['db']=new Fixture();$GLOBALS['db']->target+=['role_id'=>1,'is_active'=>1];$GLOBALS['db']->target['role_slug']='school_administrator';
+    $_POST=['id'=>2,'school_id'=>'LIB-NEW','first_name'=>'New','last_name'=>'Name','is_active'=>1,'role_id'=>10,'program_id'=>999];
+    blocked(fn()=>$admin->edit(),'redirect');$saved=$GLOBALS['db']->updates[0];
+    check($saved['sid']==='LIB-NEW'&&$saved['rid']===1&&$saved['pid']===3,'Admin edits Librarian but cannot change role/department');
+    $GLOBALS['db']->updates=[];$GLOBALS['db']->target['role_slug']='student';
+    blocked(fn()=>$admin->edit(),'redirect');check(!$GLOBALS['db']->updates,'Admin cannot edit student through Librarian route');
+    blocked(fn()=>$admin->delete(),'redirect');check(!$GLOBALS['db']->deleted,'Admin cannot delete non-Librarian');
+    $GLOBALS['db']->target['role_slug']='school_administrator';$GLOBALS['db']->otherActive=0;unset($_POST['is_active']);
+    blocked(fn()=>$admin->edit(),'redirect');check(!$GLOBALS['db']->updates,'Last active Librarian cannot be deactivated');
+    blocked(fn()=>$admin->delete(),'redirect');check(!$GLOBALS['db']->deleted,'Last active Librarian cannot be deleted');
+    $GLOBALS['db']->otherActive=1;$GLOBALS['db']->reference='studies';
+    blocked(fn()=>$admin->delete(),'redirect');check(!$GLOBALS['db']->deleted,'Admin cannot delete Librarian with studies');
+    $GLOBALS['db']->reference=null;blocked(fn()=>$admin->delete(),'redirect');check($GLOBALS['db']->deleted,'Admin can delete eligible Librarian');
     echo 'Passed '.$GLOBALS['checks'].' Librarian management checks.'.PHP_EOL;
 }

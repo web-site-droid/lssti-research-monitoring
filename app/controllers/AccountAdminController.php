@@ -33,6 +33,48 @@ final class AccountAdminController
         redirect('admin/accounts');
     }
 
+    public function edit(): void
+    {
+        Auth::requireRole(Role::ACCOUNT_ADMIN); Csrf::requireValid();
+        $id = (int) ($_POST['id'] ?? 0);
+        $data = [
+            'school_id'=>strtoupper(trim((string) ($_POST['school_id'] ?? ''))),
+            'first_name'=>trim((string) ($_POST['first_name'] ?? '')),
+            'middle_name'=>trim((string) ($_POST['middle_name'] ?? '')),
+            'last_name'=>trim((string) ($_POST['last_name'] ?? '')),
+            'is_active'=>isset($_POST['is_active']) ? 1 : 0,
+        ];
+        $existing = $data['school_id'] !== '' ? User::findBySchoolId($data['school_id']) : null;
+        if ($data['school_id'] === '' || strlen($data['school_id']) > 32 || $data['first_name'] === '' || $data['last_name'] === ''
+            || ($existing && (int) $existing['id'] !== $id)) {
+            flash('error', 'Enter a unique ID no. and the first and last name.'); redirect('admin/accounts');
+        }
+        try {
+            LibrarianAccounts::updateAccount($id, $data);
+        } catch (\PDOException $error) {
+            flash('error', 'The account could not be saved. Check that its ID no. is unique.'); redirect('admin/accounts');
+        } catch (\RuntimeException $error) {
+            flash('error', $error->getMessage()); redirect('admin/accounts');
+        }
+        Audit::log('librarian.update', 'user', $id, ['school_id'=>$data['school_id'], 'is_active'=>$data['is_active']]);
+        flash('success', 'Librarian account updated.'); redirect('admin/accounts');
+    }
+
+    public function delete(): void
+    {
+        Auth::requireRole(Role::ACCOUNT_ADMIN); Csrf::requireValid();
+        $id = (int) ($_POST['id'] ?? 0);
+        try {
+            $account = User::deleteWithoutAcademicRecords($id, (int) Auth::user()['id'], Role::SCHOOL_ADMINISTRATOR);
+        } catch (\PDOException $error) {
+            flash('error', 'This account is linked to existing records. Deactivate it using Edit instead.'); redirect('admin/accounts');
+        } catch (\RuntimeException $error) {
+            flash('error', $error->getMessage()); redirect('admin/accounts');
+        }
+        Audit::log('librarian.delete', 'user', $id, ['school_id'=>$account['school_id']]);
+        flash('success', 'Librarian account deleted.'); redirect('admin/accounts');
+    }
+
     public function activity(): void
     {
         Auth::requireRole(Role::ACCOUNT_ADMIN);
