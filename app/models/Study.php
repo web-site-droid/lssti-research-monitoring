@@ -701,6 +701,60 @@ final class Study
         self::saveKeywords($studyId, $keywords);
     }
 
+    public static function canDeletePublished(?array $user, array $study): bool
+    {
+        return ($user['role_slug'] ?? '') === \App\Helpers\Role::SCHOOL_ADMINISTRATOR
+            && ($study['status'] ?? '') === 'approved';
+    }
+
+    public static function deletePublished(int $id, array $actor): void
+    {
+        if (($actor['role_slug'] ?? '') !== \App\Helpers\Role::SCHOOL_ADMINISTRATOR) {
+            throw new \RuntimeException('Only the Librarian can delete published studies.');
+        }
+        $pdo = db();
+        $pdo->beginTransaction();
+        $paths = [];
+        try {
+            $stmt = $pdo->prepare('SELECT id, title, status FROM studies WHERE id=:id FOR UPDATE');
+            $stmt->execute(['id'=>$id]);
+            $study = $stmt->fetch();
+            if (!$study || !self::canDeletePublished($actor, $study)) {
+                throw new \RuntimeException('Only published studies can be deleted. Studies awaiting review or publication cannot be deleted.');
+            }
+            foreach ([
+                'SELECT stored_path AS path FROM study_versions WHERE study_id=:id',
+                'SELECT blind_stored_path AS path FROM study_versions WHERE study_id=:id',
+                'SELECT irb_document_path AS path FROM ethics_checklists WHERE study_id=:id',
+                'SELECT screenshot_path AS path FROM plagiarism_results WHERE study_id=:id',
+            ] as $sql) {
+                $stmt = $pdo->prepare($sql); $stmt->execute(['id'=>$id]);
+                foreach ($stmt->fetchAll() as $file) {
+                    $path = str_replace('\\', '/', (string) ($file['path'] ?? ''));
+                    // Cleanup must stay inside this study's own storage folders.
+                    if (preg_match('#^(manuscripts|ethics|plagiarism)/' . $id . '/[^/]+$#D', $path)
+                        && !in_array(basename($path), ['.', '..'], true)) $paths[$path] = $path;
+                }
+            }
+            $pdo->prepare('UPDATE studies SET current_version_id=NULL WHERE id=:id')->execute(['id'=>$id]);
+            $stmt = $pdo->prepare("DELETE FROM studies WHERE id=:id AND status='approved'");
+            $stmt->execute(['id'=>$id]);
+            if ($stmt->rowCount() !== 1) throw new \RuntimeException('The study changed; refresh and try again.');
+            foreach ($paths as $path) {
+                $pdo->prepare('DELETE FROM stored_files WHERE stored_path=:path')->execute(['path'=>$path]);
+            }
+            \App\Helpers\Audit::log('study.delete_published', 'study', $id, ['title'=>$study['title'], 'previous_status'=>'approved']);
+            $pdo->commit();
+        } catch (\Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+        foreach ($paths as $path) {
+            $disk = \App\Helpers\StorageFiles::diskPath($path);
+            if (is_file($disk)) @unlink($disk);
+        }
+    }
+
     public static function deleteOwned(int $studyId): void
     {
         $versions = self::versions($studyId);

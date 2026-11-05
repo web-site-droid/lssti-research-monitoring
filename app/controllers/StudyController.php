@@ -320,6 +320,21 @@ final class StudyController
         redirect('profile');
     }
 
+    public function deletePublishedSubmit(): void
+    {
+        Auth::requireRole(Role::SCHOOL_ADMINISTRATOR);
+        Csrf::requireValid();
+        try {
+            Study::deletePublished((int) ($_POST['study_id'] ?? 0), Auth::user());
+            flash('success', 'Published study deleted.');
+        } catch (\PDOException $error) {
+            flash('error', 'The study could not be deleted. Its records have been preserved.');
+        } catch (\RuntimeException $error) {
+            flash('error', $error->getMessage());
+        }
+        redirect('study');
+    }
+
     public function deleteSubmit(): void
     {
         Csrf::requireValid();

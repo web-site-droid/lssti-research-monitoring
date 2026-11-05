@@ -73,6 +73,7 @@ final class Router
 
             'studies' => [StudyController::class, 'index', 'auth' => true],
             'study' => [StudyController::class, 'folders', 'auth' => true, 'roles' => Role::allManuscriptViewers()],
+            'studies/delete-published' => [StudyController::class, 'deletePublishedSubmit', 'auth' => true, 'roles' => [Role::SCHOOL_ADMINISTRATOR]],
             'studies/create' => [StudyController::class, 'createForm', 'auth' => true, 'roles' => [Role::STUDENT]],
             'studies/create/submit' => [StudyController::class, 'createSubmit', 'auth' => true, 'roles' => [Role::STUDENT]],
             'studies/upload-part' => [StudyController::class, 'uploadPart', 'auth' => true, 'roles' => [Role::STUDENT, Role::SCHOOL_ADMINISTRATOR]],

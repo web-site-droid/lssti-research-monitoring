@@ -15,6 +15,8 @@ foreach ($studies as $study) {
     <h1>Study</h1>
     <p class="lead">Studies are stored in a month folder, then in a folder for each day.</p>
 </div>
+<?php if ($success = flash('success')): ?><p class="alert alert-success"><?= e($success) ?></p><?php endif; ?>
+<?php if ($error = flash('error')): ?><p class="alert alert-error"><?= e($error) ?></p><?php endif; ?>
 <?php partial('find_bar', [
     'table' => '#folder-table',
     'papers' => $studies,
@@ -104,6 +106,13 @@ foreach ($studies as $study) {
                                     <?php if (can_open_full_file($user ?? \App\Helpers\Auth::user(), $study)): ?>
                                         <a class="btn btn-secondary btn-icon-only" href="<?= e(url('reader', ['id' => $study['id']])) ?>" aria-label="View full file" title="View full file"><?= icon('book') ?></a>
                                         <a class="btn btn-green btn-icon-only" href="<?= e(url('file/manuscript', ['study_id' => $study['id'], 'version_id' => $study['current_version_id']])) ?>" aria-label="Download" title="Download"><?= icon('download') ?></a>
+                                    <?php endif; ?>
+                                    <?php if (\App\Models\Study::canDeletePublished(\App\Helpers\Auth::user(), $study)): ?>
+                                        <form method="post" action="<?= e(url('studies/delete-published')) ?>" data-confirm="<?= e('Permanently delete the published study “' . $study['title'] . '”? Its manuscript versions, reviews and related study records will be removed. This cannot be undone.') ?>">
+                                            <?= \App\Helpers\Csrf::field() ?>
+                                            <input type="hidden" name="study_id" value="<?= (int) $study['id'] ?>">
+                                            <button type="submit" class="btn btn-danger btn-icon-only" aria-label="Delete published study" title="Delete published study"><?= icon('x') ?></button>
+                                        </form>
                                     <?php endif; ?>
                                     <?= action_menu(ob_get_clean()) ?>
                                 </td>
