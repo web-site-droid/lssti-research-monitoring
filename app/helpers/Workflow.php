@@ -13,7 +13,7 @@ final class Workflow
             Role::STUDENT => [
                 ['label' => '1. Research adviser', 'desc' => 'Submit your manuscript to your research adviser.', 'route' => 'studies/create'],
                 ['label' => '2. Dept research coordinator', 'desc' => 'After adviser approval, send it to the department research coordinator.', 'route' => 'track', 'query' => ['tab' => 'waiting']],
-                ['label' => '3. Dean → research coordinator → librarian → school admin', 'desc' => 'Track progress through the remaining school review steps.', 'route' => 'track'],
+                ['label' => '3. Dean → research coordinator → school admin', 'desc' => 'Track progress through the remaining school review steps.', 'route' => 'track'],
             ],
             Role::RESEARCH_ADVISER => [
                 ['label' => '1. Dashboard', 'desc' => 'Assigned advisee papers with full files; other departments show title and abstract only.', 'route' => 'dashboard'],
@@ -30,16 +30,15 @@ final class Workflow
             Role::SCHOOL_RESEARCH_COORDINATOR => [
                 ['label' => '1. School-wide dashboard', 'desc' => 'Open full manuscripts from every department.', 'route' => 'dashboard'],
                 ['label' => '2. Ethics & plagiarism', 'desc' => 'Record ethics, format, and similarity checks.', 'route' => 'review'],
-                ['label' => '3. Send to librarian', 'desc' => 'Forward cleared studies to the librarian.', 'route' => 'review'],
+                ['label' => '3. Send to school admin', 'desc' => 'Forward cleared studies to the school administrator.', 'route' => 'review'],
             ],
             Role::LIBRARIAN => [
                 ['label' => '1. School-wide dashboard', 'desc' => 'View all research papers from every department with full files.', 'route' => 'dashboard'],
-                ['label' => '2. Send to school admin', 'desc' => 'Clear the library gate and forward to the school administrator.', 'route' => 'dashboard'],
             ],
             Role::SCHOOL_ADMINISTRATOR => [
                 ['label' => '1. School-wide dashboard', 'desc' => 'View all research papers from every department with full files.', 'route' => 'dashboard'],
-                ['label' => '2. Final publish', 'desc' => 'Publish studies cleared by the librarian.', 'route' => 'review'],
-                ['label' => '3. Users & settings', 'desc' => 'Create dean, school research coordinator, and librarian accounts.', 'route' => 'users'],
+                ['label' => '2. Final publish', 'desc' => 'Publish studies cleared by the school research coordinator.', 'route' => 'review'],
+                ['label' => '3. Users & settings', 'desc' => 'Create dean and school research coordinator accounts.', 'route' => 'users'],
             ],
             default => [],
         };
@@ -53,9 +52,8 @@ final class Workflow
                 'submitted', 'adviser_reviewed', 'revision_requested', 'resubmitted', 'ethics_review', 'pending' => 2,
                 'dean_review' => 3,
                 'under_review' => 4,
-                'library_review' => 5,
-                'admin_review', 'archived' => 6,
-                'approved' => 7,
+                'library_review', 'admin_review', 'archived' => 5,
+                'approved' => 6,
                 default => 1,
             };
         }
@@ -65,9 +63,8 @@ final class Workflow
             'pending' => 3,
             'dean_review' => 4,
             'under_review' => 5,
-            'library_review' => 6,
-            'admin_review', 'archived' => 7,
-            'approved' => 8,
+            'library_review', 'admin_review', 'archived' => 6,
+            'approved' => 7,
             default => 1,
         };
     }
@@ -78,7 +75,7 @@ final class Workflow
             'pending' => 'With dept research coordinator',
             'dean_review' => 'With dean',
             'under_review' => 'With school research coordinator',
-            'library_review' => 'With librarian',
+            'library_review' => 'With school administrator',
             'admin_review' => 'With school administrator',
             default => 'In review',
         };
@@ -88,7 +85,7 @@ final class Workflow
     public static function progressLabels(bool $skipAdviser = false): array
     {
         return $skipAdviser
-            ? ['Prepare', 'Dept', 'Dean', 'Research Coord', 'Librarian', 'School Admin', 'Publish']
-            : ['Prepare', 'Adviser', 'Dept', 'Dean', 'Research Coord', 'Librarian', 'School Admin', 'Publish'];
+            ? ['Prepare', 'Dept', 'Dean', 'Research Coord', 'School Admin', 'Publish']
+            : ['Prepare', 'Adviser', 'Dept', 'Dean', 'Research Coord', 'School Admin', 'Publish'];
     }
 }

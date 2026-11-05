@@ -72,8 +72,6 @@ final class SettingsController
         Settings::set('ip_allowlist_enabled', isset($_POST['ip_allowlist_enabled']) ? '1' : '0', $uid);
         $cidrs = array_filter(array_map('trim', explode("\n", $_POST['ip_allowlist_cidrs'] ?? '')));
         Settings::set('ip_allowlist_cidrs', json_encode(array_values($cidrs)), $uid);
-        Settings::set('login_max_attempts', (string) max(3, (int) ($_POST['login_max_attempts'] ?? 5)), $uid);
-        Settings::set('login_lockout_minutes', (string) max(5, (int) ($_POST['login_lockout_minutes'] ?? 15)), $uid);
         Audit::log('settings.update', 'settings', null);
         flash('success', 'Settings saved.');
         redirect('settings');

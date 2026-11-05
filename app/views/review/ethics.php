@@ -43,12 +43,55 @@
         </form>
     <?php endif; ?>
 
-    <?php if (Auth::hasRole(['school_research_coordinator', 'school_administrator']) && $study['status'] === 'under_review'): ?>
+    <?php if (Auth::hasRole('school_research_coordinator') && $study['status'] === 'under_review'): ?>
+        <h3>Ethics and manuscript format</h3>
+        <form method="post" action="<?= e(url('review/ethics/submit')) ?>" class="stack" enctype="multipart/form-data">
+            <?= \App\Helpers\Csrf::field() ?>
+            <input type="hidden" name="study_id" value="<?= (int) $study['id'] ?>">
+            <?php foreach ([
+                'human_subjects' => 'Human subjects',
+                'informed_consent' => 'Informed consent',
+                'ethical_clearance' => 'Ethical clearance',
+                'data_privacy_ra10173' => 'Data privacy',
+                'coi_disclosed' => 'Conflict of interest disclosure',
+                'manuscript_format' => 'Manuscript format',
+            ] as $field => $label): ?>
+                <label for="check-<?= e($field) ?>"><?= e($label) ?></label>
+                <select id="check-<?= e($field) ?>" name="<?= e($field) ?>">
+                    <?php foreach (['pending' => 'Pending', 'passed' => 'Passed', 'failed' => 'Failed'] as $value => $text): ?>
+                        <option value="<?= e($value) ?>" <?= ($ethics[$field] ?? 'pending') === $value ? 'selected' : '' ?>><?= e($text) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <?php $remarksKey = match ($field) {
+                    'data_privacy_ra10173' => 'data_privacy_remarks',
+                    'coi_disclosed' => 'coi_remarks',
+                    default => $field . '_remarks',
+                }; ?>
+                <label for="remarks-<?= e($field) ?>"><?= e($label) ?> remarks (required if failed)</label>
+                <textarea id="remarks-<?= e($field) ?>" name="<?= e($field . '_remarks') ?>" rows="2"><?= e($ethics[$remarksKey] ?? '') ?></textarea>
+            <?php endforeach; ?>
+            <label for="irb-code">Ethical clearance / IRB code</label>
+            <input id="irb-code" name="irb_code" value="<?= e($ethics['irb_code'] ?? '') ?>">
+            <p class="muted">A clearance code or existing clearance document is required to pass ethical clearance.</p>
+            <button type="submit" class="btn btn-primary">Save checks</button>
+        </form>
+        <h3>Plagiarism result</h3>
+        <p class="muted">Record the result for the current manuscript. Similarity must be below <?= e((string) \App\Helpers\Settings::getFloat('plagiarism_block_percent', DEFAULT_PLAGIARISM_BLOCK_PERCENT)) ?>% to advance.</p>
+        <?php if ($plagiarism): ?><p>Current result: <?= e((string) $plagiarism['similarity_percentage']) ?>%</p><?php endif; ?>
+        <form method="post" action="<?= e(url('review/plagiarism/submit')) ?>" class="stack" enctype="multipart/form-data">
+            <?= \App\Helpers\Csrf::field() ?>
+            <input type="hidden" name="study_id" value="<?= (int) $study['id'] ?>">
+            <label for="similarity">Similarity percentage</label>
+            <input id="similarity" type="number" name="similarity_percentage" min="0" max="100" step="0.01" required>
+            <label for="similarity-shot">Result screenshot (optional)</label>
+            <input id="similarity-shot" type="file" name="screenshot" accept="image/png,image/jpeg,image/webp">
+            <button type="submit" class="btn btn-primary">Save plagiarism result</button>
+        </form>
         <div class="actions">
             <form method="post" action="<?= e(url('review/approve')) ?>">
                 <?= \App\Helpers\Csrf::field() ?>
                 <input type="hidden" name="study_id" value="<?= (int) $study['id'] ?>">
-                <button type="submit" class="btn btn-green"><?= icon('check') ?> Send to librarian</button>
+                <button type="submit" class="btn btn-green" <?= !$canApprove['ok'] ? 'disabled' : '' ?>><?= icon('check') ?> Send to school administrator</button>
             </form>
             <form method="post" action="<?= e(url('review/reject')) ?>" data-confirm="Do you want to reject this study?">
                 <?= \App\Helpers\Csrf::field() ?>
@@ -58,11 +101,11 @@
         </div>
     <?php endif; ?>
 
-    <?php if (Auth::hasRole('school_administrator') && $study['status'] === 'admin_review'): ?>
+    <?php if (Auth::hasRole('school_administrator') && in_array($study['status'], ['admin_review', 'library_review'], true)): ?>
         <form method="post" action="<?= e(url('review/final-publish')) ?>" class="actions">
             <?= \App\Helpers\Csrf::field() ?>
             <input type="hidden" name="study_id" value="<?= (int) $study['id'] ?>">
-            <button type="submit" class="btn btn-green"><?= icon('check') ?> Publish</button>
+            <button type="submit" class="btn btn-green" <?= !$canApprove['ok'] ? 'disabled' : '' ?>><?= icon('check') ?> Publish</button>
         </form>
     <?php endif; ?>
 

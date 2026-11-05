@@ -27,35 +27,12 @@ $pageTitle = e($study['short_title']);
 <p><?= nl2br(e($study['research_objectives'])) ?></p>
 <?php endif; ?>
 
-<?php if (can_open_full_file($user, $study)): ?>
+<?php if (!empty($fileMissing)): ?>
+    <p class="alert alert-error">The manuscript file is missing. Upload the PDF or DOCX again.</p>
+<?php elseif (can_open_full_file($user, $study)): ?>
     <p><a class="btn btn-primary" href="<?= e(url('reader', ['id' => $study['id']])) ?>"><?= icon('book') ?> Open full file</a></p>
 <?php endif; ?>
-
-<?php if ($user['role_slug'] === 'student' && $study['status'] === 'approved' && ($study['congress_status'] ?? 'none') === 'none'): ?>
-    <form method="post" action="<?= e(url('studies/congress/apply')) ?>" class="inline-form">
-        <?= \App\Helpers\Csrf::field() ?>
-        <input type="hidden" name="id" value="<?= (int) $study['id'] ?>">
-        <button type="submit" class="btn btn-secondary"><?= icon('flag') ?> Apply for Research Congress</button>
-    </form>
-<?php elseif (($study['congress_status'] ?? 'none') !== 'none'): ?>
-    <p>Research Congress: <span class="badge"><?= e($study['congress_status']) ?></span></p>
-<?php endif; ?>
-<?php if (Auth::hasRole('school_administrator') && ($study['congress_status'] ?? '') === 'pending'): ?>
-    <div class="actions">
-        <form method="post" action="<?= e(url('studies/congress/decide')) ?>">
-            <?= \App\Helpers\Csrf::field() ?>
-            <input type="hidden" name="id" value="<?= (int) $study['id'] ?>">
-            <input type="hidden" name="decision" value="approved">
-            <button type="submit" class="btn btn-primary btn-sm"><?= icon('check') ?> Approve Congress</button>
-        </form>
-        <form method="post" action="<?= e(url('studies/congress/decide')) ?>">
-            <?= \App\Helpers\Csrf::field() ?>
-            <input type="hidden" name="id" value="<?= (int) $study['id'] ?>">
-            <input type="hidden" name="decision" value="rejected">
-            <button type="submit" class="btn btn-danger btn-sm"><?= icon('x') ?> Reject Congress</button>
-        </form>
-    </div>
-<?php endif; ?>
+<?php partial('replace_file', ['study' => $study, 'canReplaceFile' => $canReplaceFile ?? false]); ?>
 
 <?php if (($user['role_slug'] ?? '') === 'student' && $study['status'] === 'draft' && (int) $study['submitter_user_id'] === (int) $user['id']): ?>
     <form method="post" action="<?= e(url('studies/submit')) ?>">
@@ -92,8 +69,23 @@ $pageTitle = e($study['short_title']);
 <div class="actions">
     <a class="btn btn-primary" href="<?= e(url('review/ethics', ['id' => $study['id']])) ?>"><?= icon('clipboard') ?> Faculty review workspace</a>
 </div>
-<?php elseif (Auth::hasRole('school_administrator')): ?>
-<div class="actions">
-    <a class="btn btn-secondary" href="<?= e(url('reports/read-log', ['study_id' => $study['id']])) ?>"><?= icon('list') ?> Read audit log</a>
-</div>
+<?php endif; ?>
+<?php if (!empty($showReaders)): ?>
+<section class="card card-elevated" style="margin-top:1.25rem">
+    <h2 class="section-title">Who read this article</h2>
+    <p class="muted">People in any department who opened the full file.</p>
+    <?php partial('readers_table', ['readers' => $readers ?? []]); ?>
+</section>
+<section class="card card-elevated" style="margin-top:1.25rem">
+    <h2 class="section-title">Who downloaded this file</h2>
+    <p class="muted">People in any department who downloaded the full file.</p>
+    <?php partial('readers_table', [
+        'readers' => $downloaders ?? [],
+        'emptyText' => 'No one has downloaded this file yet.',
+        'timeLabel' => 'Downloaded',
+    ]); ?>
+</section>
+<?php endif; ?>
+<?php if (!empty($canReplaceFile)): ?>
+    <?php $pageScripts = ['manuscript-upload.js']; ?>
 <?php endif; ?>

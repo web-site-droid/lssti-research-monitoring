@@ -33,8 +33,9 @@ final class Router
         $librarians = Role::librarians();
         $reporters = Role::reporters();
         $admin = Role::finalApprovers();
-        $reviewers = array_values(array_unique(array_merge($advisers, $dean, $academic, $admin)));
-        $libraryRoles = array_values(array_unique(array_merge($dept, $librarians)));
+        $reviewers = array_values(array_unique(array_merge($advisers, $dean, $academic, $admin, [Role::SCHOOL_ADMINISTRATOR])));
+        $libraryRoles = array_values(array_unique(array_merge($dept, $librarians, [Role::SCHOOL_ADMINISTRATOR])));
+        $reporters = array_values(array_unique(array_merge($reporters, [Role::SCHOOL_ADMINISTRATOR])));
 
         $this->routes = [
             '' => [SearchController::class, 'landing', 'auth' => false],
@@ -59,11 +60,14 @@ final class Router
             'users/login-logs' => [UserController::class, 'loginLogs', 'auth' => true, 'roles' => $reporters],
             'users/import/template' => [UserController::class, 'importTemplate', 'auth' => true, 'roles' => $people],
             'users/import' => [UserController::class, 'importSubmit', 'auth' => true, 'roles' => $people],
+            'users/departments/save' => [UserController::class, 'departmentSave', 'auth' => true, 'roles' => [Role::SCHOOL_ADMINISTRATOR, Role::SCHOOL_RESEARCH_COORDINATOR]],
 
             'studies' => [StudyController::class, 'index', 'auth' => true],
-            'study' => [StudyController::class, 'folders', 'auth' => true, 'roles' => $academic],
+            'study' => [StudyController::class, 'folders', 'auth' => true, 'roles' => array_values(array_unique(array_merge($academic, $admin)))],
             'studies/create' => [StudyController::class, 'createForm', 'auth' => true, 'roles' => [Role::STUDENT]],
             'studies/create/submit' => [StudyController::class, 'createSubmit', 'auth' => true, 'roles' => [Role::STUDENT]],
+            'studies/upload-part' => [StudyController::class, 'uploadPart', 'auth' => true, 'roles' => [Role::STUDENT, Role::SCHOOL_ADMINISTRATOR]],
+            'studies/replace-file' => [StudyController::class, 'replaceFile', 'auth' => true, 'roles' => [Role::STUDENT, Role::SCHOOL_ADMINISTRATOR]],
             'studies/edit' => [StudyController::class, 'editForm', 'auth' => true, 'roles' => [Role::STUDENT]],
             'studies/edit/submit' => [StudyController::class, 'editSubmit', 'auth' => true, 'roles' => [Role::STUDENT]],
             'studies/delete' => [StudyController::class, 'deleteSubmit', 'auth' => true, 'roles' => [Role::STUDENT]],
@@ -72,8 +76,6 @@ final class Router
             'studies/revise/submit' => [StudyController::class, 'reviseSubmit', 'auth' => true, 'roles' => [Role::STUDENT]],
             'studies/submit' => [StudyController::class, 'submitStudy', 'auth' => true, 'roles' => [Role::STUDENT]],
             'studies/submit-librarian' => [StudyController::class, 'submitToLibrarian', 'auth' => true, 'roles' => [Role::STUDENT]],
-            'studies/congress/apply' => [StudyController::class, 'congressApply', 'auth' => true, 'roles' => [Role::STUDENT]],
-            'studies/congress/decide' => [StudyController::class, 'congressDecide', 'auth' => true, 'roles' => $admin],
 
             'library' => [LibraryController::class, 'index', 'auth' => true, 'roles' => $libraryRoles],
             'library/review' => [LibraryController::class, 'review', 'auth' => true, 'roles' => $libraryRoles],

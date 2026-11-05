@@ -7,7 +7,7 @@ $labels = Workflow::progressLabels($skipAdviser);
 $detail = match ($status) {
     'approved' => 'The school administrator published this study.',
     'admin_review' => 'Waiting for the school administrator to publish.',
-    'library_review' => 'Waiting for the librarian, then school administrator.',
+    'library_review' => 'Waiting for the school administrator to publish.',
     'under_review' => 'With the school research coordinator for ethics and plagiarism checks.',
     'dean_review' => 'Waiting for dean approval.',
     'pending' => 'Waiting for the dept research coordinator to review and send it to the dean.',
@@ -18,7 +18,7 @@ $detail = match ($status) {
         ? 'Finish the upload, then submit it to the dept research coordinator.'
         : 'Finish the upload, then submit it to your research adviser.',
     'revision_requested' => 'Changes were requested. Upload a revision, then it returns to your research adviser.',
-    default => 'Pipeline: adviser → dept coordinator → dean → research coordinator → librarian → school admin.',
+    default => 'Pipeline: adviser → dept coordinator → dean → research coordinator → school admin.',
 };
 ?>
 <ol class="progress-track" aria-label="Study progress">

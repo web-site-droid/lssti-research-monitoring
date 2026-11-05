@@ -1,7 +1,7 @@
 <?php $pageTitle = 'Sign in · ' . APP_NAME; ?>
 <div class="login-shell">
     <aside class="login-hero" aria-label="About this system">
-        <img class="login-logo" src="<?= e(asset_url('images/logo.png')) ?>" alt="Department of Computer Science, LSSTI" width="80" height="80">
+        <img class="login-logo" src="<?= e(asset_url('images/lssti-seal.png')) ?>" alt="LSSTI Research Repository" width="80" height="80">
         <p class="login-school">LSSTI</p>
         <h1 class="login-title">Digital Research Repository</h1>
         <p class="login-tagline">For students, faculty, and staff on the school network. Sign in with your official school ID.</p>

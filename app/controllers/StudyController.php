@@ -7,7 +7,9 @@ namespace App\Controllers;
 use App\Helpers\Audit;
 use App\Helpers\Auth;
 use App\Helpers\Csrf;
+use App\Helpers\Role;
 use App\Helpers\FileUpload;
+use App\Helpers\StorageFiles;
 use App\Helpers\StudyValidator;
 use App\Helpers\SupabaseSync;
 use App\Models\Notification;
@@ -73,6 +75,7 @@ final class StudyController
             'adviserTrack' => $ownUploads,
             'waitingStudies' => $waiting,
             'trackTab' => $tab,
+            'user' => $user,
         ]);
     }
 
@@ -90,6 +93,10 @@ final class StudyController
 
     public function createSubmit(): void
     {
+        if (request_exceeded_post_max()) {
+            flash('error', FileUpload::sizeError());
+            redirect('studies/create');
+        }
         Csrf::requireValid();
         $user = Auth::user();
         $this->forceAdviserLibraryPass();
@@ -101,7 +108,7 @@ final class StudyController
             StudyValidator::validateAuthors($authors),
             $kw['errors']
         );
-        $fileCheck = FileUpload::validateManuscript($_FILES['manuscript'] ?? []);
+        $fileCheck = $this->incomingManuscript(true);
         if (!$fileCheck['ok']) {
             $errors[] = $fileCheck['error'];
         }
@@ -149,16 +156,25 @@ final class StudyController
             'coi_statement' => '',
         ];
         $studyId = Study::createDraft((int) $user['id'], $meta, $authors, $kw['keywords']);
-        $path = FileUpload::storeManuscript($studyId, 1, $_FILES['manuscript'], $fileCheck['ext'], '_full');
-        Study::addVersion(
-            $studyId,
-            (int) $user['id'],
-            $_FILES['manuscript'],
-            $path,
-            $fileCheck['mime'],
-            (int) $_FILES['manuscript']['size'],
-            'Initial submission'
-        );
+        try {
+            $path = FileUpload::storeIncoming($studyId, 1, $fileCheck, $_FILES['manuscript'] ?? [], (int) $user['id'], '_full');
+            Study::addVersion(
+                $studyId,
+                (int) $user['id'],
+                ['name' => (string) ($fileCheck['name'] ?? ($_FILES['manuscript']['name'] ?? 'manuscript.pdf'))],
+                $path,
+                (string) ($fileCheck['mime'] ?? 'application/octet-stream'),
+                (int) ($fileCheck['size'] ?? ($_FILES['manuscript']['size'] ?? 0)),
+                'Initial submission'
+            );
+        } catch (\Throwable $e) {
+            try {
+                Study::deleteOwned($studyId);
+            } catch (\Throwable $ignored) {
+            }
+            flash('error', 'Manuscript: the file could not be saved. Try a PDF or DOCX under ' . FileUpload::maxMb() . ' MB.');
+            redirect('studies/create');
+        }
         SupabaseSync::mirrorFileToStorage($path, 'study-' . $studyId . '/full-' . basename($path));
 
         if (($_POST['intent'] ?? 'draft') !== 'submit') {
@@ -204,6 +220,10 @@ final class StudyController
 
     public function editSubmit(): void
     {
+        if (request_exceeded_post_max()) {
+            flash('error', FileUpload::sizeError());
+            redirect('studies/edit', ['id' => (int) ($_POST['id'] ?? 0)]);
+        }
         Csrf::requireValid();
         $this->forceAdviserLibraryPass();
         $this->forceUploaderDepartment();
@@ -217,13 +237,10 @@ final class StudyController
             StudyValidator::validateAuthors($authors),
             $kw['errors']
         );
-        $hasFull = !empty($_FILES['manuscript']['name']);
-        $fileCheck = ['ok' => true];
-        if ($hasFull) {
-            $fileCheck = FileUpload::validateManuscript($_FILES['manuscript'] ?? []);
-            if (!$fileCheck['ok']) {
-                $errors[] = $fileCheck['error'];
-            }
+        $fileCheck = $this->incomingManuscript(false);
+        $hasFull = empty($fileCheck['skip']);
+        if ($hasFull && !$fileCheck['ok']) {
+            $errors[] = $fileCheck['error'];
         }
         $this->forceStudentAdviserPass();
         $passTo = ($_POST['pass_to'] ?? '') === 'library' ? 'library' : (($_POST['pass_to'] ?? '') === 'teacher' ? 'teacher' : '');
@@ -272,16 +289,21 @@ final class StudyController
         if ($hasFull && $fileCheck['ok']) {
             $versions = Study::versions($studyId);
             $next = ((int) ($versions[0]['version_number'] ?? 0)) + 1;
-            $path = FileUpload::storeManuscript($studyId, $next, $_FILES['manuscript'], $fileCheck['ext'], '_full');
-            Study::addVersion(
-                $studyId,
-                (int) $user['id'],
-                $_FILES['manuscript'],
-                $path,
-                $fileCheck['mime'],
-                (int) $_FILES['manuscript']['size'],
-                'Updated draft'
-            );
+            try {
+                $path = FileUpload::storeIncoming($studyId, $next, $fileCheck, $_FILES['manuscript'] ?? [], (int) $user['id'], '_full');
+                Study::addVersion(
+                    $studyId,
+                    (int) $user['id'],
+                    ['name' => (string) ($fileCheck['name'] ?? ($_FILES['manuscript']['name'] ?? 'manuscript.pdf'))],
+                    $path,
+                    (string) ($fileCheck['mime'] ?? 'application/octet-stream'),
+                    (int) ($fileCheck['size'] ?? ($_FILES['manuscript']['size'] ?? 0)),
+                    'Updated draft'
+                );
+            } catch (\Throwable $e) {
+                flash('error', 'Manuscript: the file could not be saved. Try a PDF or DOCX under ' . FileUpload::maxMb() . ' MB.');
+                redirect('studies/edit', ['id' => $studyId]);
+            }
         }
         if (($_POST['intent'] ?? 'draft') === 'submit') {
             $fresh = Study::find($studyId);
@@ -319,6 +341,7 @@ final class StudyController
             return;
         }
         $hideAuthors = (int) $study['double_blind'] === 1 && $user['role_slug'] === 'research_adviser';
+        $showReaders = Role::canSeeArticleReaders($user, $study);
         view('studies/view', [
             'study' => $study,
             'authors' => $hideAuthors ? [] : Study::authors($id),
@@ -332,7 +355,98 @@ final class StudyController
             'user' => $user,
             'success' => flash('success'),
             'error' => flash('error'),
+            'showReaders' => $showReaders,
+            'readers' => $showReaders ? \App\Models\ReadLog::latestForStudy($id) : [],
+            'downloaders' => $showReaders ? \App\Models\DownloadLog::latestForStudy($id) : [],
+            'fileMissing' => $this->currentFileMissing($study),
+            'canReplaceFile' => Study::canReplaceManuscript($user, $study) && $this->currentFileMissing($study),
         ]);
+    }
+
+    public function uploadPart(): void
+    {
+        if (!Csrf::validate(is_string($_POST['_csrf'] ?? null) ? (string) $_POST['_csrf'] : null)) {
+            json_response(['ok' => false, 'error' => 'Invalid security token. Refresh and try again.'], 403);
+        }
+        $user = Auth::user();
+        try {
+            json_response(FileUpload::receivePart((int) ($user['id'] ?? 0)));
+        } catch (\Throwable $e) {
+            json_response(['ok' => false, 'error' => 'Manuscript: the file could not be saved. Try again.'], 500);
+        }
+    }
+
+    public function replaceFile(): void
+    {
+        if (request_exceeded_post_max()) {
+            flash('error', FileUpload::sizeError());
+            redirect('dashboard');
+        }
+        Csrf::requireValid();
+        $id = (int) ($_POST['id'] ?? 0);
+        $study = Study::find($id);
+        $user = Auth::user();
+        if (!$study || !Study::canReplaceManuscript($user, $study) || !$this->currentFileMissing($study)) {
+            flash('error', 'This manuscript cannot be replaced.');
+            redirect('reader', ['id' => $id]);
+        }
+        $fileCheck = $this->incomingManuscript(true);
+        if (!$fileCheck['ok']) {
+            flash('error', (string) $fileCheck['error']);
+            redirect('reader', ['id' => $id]);
+        }
+        $versions = Study::versions($id);
+        $currentId = (int) ($study['current_version_id'] ?? 0);
+        $version = null;
+        foreach ($versions as $row) {
+            if ((int) $row['id'] === $currentId) {
+                $version = $row;
+                break;
+            }
+        }
+        if ($version === null && $versions !== []) {
+            $version = $versions[0];
+        }
+        try {
+            $fileName = ['name' => (string) ($fileCheck['name'] ?? 'manuscript.pdf')];
+            if ($version === null) {
+                $path = FileUpload::storeIncoming($id, 1, $fileCheck, $_FILES['manuscript'] ?? [], (int) $user['id'], '_full');
+                Study::addVersion(
+                    $id,
+                    (int) $user['id'],
+                    $fileName,
+                    $path,
+                    (string) ($fileCheck['mime'] ?? 'application/octet-stream'),
+                    (int) ($fileCheck['size'] ?? 0),
+                    'Replaced missing file'
+                );
+            } else {
+                $path = (string) ($version['stored_path'] ?? '');
+                if ($path === '') {
+                    $path = FileUpload::storeIncoming($id, max(1, (int) ($version['version_number'] ?? 1)), $fileCheck, $_FILES['manuscript'] ?? [], (int) $user['id'], '_full');
+                } else {
+                    FileUpload::writeIncomingTo($path, $fileCheck, $_FILES['manuscript'] ?? [], (int) $user['id']);
+                }
+                $stmt = db()->prepare(
+                    'UPDATE study_versions
+                     SET stored_path = :path, original_filename = :orig, mime_type = :mime, file_size = :size
+                     WHERE id = :id'
+                );
+                $stmt->execute([
+                    'path' => $path,
+                    'orig' => (string) $fileName['name'],
+                    'mime' => (string) ($fileCheck['mime'] ?? 'application/octet-stream'),
+                    'size' => (int) ($fileCheck['size'] ?? 0),
+                    'id' => (int) $version['id'],
+                ]);
+            }
+        } catch (\Throwable $e) {
+            flash('error', 'Manuscript: the file could not be saved. Try a PDF or DOCX under ' . FileUpload::maxMb() . ' MB.');
+            redirect('reader', ['id' => $id]);
+        }
+        Audit::log('study.replace_file', 'study', $id);
+        flash('success', 'Manuscript file saved. Open the study to read it.');
+        redirect('reader', ['id' => $id]);
     }
 
     public function reviseForm(): void
@@ -352,6 +466,10 @@ final class StudyController
 
     public function reviseSubmit(): void
     {
+        if (request_exceeded_post_max()) {
+            flash('error', FileUpload::sizeError());
+            redirect('studies/revise', ['id' => (int) ($_POST['id'] ?? 0)]);
+        }
         Csrf::requireValid();
         $id = (int) ($_POST['id'] ?? 0);
         $study = Study::find($id);
@@ -359,7 +477,7 @@ final class StudyController
         if (!$study || (int) $study['submitter_user_id'] !== (int) $user['id'] || $study['status'] !== 'revision_requested') {
             redirect('studies');
         }
-        $fileCheck = FileUpload::validateManuscript($_FILES['manuscript'] ?? []);
+        $fileCheck = $this->incomingManuscript(true);
         if (!$fileCheck['ok']) {
             remember_form(['change_note' => (string) ($_POST['change_note'] ?? '')]);
             flash('error', (string) $fileCheck['error']);
@@ -367,21 +485,26 @@ final class StudyController
         }
         $versions = Study::versions($id);
         $next = ($versions[0]['version_number'] ?? 0) + 1;
-        $path = FileUpload::storeManuscript($id, $next, $_FILES['manuscript'], $fileCheck['ext'], '_full');
+        try {
+            $path = FileUpload::storeIncoming($id, $next, $fileCheck, $_FILES['manuscript'] ?? [], (int) $user['id'], '_full');
+        } catch (\Throwable $e) {
+            flash('error', 'Manuscript: the file could not be saved. Try a PDF or DOCX under ' . FileUpload::maxMb() . ' MB.');
+            redirect('studies/revise', ['id' => $id]);
+        }
         $note = trim($_POST['change_note'] ?? '');
         Study::addVersion(
             $id,
             (int) $user['id'],
-            $_FILES['manuscript'],
+            ['name' => (string) ($fileCheck['name'] ?? ($_FILES['manuscript']['name'] ?? 'manuscript.pdf'))],
             $path,
-            $fileCheck['mime'],
-            (int) $_FILES['manuscript']['size'],
+            (string) ($fileCheck['mime'] ?? 'application/octet-stream'),
+            (int) ($fileCheck['size'] ?? ($_FILES['manuscript']['size'] ?? 0)),
             $note
         );
         if (($user['role_slug'] ?? '') !== 'student' && ($study['pass_to'] ?? '') === 'library') {
             Study::passToLibrary($id);
             foreach (User::all('dept_research_coordinator') as $librarian) {
-                Notification::create((int) $librarian['id'], 'study', 'Revised study ready for library review', $study['title'], 'library/review?id=' . $id);
+                Notification::create((int) $librarian['id'], 'study', 'Revised study ready for department review', $study['title'], 'library/review?id=' . $id);
             }
         } else {
             Study::resubmit($id);
@@ -431,53 +554,10 @@ final class StudyController
             redirect('studies/view', ['id' => $id]);
         }
         foreach (User::all('dept_research_coordinator') as $librarian) {
-            Notification::create((int) $librarian['id'], 'study', 'Study ready for library review', $study['title'], 'library/review?id=' . $id);
+            Notification::create((int) $librarian['id'], 'study', 'Study ready for department review', $study['title'], 'library/review?id=' . $id);
         }
         Audit::log('study.submit_library', 'study', $id);
         flash('success', 'Sent to the dept research coordinator.');
-        redirect('studies/view', ['id' => $id]);
-    }
-
-    public function congressDecide(): void
-    {
-        Csrf::requireValid();
-        Auth::requireRole('school_administrator');
-        $id = (int) ($_POST['id'] ?? 0);
-        $decision = $_POST['decision'] ?? '';
-        if (!in_array($decision, ['approved', 'rejected'], true)) {
-            redirect('studies/view', ['id' => $id]);
-        }
-        $study = Study::find($id);
-        if (!$study || ($study['congress_status'] ?? '') !== 'pending') {
-            redirect('studies');
-        }
-        db()->prepare('UPDATE studies SET congress_status = :st, updated_at = NOW() WHERE id = :id')
-            ->execute(['st' => $decision, 'id' => $id]);
-        Notification::create((int) $study['submitter_user_id'], 'congress', 'Congress application ' . $decision, $study['short_title'], 'studies/view?id=' . $id);
-        flash('success', 'Congress application updated.');
-        redirect('studies/view', ['id' => $id]);
-    }
-
-    public function congressApply(): void
-    {
-        Csrf::requireValid();
-        $id = (int) ($_POST['id'] ?? 0);
-        $study = Study::find($id);
-        $user = Auth::user();
-        if (!$study || (int) $study['submitter_user_id'] !== (int) $user['id'] || $study['status'] !== 'approved') {
-            redirect('studies');
-        }
-        db()->prepare(
-            "UPDATE studies SET congress_status = 'pending', updated_at = NOW() WHERE id = :id AND congress_status = 'none'"
-        )->execute(['id' => $id]);
-        $directorId = (int) db()->query(
-            "SELECT u.id FROM users u INNER JOIN roles r ON r.id = u.role_id WHERE r.slug = 'school_administrator' LIMIT 1"
-        )->fetchColumn();
-        if ($directorId) {
-            Notification::create($directorId, 'congress', 'Research Congress application', $study['short_title'], 'studies/view?id=' . $id);
-        }
-        Audit::log('congress.apply', 'study', $id);
-        flash('success', 'Research Congress application submitted.');
         redirect('studies/view', ['id' => $id]);
     }
 
@@ -522,16 +602,16 @@ final class StudyController
         }
         if ($passTo === 'library') {
             if (!Study::passToLibrary($studyId)) {
-                flash('error', 'This study could not be sent to the library.');
+                flash('error', 'This study could not be sent to the dept research coordinator.');
                 return;
             }
             foreach (User::all('dept_research_coordinator') as $librarian) {
-                Notification::create((int) $librarian['id'], 'study', 'Study ready for library review', $title, 'library/review?id=' . $studyId);
+                Notification::create((int) $librarian['id'], 'study', 'Study ready for department review', $title, 'library/review?id=' . $studyId);
             }
             Audit::log('study.submit_library', 'study', $studyId);
             flash('success', ($uploader['role_slug'] ?? '') === 'research_adviser'
                 ? 'Submitted directly to the dept research coordinator.'
-                : 'Passed to the library.');
+                : 'Passed to the dept research coordinator.');
             return;
         }
         if (!$adviserId) {
@@ -595,5 +675,33 @@ final class StudyController
         if (($user['role_slug'] ?? '') === 'student') {
             $_POST['pass_to'] = 'teacher';
         }
+    }
+
+    /** @return array{ok:bool,skip?:bool,error?:string,mime?:string,ext?:string,name?:string,size?:int,staged?:bool,token?:string} */
+    private function incomingManuscript(bool $required): array
+    {
+        $user = Auth::user();
+        $token = trim((string) ($_POST['manuscript_stored'] ?? ''));
+        if ($token !== '') {
+            return FileUpload::fromStaged($token, (int) ($user['id'] ?? 0));
+        }
+        if (!$required && empty($_FILES['manuscript']['name'])) {
+            return ['ok' => true, 'skip' => true];
+        }
+        return FileUpload::validateManuscript($_FILES['manuscript'] ?? []);
+    }
+
+    /** @param array<string, mixed> $study */
+    private function currentFileMissing(array $study): bool
+    {
+        $versions = Study::versions((int) ($study['id'] ?? 0));
+        $currentId = (int) ($study['current_version_id'] ?? 0);
+        foreach ($versions as $row) {
+            if ((int) $row['id'] === $currentId) {
+                $path = (string) ($row['stored_path'] ?? '');
+                return $path === '' || !StorageFiles::exists($path);
+            }
+        }
+        return $versions === [];
     }
 }

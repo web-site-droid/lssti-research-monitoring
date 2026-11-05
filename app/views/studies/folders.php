@@ -25,7 +25,7 @@ foreach ($studies as $study) {
         'pending' => 'Pending',
         'dean_review' => 'Dean review',
         'under_review' => 'Under review',
-        'library_review' => 'Library review',
+        'library_review' => 'School admin review',
         'admin_review' => 'School admin review',
         'approved' => 'Approved',
         'revision_requested' => 'Revision requested',

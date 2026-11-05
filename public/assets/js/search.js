@@ -320,7 +320,16 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     var q = document.getElementById('q');
-    var debouncedSuggest = debounce(function () { runSuggest(q.value.trim()); }, 200);
+    if (!q) return;
+    var debouncedSearch = debounce(function () {
+      if (document.getElementById('suggestions')) {
+        document.getElementById('suggestions').innerHTML = '';
+      }
+      runSearch();
+    }, 300);
+    var debouncedSuggest = debounce(function () {
+      runSuggest(q.value.trim());
+    }, 200);
     q.addEventListener('input', function () {
       if (q.closest('[data-find-bar]')) {
         var list = document.getElementById('suggestions');
@@ -328,17 +337,26 @@
         return;
       }
       debouncedSuggest();
+      if (q.value.trim().length >= 2) {
+        debouncedSearch();
+      } else if (q.value.trim().length === 0) {
+        debouncedSearch();
+      }
     });
     q.addEventListener('keydown', function (event) {
       if (event.key !== 'Enter') return;
       event.preventDefault();
-      document.getElementById('suggestions').innerHTML = '';
+      if (document.getElementById('suggestions')) {
+        document.getElementById('suggestions').innerHTML = '';
+      }
       runSearch();
     });
     var go = document.getElementById('search-go');
     if (go) {
       go.addEventListener('click', function () {
-        document.getElementById('suggestions').innerHTML = '';
+        if (document.getElementById('suggestions')) {
+          document.getElementById('suggestions').innerHTML = '';
+        }
         runSearch();
       });
     }

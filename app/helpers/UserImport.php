@@ -301,7 +301,7 @@ final class UserImport
             'research adviser' => 'research_adviser',
             'research advisor' => 'research_adviser',
             'adviser panelist' => 'research_adviser',
-            'librarian' => 'librarian',
+            'librarian' => 'school_research_coordinator',
             'dept research coordinator' => 'dept_research_coordinator',
             'department research coordinator' => 'dept_research_coordinator',
             'dean' => 'dean',

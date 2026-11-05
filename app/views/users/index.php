@@ -10,7 +10,9 @@ $editRoles = $editRoles ?? $roles ?? [];
     <h1>People</h1>
     <p class="lead"><?php
         if ($adminMode) {
-            echo 'Add a dean, school research coordinator, or librarian. A dean needs a department. You can open every full manuscript school-wide.';
+            echo 'Add a dean or school research coordinator. Edit any account and change that person’s department. You can also open every full manuscript school-wide.';
+        } elseif (!empty($canManageDepartments)) {
+            echo 'Add people and assign a department.';
         } elseif ($deanMode) {
             echo 'Add a student, research adviser, or dept research coordinator in your department' . ($departmentLabel !== '' ? ' (' . e($departmentLabel) . ')' : '') . '.';
         } elseif ($coordinatorMode) {
@@ -28,7 +30,7 @@ $editRoles = $editRoles ?? $roles ?? [];
     <h2 class="section-title">Import from Excel</h2>
     <p class="lead"><?php
         if ($adminMode) {
-            echo 'Get the file, fill one person each row, then upload. Use dean, school research coordinator, or librarian only.';
+            echo 'Get the file, fill one person each row, then upload. Use dean or school research coordinator only.';
         } elseif ($deanMode) {
             echo 'Get the file, fill one person each row, then upload. Use student, research adviser, or dept research coordinator only.';
         } elseif ($coordinatorMode) {
@@ -124,7 +126,7 @@ ksort($departments);
     </tbody>
 </table>
 </div>
-<dialog id="edit-account" class="preview-modal profile-modal" data-open-edit="<?= (int) ($openEdit ?? 0) ?>" data-actor-id="<?= (int) ((\App\Helpers\Auth::user()['id'] ?? 0)) ?>">
+<dialog id="edit-account" class="preview-modal profile-modal" data-open-edit="<?= (int) ($openEdit ?? 0) ?>" data-actor-id="<?= (int) ((\App\Helpers\Auth::user()['id'] ?? 0)) ?>" data-manage-dept="<?= !empty($canManageDepartments) ? '1' : '0' ?>" data-assign-dept="<?= !empty($canAssignUserDepartment) ? '1' : '0' ?>">
     <form method="post" action="<?= e(url('users/edit/submit')) ?>" class="profile-editor stack">
         <?= \App\Helpers\Csrf::field() ?>
         <div class="preview-modal-head">
@@ -165,11 +167,11 @@ ksort($departments);
                     <label for="edit-department">Department</label>
                     <input id="edit-department" value="<?= e($departmentLabel) ?>" readonly>
                 <?php else: ?>
-                    <div id="department-field" hidden>
-                        <label for="program_id">Department <span class="req">*</span></label>
+                    <div id="department-field"<?= !empty($canAssignUserDepartment) ? '' : ' hidden' ?>>
+                        <label for="program_id">Department <span id="department-req" class="req"<?= !empty($canAssignUserDepartment) ? ' hidden' : '' ?>>*</span></label>
                         <input id="program-locked" readonly hidden>
                         <select id="program_id" name="program_id">
-                            <option value="">Select department</option>
+                            <option value=""><?= !empty($canAssignUserDepartment) ? 'All departments' : 'Select department' ?></option>
                             <?php foreach ($programs ?? [] as $p): ?>
                                 <option value="<?= (int) $p['id'] ?>"><?= e($p['code'] . ' — ' . $p['name']) ?></option>
                             <?php endforeach; ?>

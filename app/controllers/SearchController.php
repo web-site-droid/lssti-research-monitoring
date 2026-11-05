@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Models\DownloadLog;
 use App\Models\Program;
 use App\Models\ReadLog;
 use App\Models\Study;
@@ -13,18 +14,10 @@ final class SearchController
 {
     public function landing(): void
     {
-        $user = \App\Helpers\Auth::user();
-        $programs = Program::directorAdded();
-        $advisers = User::all('research_adviser');
-        view('home/index', [
-            'user' => $user,
-            'programs' => $programs,
-            'advisers' => $advisers,
-            'schoolYears' => Study::schoolYearOptions(),
-            'studentLocked' => false,
-            'studentProgramId' => 0,
-            'studentProgramLabel' => '',
-        ], 'landing');
+        if (\App\Helpers\Auth::check()) {
+            redirect('dashboard');
+        }
+        redirect('login');
     }
 
     public function index(): void
@@ -150,20 +143,30 @@ final class SearchController
             view('errors/forbidden', ['message' => 'No manuscript file available.']);
             return;
         }
-        if ($fullAccess && $user && $version) {
+        $stored = $version ? (string) ($version['stored_path'] ?? '') : '';
+        $fileMissing = $fullAccess && ($stored === '' || !\App\Helpers\StorageFiles::exists($stored));
+        if ($fullAccess && $user && $version && !$fileMissing) {
             ReadLog::record((int) $user['id'], $id, $versionId);
         }
-        $ext = $version ? strtolower(pathinfo($version['original_filename'], PATHINFO_EXTENSION)) : '';
+        $named = $version ? (string) ($version['original_filename'] ?? '') : '';
+        $ext = strtolower(pathinfo($stored !== '' ? $stored : $named, PATHINFO_EXTENSION));
+        $showReaders = $user && \App\Helpers\Role::canSeeArticleReaders($user, $study);
         view('search/reader', [
             'study' => $study,
             'version' => $version,
             'ext' => $ext,
-            'fullAccess' => $fullAccess,
+            'fullAccess' => $fullAccess && !$fileMissing,
+            'fileMissing' => $fileMissing,
+            'canReplaceFile' => $fileMissing && Study::canReplaceManuscript($user, $study),
             'keywords' => Study::keywords($id),
             'authorDisplay' => Study::formatAuthorList($id, false),
             'rating' => Study::ratingSummary($id),
             'myStars' => $user ? Study::userRating($id, (int) $user['id']) : 0,
             'success' => flash('success'),
+            'error' => flash('error'),
+            'showReaders' => $showReaders,
+            'readers' => $showReaders ? ReadLog::latestForStudy($id) : [],
+            'downloaders' => $showReaders ? DownloadLog::latestForStudy($id) : [],
         ]);
     }
 

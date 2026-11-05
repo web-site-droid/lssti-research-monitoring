@@ -7,7 +7,7 @@ namespace App\Helpers;
 /**
  * Pipeline (low → high):
  * student → research_adviser → dept_research_coordinator → dean
- * → school_research_coordinator → librarian → school_administrator
+ * → school_research_coordinator → school_administrator
  */
 final class Role
 {
@@ -74,15 +74,31 @@ final class Role
         return [
             self::DEAN,
             self::SCHOOL_RESEARCH_COORDINATOR,
-            self::LIBRARIAN,
         ];
     }
 
-    public static function sameDepartment(array $user, array $entity): bool
+    /** School administrator and school research coordinator may add or rename departments. */
+    public static function canManageDepartments(string $slug, string $name = ''): bool
     {
-        $userProgram = (int) ($user['program_id'] ?? 0);
-        $entityProgram = (int) ($entity['program_id'] ?? 0);
-        return $userProgram > 0 && $entityProgram > 0 && $userProgram === $entityProgram;
+        $role = self::canonical($slug, $name);
+        return in_array($role, [
+            self::SCHOOL_ADMINISTRATOR,
+            self::SCHOOL_RESEARCH_COORDINATOR,
+            self::LIBRARIAN,
+        ], true);
+    }
+
+    public static function canSeeArticleReaders(?array $user, array $study): bool
+    {
+        if (!$user) {
+            return false;
+        }
+        $role = self::canonical((string) ($user['role_slug'] ?? ''), (string) ($user['role_name'] ?? ''));
+        if (in_array($role, [self::SCHOOL_ADMINISTRATOR, self::SCHOOL_RESEARCH_COORDINATOR, self::LIBRARIAN], true)) {
+            return true;
+        }
+        return in_array($role, [self::DEAN, self::DEPT_RESEARCH_COORDINATOR], true)
+            && self::sameDepartment($user, $study);
     }
 
     /** Department gate after adviser (status: pending). */
@@ -91,7 +107,7 @@ final class Role
     {
         return [
             self::DEPT_RESEARCH_COORDINATOR,
-            self::SCHOOL_ADMINISTRATOR,
+            self::LIBRARIAN,
         ];
     }
 
@@ -100,7 +116,7 @@ final class Role
     {
         return [
             self::DEAN,
-            self::SCHOOL_ADMINISTRATOR,
+            self::LIBRARIAN,
         ];
     }
 
@@ -109,7 +125,7 @@ final class Role
     {
         return [
             self::RESEARCH_ADVISER,
-            self::SCHOOL_ADMINISTRATOR,
+            self::LIBRARIAN,
         ];
     }
 
@@ -119,17 +135,16 @@ final class Role
     {
         return [
             self::SCHOOL_RESEARCH_COORDINATOR,
-            self::SCHOOL_ADMINISTRATOR,
+            self::LIBRARIAN,
         ];
     }
 
-    /** Librarian gate after school research coordinator. */
+    /** Legacy library routes. Librarian is no longer a review gate. */
     /** @return list<string> */
     public static function librarians(): array
     {
         return [
             self::LIBRARIAN,
-            self::SCHOOL_ADMINISTRATOR,
         ];
     }
 
@@ -152,11 +167,6 @@ final class Role
         ];
     }
 
-    public static function canViewAllManuscripts(string $slug): bool
-    {
-        return in_array($slug, self::allManuscriptViewers(), true);
-    }
-
     /** @return list<string> */
     public static function reporters(): array
     {
@@ -165,13 +175,13 @@ final class Role
             self::DEAN,
             self::SCHOOL_RESEARCH_COORDINATOR,
             self::LIBRARIAN,
-            self::SCHOOL_ADMINISTRATOR,
         ];
     }
 
     public static function isAdmin(string $slug): bool
     {
-        return self::canonical($slug) === self::SCHOOL_ADMINISTRATOR;
+        $role = self::canonical($slug);
+        return in_array($role, [self::LIBRARIAN, self::SCHOOL_ADMINISTRATOR], true);
     }
 
     /** Map legacy Hostinger/XAMPP slugs or display names onto the current role keys. */
@@ -186,6 +196,7 @@ final class Role
             || $key === 'researchdirector'
             || $key === 'school_admin'
             || $key === 'administrator'
+            || $key === 'school_administrator'
         ) {
             return self::SCHOOL_ADMINISTRATOR;
         }
@@ -193,7 +204,8 @@ final class Role
             'adviser', 'advisor', 'teacher' => self::RESEARCH_ADVISER,
             'dept_coordinator', 'department_research_coordinator', 'drc' => self::DEPT_RESEARCH_COORDINATOR,
             'src', 'school_coordinator' => self::SCHOOL_RESEARCH_COORDINATOR,
-            'library' => self::LIBRARIAN,
+            'library', 'librarian' => self::LIBRARIAN,
+            'school_administrator' => self::SCHOOL_ADMINISTRATOR,
             default => $key !== '' ? $key : $slug,
         };
     }
@@ -286,6 +298,19 @@ final class Role
             foreach ($accounts as $schoolId => $slug) {
                 $assign->execute(['slug' => $slug, 'sid' => $schoolId]);
             }
+            $libRole = $pdo->prepare('SELECT id FROM roles WHERE slug = :slug LIMIT 1');
+            $libRole->execute(['slug' => self::LIBRARIAN]);
+            $libRoleId = $libRole->fetchColumn();
+            $srcRole = $pdo->prepare('SELECT id FROM roles WHERE slug = :slug LIMIT 1');
+            $srcRole->execute(['slug' => self::SCHOOL_RESEARCH_COORDINATOR]);
+            $srcRoleId = $srcRole->fetchColumn();
+            if ($libRoleId && $srcRoleId && (int) $libRoleId !== (int) $srcRoleId) {
+                $pdo->prepare('UPDATE users SET role_id = :n WHERE role_id = :o')->execute([
+                    'n' => (int) $srcRoleId,
+                    'o' => (int) $libRoleId,
+                ]);
+            }
+            $pdo->exec("UPDATE studies SET status = 'admin_review', updated_at = NOW() WHERE status = 'library_review'");
             $status = $pdo->query("SHOW COLUMNS FROM studies LIKE 'status'")->fetch();
             $type = (string) ($status['Type'] ?? '');
             if ($type !== '' && !str_contains($type, 'dean_review')) {
@@ -299,5 +324,30 @@ final class Role
         } catch (\Throwable $e) {
             // Hostinger should still load even if this repair cannot run.
         }
+    }
+
+    public static function canViewAllManuscripts(string $slug, string $name = ''): bool
+    {
+        $role = self::canonical($slug, $name);
+        return in_array($role, [
+            self::SCHOOL_RESEARCH_COORDINATOR,
+            self::LIBRARIAN,
+            self::SCHOOL_ADMINISTRATOR,
+        ], true);
+    }
+
+    public static function sameDepartment(?array $user, array $study): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        $userProgram = (int) ($user['program_id'] ?? 0);
+        $studyProgram = (int) ($study['program_id'] ?? 0);
+        if ($userProgram <= 0 || $studyProgram <= 0) {
+            return false;
+        }
+
+        return $userProgram === $studyProgram;
     }
 }

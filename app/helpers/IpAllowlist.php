@@ -8,11 +8,7 @@ final class IpAllowlist
 {
     public static function enforce(): void
     {
-        $enabled = Settings::get('ip_allowlist_enabled');
-        if ($enabled === null) {
-            $enabled = IP_ALLOWLIST_ENABLED ? '1' : '0';
-        }
-        if ($enabled !== '1') {
+        if (!IP_ALLOWLIST_ENABLED) {
             return;
         }
 

@@ -61,19 +61,19 @@ if (!defined('DB_USER')) {
     define('DB_USER', lssti_env('DB_USER', lssti_env('MYSQL_USER', $defaultUser)) ?? $defaultUser);
 }
 if (!defined('DB_PASS')) {
-    $defaultPass = ($isLocalDb && !VERCEL_DEPLOY) ? '' : 'Lssti2026';
+    $defaultPass = '';
     define('DB_PASS', lssti_env('DB_PASS', lssti_env('MYSQL_PASSWORD', $defaultPass)) ?? $defaultPass);
 }
 if (!defined('DB_CHARSET')) {
     define('DB_CHARSET', 'utf8mb4');
 }
 
-define('APP_ASSET_VERSION', '20261015e');
+define('APP_ASSET_VERSION', '20261030b');
 define('SESSION_NAME', 'LSSTI_RESEARCH_SESS');
 define('SESSION_TIMEOUT_MINUTES', 30);
 define('CSRF_TOKEN_KEY', '_csrf_token');
 
-define('DEFAULT_MAX_UPLOAD_MB', VERCEL_DEPLOY ? 4 : 25);
+define('DEFAULT_MAX_UPLOAD_MB', VERCEL_DEPLOY ? 15 : 25);
 define('DEFAULT_PLAGIARISM_BLOCK_PERCENT', 10.0);
 define('DEFAULT_LOGIN_MAX_ATTEMPTS', 5);
 define('DEFAULT_LOGIN_LOCKOUT_MINUTES', 15);
@@ -84,6 +84,18 @@ define('IP_ALLOWLIST_CIDRS', [
     '192.168.0.0/16',
     '10.0.0.0/8',
 ]);
+
+/** Live sign-in. Do not send users to Hostinger. */
+define('APP_LIVE_ORIGIN', 'https://lssti-research-monitoring.vercel.app');
+
+$host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+if (
+    $host !== ''
+    && (str_ends_with($host, 'webcom.social') || str_contains($host, 'hostingersite.com'))
+) {
+    header('Location: ' . APP_LIVE_ORIGIN . '/index.php?route=login', true, 302);
+    exit;
+}
 
 /** Fallback when not running under Apache; browser requests use auto-detected path + port */
 define('APP_URL_PATH', VERCEL_DEPLOY ? '' : '/research/public');

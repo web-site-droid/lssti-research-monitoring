@@ -1,10 +1,15 @@
 <?php
 $user = $user ?? \App\Helpers\Auth::user();
-$notes = $user ? \App\Models\Notification::forUser((int) $user['id'], 200) : [];
-$unreadTotal = $user ? \App\Models\Notification::unreadCount((int) $user['id']) : 0;
+$notes = $user ? \App\Models\Notification::forUser((int) $user['id'], 40) : [];
+$unreadTotal = 0;
+foreach ($notes as $note) {
+    if (!(int) ($note['is_read'] ?? 0)) {
+        $unreadTotal++;
+    }
+}
 ?>
 <header class="topbar">
-    <button type="button" class="menu-toggle icon-btn" data-nav-toggle="sidebar" aria-expanded="false" aria-controls="site-sidebar"><?= icon('list') ?> <span class="icon-label">Menu</span></button>
+    <button type="button" class="menu-toggle icon-btn" data-nav-toggle="menu" aria-expanded="false" aria-controls="nav-sheet"><?= icon('list') ?> <span class="icon-label">Menu</span></button>
     <nav class="topbar-actions" aria-label="Account">
         <button type="button" class="icon-btn" data-open-notify aria-label="Alerts"><?= icon('bell') ?><?php if ($unreadTotal > 0): ?> <span class="nav-badge"><?= (int) $unreadTotal ?></span><?php endif; ?></button>
         <?php

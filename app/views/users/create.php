@@ -1,7 +1,7 @@
 <?php
 $adviserMode = !empty($adviserMode);
 $deanMode = !empty($deanMode);
-$adminMode = !empty($adminMode) || !empty($canAddDepartment);
+$adminMode = !empty($adminMode);
 $deptMode = !empty($deptMode) || $adviserMode || $deanMode;
 ?>
 <div class="page-header">
@@ -12,9 +12,11 @@ $deptMode = !empty($deptMode) || $adviserMode || $deanMode;
         } elseif ($adviserMode) {
             echo 'Choose student or adviser. The account is added to your department' . ($departmentLabel !== '' ? ', ' . e($departmentLabel) : '') . '. They sign in with the school ID and temporary password.';
         } elseif ($adminMode) {
-            echo 'Choose dean, school research coordinator, or librarian. A dean needs a department.';
+            echo 'Choose dean or school research coordinator. A dean needs a department.';
         } else {
-            echo 'Create an account. For department-bound roles, choose a department the school administrator added.';
+            echo !empty($canAddDepartment)
+                ? 'Create an account. You can choose an existing department or add a new one.'
+                : 'Create an account. For department-bound roles, choose a department the school administrator added.';
         }
     ?></p>
 </div>

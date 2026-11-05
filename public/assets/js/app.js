@@ -32,8 +32,11 @@ document.addEventListener('DOMContentLoaded', function () {
   initContactNumber();
   initSignOut();
   initNotifyModal();
+  initGuideModal();
   initFindBars();
   initDeptPaperCards();
+  initResponsiveTables();
+  initMobilePageTitle();
 });
 
 function initDepartmentField() {
@@ -42,16 +45,23 @@ function initDepartmentField() {
     if (!field) return;
     var select = field.querySelector('select');
     if (!select) return;
-    function sync() {
-      var option = role.options[role.selectedIndex];
-      var slug = option ? option.getAttribute('data-slug') : '';
-      var show = slug === 'student'
+    var reqMark = field.querySelector('.req, #department-req');
+    function isBound(slug) {
+      return slug === 'student'
         || slug === 'research_adviser'
         || slug === 'adviser'
         || slug === 'dept_research_coordinator'
         || slug === 'dean';
+    }
+    function sync() {
+      var option = role.options[role.selectedIndex];
+      var slug = option ? option.getAttribute('data-slug') : '';
+      var bound = isBound(slug);
+      var assignAny = !!(role.closest('[data-assign-dept="1"]'));
+      var show = assignAny || bound;
       field.hidden = !show;
-      select.required = show;
+      select.required = bound;
+      if (reqMark) reqMark.hidden = !bound;
       if (!show) {
         select.value = '';
         select.dispatchEvent(new Event('change'));
@@ -96,7 +106,9 @@ function initAccountEdit() {
     if (role) role.dispatchEvent(new Event('change'));
     var actorId = dialog.getAttribute('data-actor-id') || '0';
     var createdBy = button.getAttribute('data-created') || '0';
-    var canChangeDepartment = actorId !== '0' && createdBy === actorId;
+    var canChangeDepartment = dialog.getAttribute('data-assign-dept') === '1'
+      || dialog.getAttribute('data-manage-dept') === '1'
+      || (actorId !== '0' && createdBy === actorId);
     var locked = document.getElementById('program-locked');
     if (program) {
       program.disabled = !canChangeDepartment;
@@ -592,6 +604,9 @@ function initFindBars() {
       if (table) table._applyTableFilter = paint;
     }
     if (toggle && panel) {
+      panel.hidden = true;
+      toggle.classList.remove('is-on');
+      toggle.setAttribute('aria-expanded', 'false');
       toggle.addEventListener('click', function () {
         var open = panel.hasAttribute('hidden');
         panel.hidden = !open;
@@ -785,7 +800,7 @@ function markCurrentNav() {
   var params = new URLSearchParams(window.location.search);
   var current = params.get('route') || '';
   var tab = params.get('tab') || '';
-  document.querySelectorAll('.main-nav a[href]').forEach(function (link) {
+  document.querySelectorAll('.main-nav a[href], .nav-sheet-list a[href]').forEach(function (link) {
     if (link.classList.contains('nav-signout')) return;
     var route = '';
     try {
@@ -880,28 +895,78 @@ function closeMenus() {
   });
 }
 
+function initMobilePageTitle() {
+  var topbar = document.querySelector('.topbar');
+  if (!topbar || topbar.querySelector('.topbar-title')) return;
+  var heading = document.querySelector('#main h1, .page-header h1');
+  if (!heading) return;
+  var title = document.createElement('span');
+  title.className = 'topbar-title';
+  title.textContent = heading.textContent.replace(/\s+/g, ' ').trim();
+  var actions = topbar.querySelector('.topbar-actions');
+  topbar.insertBefore(title, actions || null);
+}
+
+function initResponsiveTables() {
+  var mq = window.matchMedia('(max-width: 720px)');
+  function apply() {
+    document.querySelectorAll('table.data-table, table.dash-table').forEach(function (table) {
+      var colCount = table.querySelectorAll('thead th').length;
+      if (table.classList.contains('paper-table') && colCount <= 3) {
+        table.classList.remove('is-cards');
+        return;
+      }
+      var heads = Array.prototype.map.call(table.querySelectorAll('thead th'), function (th) {
+        return (th.textContent || '').replace(/\s+/g, ' ').trim();
+      });
+      table.querySelectorAll('tbody tr').forEach(function (row) {
+        Array.prototype.forEach.call(row.children, function (cell, index) {
+          if (heads[index]) cell.setAttribute('data-label', heads[index]);
+        });
+      });
+      table.classList.toggle('is-cards', mq.matches);
+    });
+  }
+  apply();
+  if (mq.addEventListener) mq.addEventListener('change', apply);
+  else mq.addListener(apply);
+}
+
 function initMobileNav() {
-  var backdrop = document.createElement('div');
-  backdrop.className = 'nav-backdrop';
-  document.body.appendChild(backdrop);
+  var sheet = document.getElementById('nav-sheet');
   function close() {
     document.body.classList.remove('nav-open', 'header-open');
+    if (sheet) sheet.hidden = true;
     document.querySelectorAll('[data-nav-toggle]').forEach(function (button) {
       button.setAttribute('aria-expanded', 'false');
     });
   }
+  function openMenu(button) {
+    document.body.classList.add('nav-open');
+    if (sheet) sheet.hidden = false;
+    if (button) button.setAttribute('aria-expanded', 'true');
+  }
   document.querySelectorAll('[data-nav-toggle]').forEach(function (button) {
     button.addEventListener('click', function () {
-      var kind = button.getAttribute('data-nav-toggle');
       var open = button.getAttribute('aria-expanded') === 'true';
-      close();
-      if (!open) {
-        document.body.classList.add(kind === 'sidebar' ? 'nav-open' : 'header-open');
-        button.setAttribute('aria-expanded', 'true');
-      }
+      if (open) close();
+      else openMenu(button);
     });
   });
-  backdrop.addEventListener('click', close);
+  document.querySelectorAll('[data-nav-close]').forEach(function (button) {
+    button.addEventListener('click', close);
+  });
+  if (sheet) {
+    sheet.addEventListener('click', function (event) {
+      if (event.target === sheet) close();
+    });
+  }
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') close();
+  });
+  document.querySelectorAll('.nav-sheet-list a, .nav-sheet-list [data-open-guide]').forEach(function (link) {
+    link.addEventListener('click', close);
+  });
 }
 
 function swalReady() {
@@ -1027,6 +1092,18 @@ function openNotifyDetail(button) {
     reverseButtons: true
   }).then(function (result) {
     if (result.isConfirmed && href) window.location.href = href;
+  });
+}
+
+function initGuideModal() {
+  var dialog = document.getElementById('guide-modal');
+  if (!dialog) return;
+  bindDialogDismiss(dialog, 'guide-modal-close');
+  document.querySelectorAll('[data-open-guide]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      if (dialog.parentElement !== document.body) document.body.appendChild(dialog);
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+    });
   });
 }
 

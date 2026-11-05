@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Auth;
-use App\Models\Notification;
 use App\Models\Program;
 use App\Models\Study;
 
@@ -18,9 +17,9 @@ final class DashboardController
             redirect('password/change');
         }
         $role = $user['role_slug'] ?? '';
-        $studies = $role === 'student' ? Study::listForUser($user, []) : [];
-        $notifications = Notification::forUser((int) $user['id'], 5);
-        $stats = $this->statsForRole($role, (int) $user['id'], (int) ($user['program_id'] ?? 0));
+        $studies = [];
+        $notifications = [];
+        $stats = $role === 'student' ? [] : $this->statsForRole($role, (int) $user['id'], (int) ($user['program_id'] ?? 0));
         $uploads = [];
         $success = null;
         $error = null;
@@ -136,13 +135,16 @@ final class DashboardController
                     SUM(s.status IN ('submitted', 'revision_requested')) AS pending_count,
                     SUM(s.status NOT IN ('submitted', 'revision_requested', 'draft')) AS accepted_count
                  FROM studies s
-                 WHERE s.adviser_user_id = :uid
-                    OR EXISTS (
-                        SELECT 1 FROM review_assignments ra
-                        WHERE ra.study_id = s.id AND ra.reviewer_user_id = :uid2
+                 WHERE s.program_id = :pid
+                    AND (
+                        s.adviser_user_id = :uid
+                        OR EXISTS (
+                            SELECT 1 FROM review_assignments ra
+                            WHERE ra.study_id = s.id AND ra.reviewer_user_id = :uid2
+                        )
                     )"
             );
-            $stmt->execute(['uid' => $userId, 'uid2' => $userId]);
+            $stmt->execute(['pid' => $programId, 'uid' => $userId, 'uid2' => $userId]);
             $row = $stmt->fetch() ?: [];
             return [(int) ($row['pending_count'] ?? 0), (int) ($row['accepted_count'] ?? 0)];
         }
@@ -165,7 +167,7 @@ final class DashboardController
                 ['admin_review', 'approved', 'archived'],
             ],
             'school_administrator' => [
-                ['admin_review'],
+                ['admin_review', 'library_review'],
                 ['approved', 'archived'],
             ],
         ];
@@ -173,7 +175,7 @@ final class DashboardController
             return [0, 0];
         }
         [$pendingStatuses, $acceptedStatuses] = $gates[$role];
-        $departmentOnly = in_array($role, ['dept_research_coordinator', 'dean'], true) && $programId > 0;
+        $departmentOnly = $programId > 0;
         return [
             $this->countStatuses($pendingStatuses, $departmentOnly ? $programId : 0),
             $this->countStatuses($acceptedStatuses, $departmentOnly ? $programId : 0),
@@ -225,7 +227,7 @@ final class DashboardController
         $held = match ($role) {
             'school_research_coordinator' => ['under_review', 'library_review', 'admin_review', 'approved', 'archived'],
             'librarian' => ['library_review', 'admin_review', 'approved', 'archived'],
-            'school_administrator' => ['admin_review', 'approved', 'archived'],
+            'school_administrator' => ['admin_review', 'library_review', 'approved', 'archived'],
             default => [],
         };
         if (!$held) {

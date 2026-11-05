@@ -8,13 +8,21 @@ use App\Models\User;
 
 final class Auth
 {
+    /** @var array<string, mixed>|false|null */
+    private static $cached = false;
+
     public static function user(): ?array
     {
+        if (self::$cached !== false) {
+            return self::$cached;
+        }
         $id = $_SESSION['user_id'] ?? null;
         if (!$id) {
+            self::$cached = null;
             return null;
         }
-        return User::findById((int) $id);
+        self::$cached = User::findById((int) $id);
+        return self::$cached;
     }
 
     public static function check(): bool
@@ -27,10 +35,12 @@ final class Auth
         Session::regenerate();
         $_SESSION['user_id'] = (int) $user['id'];
         $_SESSION['role_slug'] = Role::canonical((string) ($user['role_slug'] ?? ''));
+        self::$cached = $user;
     }
 
     public static function logout(): void
     {
+        self::$cached = null;
         $_SESSION = [];
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_destroy();
@@ -49,7 +59,7 @@ final class Auth
     {
         self::requireLogin();
         $roles = is_array($roles) ? $roles : [$roles];
-        $current = Role::canonical((string) ($_SESSION['role_slug'] ?? ''));
+        $current = Role::canonical((string) (self::user()['role_slug'] ?? ''));
         if (!in_array($current, $roles, true)) {
             http_response_code(403);
             view('errors/forbidden', ['message' => 'You do not have permission to access this page.']);
@@ -60,7 +70,7 @@ final class Auth
     public static function hasRole(string|array $roles): bool
     {
         $roles = is_array($roles) ? $roles : [$roles];
-        $current = Role::canonical((string) ($_SESSION['role_slug'] ?? ''));
+        $current = Role::canonical((string) (self::user()['role_slug'] ?? ''));
         return in_array($current, $roles, true);
     }
 }

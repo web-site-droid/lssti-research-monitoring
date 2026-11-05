@@ -1,5 +1,4 @@
 .git
-docs
 backups
 storage/manuscripts
 storage/avatars
@@ -8,6 +7,4 @@ storage/plagiarism
 database/u471965942_researchdb.sql
 config/database.local.php
 config/supabase.local.php
-web
 node_modules
-*.md

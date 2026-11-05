@@ -14,6 +14,11 @@ final class Csrf
         return $_SESSION[CSRF_TOKEN_KEY];
     }
 
+    public static function regenerate(): void
+    {
+        $_SESSION[CSRF_TOKEN_KEY] = bin2hex(random_bytes(32));
+    }
+
     public static function field(): string
     {
         return '<input type="hidden" name="_csrf" value="' . e(self::token()) . '">';
@@ -28,10 +33,16 @@ final class Csrf
     public static function requireValid(): void
     {
         $token = $_POST['_csrf'] ?? null;
-        if (!self::validate(is_string($token) ? $token : null)) {
-            http_response_code(403);
-            echo 'Invalid security token. Go back and try again.';
-            exit;
+        if (self::validate(is_string($token) ? $token : null)) {
+            return;
         }
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            self::regenerate();
+        }
+
+        http_response_code(403);
+        echo 'Your form has expired or is from an older page. Refresh the page and try again.';
+        exit;
     }
 }

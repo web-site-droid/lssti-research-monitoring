@@ -54,4 +54,59 @@ final class ReadLog
         $stmt->execute($params);
         return $stmt->fetchAll();
     }
+
+    /** Latest time each user opened each study. Optionally only articles in one department. */
+    /** @return list<array<string,mixed>> */
+    public static function latestPerUserStudy(?int $studyProgramId = null): array
+    {
+        $sql = "SELECT r.opened_at, u.school_id, u.first_name, u.last_name,
+                    ro.name AS role_name, p.code AS program_code,
+                    sp.code AS study_program_code, s.title, s.id AS study_id
+             FROM read_logs r
+             INNER JOIN users u ON u.id = r.user_id
+             INNER JOIN roles ro ON ro.id = u.role_id
+             LEFT JOIN programs p ON p.id = u.program_id
+             INNER JOIN studies s ON s.id = r.study_id
+             INNER JOIN programs sp ON sp.id = s.program_id
+             WHERE r.id = (
+                 SELECT MAX(latest.id) FROM read_logs latest
+                 WHERE latest.user_id = r.user_id
+                   AND latest.study_id = r.study_id
+             )";
+        $params = [];
+        if ($studyProgramId !== null && $studyProgramId > 0) {
+            $sql .= ' AND s.program_id = :pid';
+            $params['pid'] = $studyProgramId;
+        }
+        $sql .= ' ORDER BY r.opened_at DESC LIMIT 200';
+        $stmt = db()->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    /** Latest time each user opened one study. */
+    /** @return list<array<string,mixed>> */
+    public static function latestForStudy(int $studyId): array
+    {
+        if ($studyId <= 0) {
+            return [];
+        }
+        $stmt = db()->prepare(
+            "SELECT r.opened_at, u.school_id, u.first_name, u.last_name,
+                    ro.name AS role_name, p.code AS program_code
+             FROM read_logs r
+             INNER JOIN users u ON u.id = r.user_id
+             INNER JOIN roles ro ON ro.id = u.role_id
+             LEFT JOIN programs p ON p.id = u.program_id
+             WHERE r.study_id = :sid
+               AND r.id = (
+                 SELECT MAX(latest.id) FROM read_logs latest
+                 WHERE latest.user_id = r.user_id
+                   AND latest.study_id = r.study_id
+               )
+             ORDER BY r.opened_at DESC"
+        );
+        $stmt->execute(['sid' => $studyId]);
+        return $stmt->fetchAll();
+    }
 }

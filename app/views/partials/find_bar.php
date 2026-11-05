@@ -10,6 +10,7 @@ $statusAttr = (string) ($statusAttr ?? 'data-gate');
 $pageSize = (int) ($pageSize ?? 0);
 $searchId = (string) ($searchId ?? '');
 $mode = (string) ($mode ?? '');
+$showDepartment = isset($showDepartment) ? (bool) $showDepartment : true;
 $departments = [];
 foreach ($programs as $program) {
     $code = is_array($program) ? (string) ($program['code'] ?? '') : (string) $program;
@@ -54,7 +55,7 @@ krsort($years);
         <div class="find-tools">
             <label class="find-search">
                 <span class="visually-hidden">Search</span>
-                <input type="search" data-find-q <?= $searchId !== '' ? 'id="' . e($searchId) . '" data-manual' : '' ?> placeholder="Search title, authors, or department" autocomplete="off" aria-autocomplete="list" aria-controls="find-hits-<?= e(ltrim($table, '#')) ?>">
+                <input type="search" data-find-q <?= $searchId !== '' ? 'id="' . e($searchId) . '" data-manual' : '' ?> placeholder="<?= $showDepartment ? 'Search title, authors, or department' : 'Search title or authors' ?>" autocomplete="off" aria-autocomplete="list" aria-controls="find-hits-<?= e(ltrim($table, '#')) ?>">
                 <div class="find-hits" id="find-hits-<?= e(ltrim($table, '#')) ?>" data-find-hits hidden></div>
             </label>
             <label class="find-sort">
@@ -66,11 +67,12 @@ krsort($years);
                     <option value="title-desc">Title Z–A</option>
                 </select>
             </label>
-            <button type="button" class="find-toggle is-on" data-find-toggle aria-expanded="true"><?= icon('filter') ?> Filters</button>
+            <button type="button" class="find-toggle" data-find-toggle aria-expanded="false"><?= icon('filter') ?> Filters</button>
         </div>
     </div>
-    <div class="find-panel" data-find-panel>
+    <div class="find-panel" data-find-panel hidden>
         <div class="find-fields">
+            <?php if ($showDepartment): ?>
             <label class="find-field">
                 <span><?= icon('home') ?> Department</span>
                 <select data-find-dept aria-label="Department">
@@ -80,6 +82,7 @@ krsort($years);
                     <?php endforeach; ?>
                 </select>
             </label>
+            <?php endif; ?>
             <label class="find-field">
                 <span><?= icon('file') ?> Paper Type</span>
                 <select data-find-type aria-label="Paper type">

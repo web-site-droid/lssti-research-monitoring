@@ -1,25 +1,26 @@
 <div class="page-header">
-    <h1>Who opened this study<?php if ($study): ?>: <?= e($study['short_title']) ?><?php endif; ?></h1>
-    <p class="lead">Filter by study and dates. Click a heading to sort the list.</p>
+    <h1>Who read and downloaded this article<?php if ($study): ?>: <?= e($study['title'] ?: $study['short_title']) ?><?php endif; ?></h1>
+    <p class="lead"><?= $study
+        ? 'People who opened or downloaded the full file for this ' . e((string) ($study['program_code'] ?? '')) . ' article.'
+        : 'Choose a study to see who opened or downloaded it.' ?></p>
 </div>
-<form method="get" action="<?= e(url('reports/read-log')) ?>" class="filter-bar">
-    <label>Study number <input name="study_id" value="<?= (int) ($study['id'] ?? 0) ?>" required></label>
-    <label>From <input type="date" name="from" value="<?= e($from ?? '') ?>"></label>
-    <label>To <input type="date" name="to" value="<?= e($to ?? '') ?>"></label>
-    <button type="submit" class="btn btn-secondary"><?= icon('filter') ?> Apply</button>
-</form>
-<div class="table-wrap">
-<table class="data-table" data-sortable>
-    <thead><tr><th>Time</th><th>User</th><th>Role</th><th>IP address</th></tr></thead>
-    <tbody>
-    <?php foreach ($logs as $log): ?>
-        <tr>
-            <td><?= e($log['opened_at']) ?></td>
-            <td><?= e($log['school_id'] . ' — ' . $log['last_name']) ?></td>
-            <td><?= e($log['role_name']) ?></td>
-            <td><?= e($log['ip_address']) ?></td>
-        </tr>
-    <?php endforeach; ?>
-    </tbody>
-</table>
-</div>
+<?php if ($study): ?>
+    <section class="card card-elevated paper-group is-wide">
+        <h2 class="section-title">Who read this article</h2>
+        <?php partial('readers_table', [
+            'readers' => $readers ?? [],
+            'emptyText' => 'No one has opened this article yet.',
+        ]); ?>
+    </section>
+    <section class="card card-elevated paper-group is-wide" style="margin-top:1.25rem">
+        <h2 class="section-title">Who downloaded this file</h2>
+        <?php partial('readers_table', [
+            'readers' => $downloaders ?? [],
+            'emptyText' => 'No one has downloaded this file yet.',
+            'timeLabel' => 'Downloaded',
+        ]); ?>
+    </section>
+    <p class="muted" style="margin-top:1rem"><a href="<?= e(url('reports')) ?>"><?= icon('arrow-left') ?> Back to Logs</a></p>
+<?php else: ?>
+    <p class="empty-state">Open Logs and choose an article title to see who read or downloaded it.</p>
+<?php endif; ?>

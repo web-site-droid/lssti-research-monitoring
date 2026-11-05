@@ -35,7 +35,7 @@ final class Session
 
     public static function enforceTimeout(): void
     {
-        $timeoutMinutes = (int) (Settings::get('session_timeout_minutes') ?? SESSION_TIMEOUT_MINUTES);
+        $timeoutMinutes = defined('SESSION_TIMEOUT_MINUTES') ? (int) SESSION_TIMEOUT_MINUTES : 30;
         $now = time();
         if (isset($_SESSION['_last_activity'])) {
             if ($now - (int) $_SESSION['_last_activity'] > $timeoutMinutes * 60) {

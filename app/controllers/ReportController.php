@@ -6,6 +6,8 @@ namespace App\Controllers;
 
 use App\Helpers\Auth;
 use App\Helpers\Role;
+use App\Models\DownloadLog;
+use App\Models\Program;
 use App\Models\ReadLog;
 use App\Models\Study;
 
@@ -14,11 +16,17 @@ final class ReportController
     public function index(): void
     {
         $user = Auth::user();
-        $isAdmin = Role::isAdmin((string) ($user['role_slug'] ?? ''));
+        $role = Role::canonical((string) ($user['role_slug'] ?? ''), (string) ($user['role_name'] ?? ''));
+        $ownDept = in_array($role, [Role::DEAN, Role::DEPT_RESEARCH_COORDINATOR], true);
+        $viewProgramCode = $ownDept ? trim((string) ($user['program_code'] ?? '')) : '';
+        $studyProgramId = $ownDept ? (int) ($user['program_id'] ?? 0) : 0;
         view('reports/index', [
             'signIns' => $this->signInsByDepartment(null),
-            'downloads' => $isAdmin ? $this->fileDownloads() : [],
-            'showDownloads' => $isAdmin,
+            'reads' => ReadLog::latestPerUserStudy($studyProgramId > 0 ? $studyProgramId : null),
+            'downloads' => DownloadLog::latestPerUserStudy($studyProgramId > 0 ? $studyProgramId : null),
+            'programs' => Program::active(),
+            'viewProgramCode' => $viewProgramCode,
+            'readsOwnDepartment' => $ownDept,
         ]);
     }
 
@@ -49,12 +57,21 @@ final class ReportController
 
     public function readLog(): void
     {
+        $user = Auth::user();
         $studyId = (int) ($_GET['study_id'] ?? 0);
+        $study = $studyId ? Study::find($studyId) : null;
+        if ($study && !Role::canSeeArticleReaders($user, $study)) {
+            http_response_code(403);
+            view('errors/forbidden', ['message' => 'You can only see who read articles in your department.']);
+            return;
+        }
         $from = $_GET['from'] ?? null;
         $to = $_GET['to'] ?? null;
         view('reports/read_log', [
-            'study' => Study::find($studyId),
+            'study' => $study,
             'logs' => $studyId ? ReadLog::forStudy($studyId, $from, $to) : [],
+            'readers' => $studyId ? ReadLog::latestForStudy($studyId) : [],
+            'downloaders' => $studyId ? DownloadLog::latestForStudy($studyId) : [],
             'from' => $from,
             'to' => $to,
         ]);
@@ -138,30 +155,6 @@ final class ReportController
              ORDER BY p.code IS NULL, p.code, u.last_name, u.first_name';
         $stmt = db()->prepare($sql);
         $stmt->execute($params);
-        return $stmt->fetchAll();
-    }
-
-    /** @return list<array<string,mixed>> */
-    private function fileDownloads(): array
-    {
-        $stmt = db()->query(
-            "SELECT a.created_at, u.school_id, u.first_name, u.last_name,
-                    r.name AS role_name, p.code AS program_code, s.title
-             FROM audit_logs a
-             INNER JOIN users u ON u.id = a.user_id
-             INNER JOIN roles r ON r.id = u.role_id
-             LEFT JOIN programs p ON p.id = u.program_id
-             LEFT JOIN studies s ON s.id = a.entity_id
-             WHERE a.action = 'study.download'
-               AND a.id = (
-                 SELECT MAX(latest.id) FROM audit_logs latest
-                 WHERE latest.user_id = a.user_id
-                   AND latest.action = 'study.download'
-                   AND latest.entity_id = a.entity_id
-               )
-             ORDER BY a.created_at DESC
-             LIMIT 200"
-        );
         return $stmt->fetchAll();
     }
 

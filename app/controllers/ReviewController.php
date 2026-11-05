@@ -58,7 +58,9 @@ final class ReviewController
             'scores' => Study::scores($id),
             'plagiarism' => Study::latestPlagiarism($id, (int) ($study['current_version_id'] ?? 0)),
             'authorDisplay' => Study::formatAuthorList($id, $hideAuthors),
-            'canApprove' => Study::canApprove($id),
+            'canApprove' => in_array($study['status'], ['admin_review', 'library_review'], true)
+                ? Study::canFinalPublish($id)
+                : Study::canApprove($id),
             'panelists' => User::all('research_adviser'),
             'isAcademic' => in_array($role, ['school_research_coordinator', 'school_administrator'], true),
             'isDean' => $role === 'dean',
@@ -305,8 +307,9 @@ final class ReviewController
         if (!$study || !in_array($user['role_slug'] ?? '', ['school_research_coordinator', 'school_administrator'], true)) {
             redirect('review');
         }
-        $pct = (float) ($_POST['similarity_percentage'] ?? -1);
-        if ($pct < 0 || $pct > 100) {
+        $rawPercent = $_POST['similarity_percentage'] ?? null;
+        $pct = is_scalar($rawPercent) && is_numeric($rawPercent) ? (float) $rawPercent : -1;
+        if (!is_finite($pct) || $pct < 0 || $pct > 100) {
             flash('error', 'Invalid similarity percentage.');
             redirect('review/ethics', ['id' => $id]);
         }
@@ -349,24 +352,24 @@ final class ReviewController
             redirect('review');
         }
         $study = Study::find($id);
-        foreach (User::all('librarian') as $librarian) {
+        foreach (User::all('school_administrator') as $admin) {
             Notification::create(
-                (int) $librarian['id'],
+                (int) $admin['id'],
                 'review',
-                'Study ready for librarian review',
+                'Study ready for school administrator',
                 $study['short_title'],
-                'library/review?id=' . $id
+                'review/ethics?id=' . $id
             );
         }
         Notification::create(
             (int) $study['submitter_user_id'],
             'review',
-            'Sent to librarian',
-            'The school research coordinator cleared this study for the librarian.',
+            'Sent to school administrator',
+            'The school research coordinator cleared this study for the school administrator.',
             'studies/view?id=' . $id
         );
-        Audit::log('study.send_librarian', 'study', $id);
-        flash('success', 'Sent to the librarian.');
+        Audit::log('study.send_admin', 'study', $id);
+        flash('success', 'Sent to the school administrator.');
         redirect('review');
     }
 

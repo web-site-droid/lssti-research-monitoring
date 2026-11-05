@@ -9,11 +9,11 @@
         } elseif ($roleSlug === 'dean') {
             echo 'Open full files for every paper in your department. Other departments show title and abstract only.';
         } elseif ($roleSlug === 'school_research_coordinator') {
-            echo 'View every research paper from all departments with full manuscript access. Complete ethics and plagiarism, then send cleared studies to the librarian.';
+            echo 'View every research paper from all departments with full manuscript access. Complete ethics and plagiarism, then send cleared studies to the school administrator.';
         } elseif ($roleSlug === 'librarian') {
-            echo 'View every research paper from all departments with full manuscript access. Clear the library gate, then send studies to the school administrator.';
+            echo 'View every research paper from all departments with full manuscript access.';
         } elseif ($roleSlug === 'school_administrator') {
-            echo 'View every research paper from all departments with full manuscript access. Publish studies cleared by the librarian, and create dean, research coordinator, and librarian accounts.';
+            echo 'View every research paper from all departments with full manuscript access. Publish studies cleared by the school research coordinator, and create dean and research coordinator accounts.';
         } elseif ($roleSlug === 'research_adviser') {
             echo 'Open full files for every paper in your department. Other departments show title and abstract only.';
         } elseif ($roleSlug === 'student') {
@@ -37,7 +37,6 @@
                 $statLabels = [
                     'vet' => 'Waiting',
                     'review' => 'To check',
-                    'pending_congress' => 'Congress',
                     'pending' => 'Pending',
                     'accepted' => 'Accepted',
                     'department_studies' => 'All studies',
@@ -71,9 +70,9 @@ $schoolWideFilterEmpty = 'No papers in this department.';
 <section class="card card-elevated">
     <h2 class="section-title">All departments — full manuscripts</h2>
     <?php if ($isSrcDash): ?>
-        <p class="muted">Every research paper school-wide. Full files are available. Open review for ethics, plagiarism, and send to librarian.</p>
+        <p class="muted">Every research paper school-wide. Full files are available. Open review for ethics, plagiarism, and send to the school administrator.</p>
     <?php elseif ($isLibDash): ?>
-        <p class="muted">Every research paper school-wide. Full files are available. Open library review, then send cleared studies to the school administrator.</p>
+        <p class="muted">Every research paper school-wide. Full files are available.</p>
     <?php elseif ($isAdminDash): ?>
         <p class="muted">Every research paper school-wide. Full files are available. Publish studies waiting at school admin review.</p>
     <?php endif; ?>
@@ -90,14 +89,14 @@ $schoolWideFilterEmpty = 'No papers in this department.';
     <?php foreach ($directorStudies as $paper): ?>
         <?php if ((int) ($paper['current_version_id'] ?? 0) > 0):
             $cardStatus = (string) ($paper['status'] ?? '');
-            $cardPending = $isSrcDash ? ['under_review'] : ($isLibDash ? ['library_review'] : ['admin_review']);
+            $cardPending = $isSrcDash ? ['under_review'] : ($isLibDash ? ['library_review'] : ['admin_review', 'library_review']);
             $cardAccepted = $isSrcDash
                 ? ['library_review', 'admin_review', 'approved', 'archived']
                 : ($isLibDash ? ['admin_review', 'approved', 'archived'] : ['approved', 'archived']);
             $cardGate = in_array($cardStatus, $cardPending, true) ? 'pending' : (in_array($cardStatus, $cardAccepted, true) ? 'accepted' : '');
             partial('paper_read_card', ['paper' => $paper, 'gate' => $cardGate]);
         endif; ?>
-    <?php endforeach; ?>
+        <?php endforeach; ?>
 </div>
 <p id="dash-studies-empty" class="empty-state" hidden data-empty-dept="No papers in that department." data-empty-text="No studies match.">No studies match.</p>
 <div class="table-scroll<?= count($directorStudies) > 10 ? ' is-scroll' : '' ?>">
@@ -121,9 +120,9 @@ $schoolWideFilterEmpty = 'No papers in this department.';
             $canSendLibrary = $isLibDash
                 && ($study['status'] ?? '') === 'library_review'
                 && \App\Models\Study::hasLibraryReview((int) $study['id']);
-            $canFinalPublish = $isAdminDash && ($study['status'] ?? '') === 'admin_review';
+            $canFinalPublish = $isAdminDash && in_array($study['status'] ?? '', ['admin_review', 'library_review'], true);
             $studyStatus = (string) ($study['status'] ?? '');
-            $pendingGate = $isSrcDash ? ['under_review'] : ($isLibDash ? ['library_review'] : ['admin_review']);
+            $pendingGate = $isSrcDash ? ['under_review'] : ($isLibDash ? ['library_review'] : ['admin_review', 'library_review']);
             $acceptedGate = $isSrcDash
                 ? ['library_review', 'admin_review', 'approved', 'archived']
                 : ($isLibDash ? ['admin_review', 'approved', 'archived'] : ['approved', 'archived']);
@@ -148,7 +147,7 @@ $schoolWideFilterEmpty = 'No papers in this department.';
                     if ($isSrcDash && ($study['status'] ?? '') === 'under_review') {
                         echo '<a class="btn btn-secondary btn-icon-only" href="' . e(url('review/ethics', ['id' => $study['id']])) . '" aria-label="Open review" title="Open review">' . icon('check') . '</a>';
                     }
-                    if ($isAdminDash && ($study['status'] ?? '') === 'admin_review') {
+                    if ($isAdminDash && in_array($study['status'] ?? '', ['admin_review', 'library_review'], true)) {
                         echo '<a class="btn btn-secondary btn-icon-only" href="' . e(url('review/ethics', ['id' => $study['id']])) . '" aria-label="Open review" title="Open review">' . icon('check') . '</a>';
                     }
                     if ($isLibDash && ($study['status'] ?? '') === 'library_review') {
@@ -161,11 +160,14 @@ $schoolWideFilterEmpty = 'No papers in this department.';
                             'version_id' => $study['current_version_id'],
                         ])) . '" aria-label="Download full file" title="Download full file">' . icon('download') . '</a>';
                     }
+                    if ($isAdminDash) {
+                        echo '<a class="btn btn-secondary btn-icon-only" href="' . e(url('reports/read-log', ['study_id' => $study['id']])) . '" aria-label="Who read this article" title="Who read this article">' . icon('list') . '</a>';
+                    }
                     if ($isSrcDash && ($study['status'] ?? '') === 'under_review') {
                         echo '<form method="post" action="' . e(url('review/approve')) . '" class="inline-form">'
                             . \App\Helpers\Csrf::field()
                             . '<input type="hidden" name="study_id" value="' . (int) $study['id'] . '">'
-                            . '<button type="submit" class="btn btn-primary btn-sm" aria-label="Send to librarian" title="Send to librarian">' . icon('send') . '</button></form>';
+                            . '<button type="submit" class="btn btn-primary btn-sm" aria-label="Send to school administrator" title="Send to school administrator">' . icon('send') . '</button></form>';
                     }
                     if ($canSendLibrary) {
                         echo '<form method="post" action="' . e(url('library/approve')) . '" class="inline-form">'
@@ -230,6 +232,7 @@ $schoolWideFilterEmpty = 'No papers in this department.';
         'empty' => '#adviser-dept-table-empty',
         'papers' => $deptCatalog,
         'programs' => $programs ?? [],
+        'showDepartment' => false,
     ]); ?>
     <p class="muted">Click a card to read the whole file and play it aloud.</p>
     <div class="paper-cards" id="adviser-read-cards">
@@ -377,6 +380,7 @@ $deanQueue = $uploads ?? [];
         'papers' => $deptCatalog,
         'programs' => $programs ?? [],
         'statusOptions' => ['' => 'Any status', 'pending' => 'Pending', 'accepted' => 'Accepted'],
+        'showDepartment' => false,
     ]); ?>
     <p class="muted">Click a card to read the whole file and play it aloud.</p>
     <div class="paper-cards" id="dean-read-cards">
@@ -438,6 +442,7 @@ $deanQueue = $uploads ?? [];
                                 'version_id' => $paper['current_version_id'],
                             ])) . '" aria-label="Download full file" title="Download full file">' . icon('download') . '</a>';
                         }
+                        echo '<a class="btn btn-secondary btn-icon-only" href="' . e(url('reports/read-log', ['study_id' => $paper['id']])) . '" aria-label="Who read this article" title="Who read this article">' . icon('list') . '</a>';
                         if (($paper['status'] ?? '') === 'dean_review') {
                             echo '<form method="post" action="' . e(url('review/dean-approve')) . '" class="inline-form">'
                                 . \App\Helpers\Csrf::field()
@@ -549,6 +554,7 @@ $pendingUploads = $uploads ?? [];
         'programs' => $programs ?? [],
         'statusOptions' => ['' => 'Any status', 'pending' => 'Pending', 'accepted' => 'Accepted'],
         'pageSize' => 6,
+        'showDepartment' => false,
     ]); ?>
     <p class="muted">Click a card to read the whole file and play it aloud.</p>
     <div class="paper-cards" id="drc-read-cards">
@@ -622,7 +628,7 @@ $pendingUploads = $uploads ?? [];
                         ?>
                     </td>
                 </tr>
-            <?php endforeach; ?>
+                <?php endforeach; ?>
         <?php endif; ?>
         </tbody>
     </table>
@@ -723,6 +729,7 @@ $pendingUploads = $uploads ?? [];
         'programs' => $programs ?? [],
         'pageSize' => 6,
         'searchId' => 'q',
+        'showDepartment' => false,
     ]); ?>
     <ul id="suggestions" class="suggestions scholar-suggestions" role="listbox"></ul>
 </div>

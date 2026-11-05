@@ -26,10 +26,16 @@ final class UserController
         $deptMode = $adviserMode || $deanMode || $coordinatorMode;
         $programId = (int) ($actor['program_id'] ?? 0);
         $adminMode = $roleSlug === Role::SCHOOL_ADMINISTRATOR;
+        $canManageDepartments = Role::canManageDepartments((string) $roleSlug, (string) ($actor['role_name'] ?? ''));
         $librarianMode = $roleSlug === Role::LIBRARIAN;
         $allowedSlugs = $this->creatableSlugs($roleSlug);
         $roles = $this->rolesForActor($roleSlug, $allowedSlugs);
         $editRoles = $deptMode ? $roles : User::roles();
+        $hideLibrarian = static function (array $role): bool {
+            return ($role['slug'] ?? '') !== Role::LIBRARIAN;
+        };
+        $roles = array_values(array_filter($roles, $hideLibrarian));
+        $editRoles = array_values(array_filter($editRoles, $hideLibrarian));
         if ($librarianMode) {
             $hideAdmin = static function (array $role): bool {
                 return ($role['slug'] ?? '') !== Role::SCHOOL_ADMINISTRATOR;
@@ -70,8 +76,10 @@ final class UserController
             'importNotes' => flash('import_notes'),
             'roles' => $roles,
             'editRoles' => $editRoles,
-            'programs' => $deptMode ? [] : ($adminMode ? Program::active() : Program::directorAdded()),
-            'canAddDepartment' => $adminMode,
+            'programs' => $deptMode ? [] : ($canManageDepartments ? Program::active() : Program::directorAdded()),
+            'canAddDepartment' => $canManageDepartments,
+            'canManageDepartments' => $canManageDepartments,
+            'canAssignUserDepartment' => $adminMode,
             'studentRoleId' => $adviserMode ? (int) ((User::findRoleBySlug('student')['id'] ?? 0)) : 0,
             'openEdit' => (int) ($_GET['edit'] ?? 0),
             'openAdd' => (int) ($_GET['add'] ?? 0) === 1,
@@ -117,7 +125,12 @@ final class UserController
             $role = User::findRole($data['role_id']);
             $programId = (int) ($actor['program_id'] ?? 0);
             $allowed = $this->creatableSlugs($roleSlug);
-            if (!$role || !in_array($role['slug'], $allowed, true) || $programId <= 0 || !Program::find($programId)) {
+            if (
+                !$role
+                || !in_array($role['slug'] ?? '', $allowed, true)
+                || $programId <= 0
+                || !Program::find($programId)
+            ) {
                 flash('error', $roleSlug === Role::DEAN
                     ? 'Choose student, research adviser, or dept research coordinator. Accounts stay in your department.'
                     : 'Choose student or research adviser. Accounts stay in your department.');
@@ -128,7 +141,7 @@ final class UserController
             $role = User::findRole($data['role_id']);
             if ($roleSlug === Role::SCHOOL_ADMINISTRATOR) {
                 if (!$role || !in_array($role['slug'], Role::schoolAdminCreatableRoles(), true)) {
-                    flash('error', 'Choose dean, school research coordinator, or librarian.');
+                    flash('error', 'Choose dean or school research coordinator.');
                     redirect('users', ['add' => 1]);
                 }
             }
@@ -219,11 +232,13 @@ final class UserController
             $newRole = User::findRole($data['role_id']);
             $sameRole = ($newRole['slug'] ?? '') === ($target['role_slug'] ?? '');
             if (!$newRole || (!in_array($newRole['slug'], Role::schoolAdminCreatableRoles(), true) && !$sameRole)) {
-                flash('error', 'Choose dean, school research coordinator, or librarian.');
+                flash('error', 'Choose dean or school research coordinator.');
                 redirect('users', ['edit' => $id]);
             }
         }
-        $canChangeDepartment = (int) ($target['created_by'] ?? 0) === (int) ($actor['id'] ?? 0);
+        $canChangeDepartment = $roleSlug === Role::SCHOOL_ADMINISTRATOR
+            || Role::canManageDepartments($roleSlug, (string) ($actor['role_name'] ?? ''))
+            || (int) ($target['created_by'] ?? 0) === (int) ($actor['id'] ?? 0);
         if ($canChangeDepartment) {
             $department = $this->departmentFromPost($data['role_id']);
             if ($department['error'] !== null) {
@@ -261,11 +276,14 @@ final class UserController
                 redirect('users');
             }
         }
-        if ($roleSlug === Role::LIBRARIAN) {
+        if (in_array($roleSlug, [Role::LIBRARIAN, Role::SCHOOL_ADMINISTRATOR], true)) {
             $target = User::findById($id);
-            if (!$target || ($target['role_slug'] ?? '') === Role::SCHOOL_ADMINISTRATOR) {
-                flash('error', 'You cannot reset a school administrator password.');
+            if (!$target) {
+                flash('error', 'Account not found.');
                 redirect('users');
+            }
+            if (($target['role_slug'] ?? '') === Role::SCHOOL_ADMINISTRATOR || ($target['role_slug'] ?? '') === Role::LIBRARIAN) {
+                // allowed: librarian may reset all accounts, including other librarian accounts
             }
         }
         $password = trim($_POST['password'] ?? '') !== '' ? $_POST['password'] : UserImport::DEFAULT_PASSWORD;
@@ -347,6 +365,10 @@ final class UserController
                     'create_departments' => true,
                     'roles' => Role::schoolAdminCreatableRoles(),
                 ];
+            } elseif ($roleSlug === Role::SCHOOL_RESEARCH_COORDINATOR) {
+                $limit = [
+                    'create_departments' => true,
+                ];
             }
             $result = UserImport::import($rows, (int) $actor['id'], $limit);
         } catch (RuntimeException $e) {
@@ -365,6 +387,34 @@ final class UserController
         redirect('users');
     }
 
+    public function departmentSave(): void
+    {
+        Csrf::requireValid();
+        $actor = Auth::user();
+        if (!Role::canManageDepartments((string) ($actor['role_slug'] ?? ''), (string) ($actor['role_name'] ?? ''))) {
+            http_response_code(403);
+            echo 'Forbidden';
+            return;
+        }
+        $id = (int) ($_POST['id'] ?? 0);
+        $code = (string) ($_POST['code'] ?? '');
+        $name = (string) ($_POST['name'] ?? '');
+        try {
+            if ($id > 0) {
+                Program::update($id, $code, $name);
+                Audit::log('program.update', 'program', $id);
+                flash('success', 'Department updated.');
+            } else {
+                $newId = Program::create($code, $name, true);
+                Audit::log('program.create', 'program', $newId);
+                flash('success', 'Department added.');
+            }
+        } catch (\InvalidArgumentException $e) {
+            flash('error', $e->getMessage());
+        }
+        redirect('users');
+    }
+
     public function loginLogs(): void
     {
         redirect('reports');
@@ -374,14 +424,18 @@ final class UserController
     private function departmentFromPost(int $roleId): array
     {
         $role = User::findRole($roleId);
-        if (!$role || !in_array($role['slug'], Role::departmentBoundRoles(), true)) {
+        $actor = Auth::user();
+        $actorSlug = (string) ($actor['role_slug'] ?? '');
+        $bound = $role && in_array($role['slug'], Role::departmentBoundRoles(), true);
+        $canManage = Role::canManageDepartments($actorSlug, (string) ($actor['role_name'] ?? ''));
+        $canAssignAny = $actorSlug === Role::SCHOOL_ADMINISTRATOR;
+        $raw = (string) ($_POST['program_id'] ?? '');
+        if (!$bound && !$canAssignAny) {
             return ['program_id' => null, 'error' => null];
         }
-        $actor = Auth::user();
-        $isDirector = ($actor['role_slug'] ?? '') === Role::SCHOOL_ADMINISTRATOR;
-        if ((string) ($_POST['program_id'] ?? '') === 'new') {
-            if (!$isDirector) {
-                return ['program_id' => null, 'error' => 'Only the school administrator can add a department.'];
+        if ($raw === 'new') {
+            if (!$canManage) {
+                return ['program_id' => null, 'error' => 'Only the school administrator or school research coordinator can add a department.'];
             }
             try {
                 $id = Program::create((string) ($_POST['new_program_code'] ?? ''), (string) ($_POST['new_program_name'] ?? ''), true);
@@ -390,11 +444,19 @@ final class UserController
             }
             return ['program_id' => $id, 'error' => null];
         }
-        $program = $isDirector
-            ? Program::find((int) ($_POST['program_id'] ?? 0))
-            : Program::findDirectorAdded((int) ($_POST['program_id'] ?? 0));
+        if ($raw === '' || $raw === '0') {
+            if ($bound) {
+                return ['program_id' => null, 'error' => 'Choose a department.'];
+            }
+            return ['program_id' => null, 'error' => null];
+        }
+        $program = ($canManage || $canAssignAny)
+            ? Program::find((int) $raw)
+            : Program::findDirectorAdded((int) $raw);
         if (!$program) {
-            return ['program_id' => null, 'error' => 'Choose a department the school administrator added.'];
+            return ['program_id' => null, 'error' => ($canManage || $canAssignAny)
+                ? 'Choose a department.'
+                : 'Choose a department the school administrator added.'];
         }
         return ['program_id' => (int) $program['id'], 'error' => null];
     }

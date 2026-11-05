@@ -62,4 +62,30 @@ final class Program
         $row = $stmt->fetch();
         return $row ?: null;
     }
+
+    public static function findByCode(string $code): ?array
+    {
+        $stmt = db()->prepare('SELECT * FROM programs WHERE is_active = 1 AND code = :code LIMIT 1');
+        $stmt->execute(['code' => strtoupper(trim($code))]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
+    public static function update(int $id, string $code, string $name): void
+    {
+        $code = strtoupper(trim($code));
+        $name = trim($name);
+        if ($code === '' || $name === '' || strlen($code) > 16 || strlen($name) > 128 || !preg_match('/^[A-Z0-9-]{2,16}$/', $code)) {
+            throw new \InvalidArgumentException('Enter a department code of 2 to 16 letters or numbers, and a department name.');
+        }
+        if (!self::find($id)) {
+            throw new \InvalidArgumentException('Department not found.');
+        }
+        $taken = self::findByCode($code);
+        if ($taken && (int) $taken['id'] !== $id) {
+            throw new \InvalidArgumentException('That department code is already used.');
+        }
+        $stmt = db()->prepare('UPDATE programs SET code = :code, name = :name WHERE id = :id');
+        $stmt->execute(['code' => $code, 'name' => $name, 'id' => $id]);
+    }
 }

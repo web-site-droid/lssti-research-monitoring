@@ -21,14 +21,21 @@
                 <option value="<?= (int) $r['id'] ?>" data-slug="<?= e($r['slug']) ?>" <?= (int) $r['id'] === (int) $editUser['role_id'] ? 'selected' : '' ?>><?= e($r['name']) ?></option>
             <?php endforeach; ?>
         </select>
-        <?php $canChangeDepartment = (int) ($editUser['created_by'] ?? 0) === (int) ((\App\Helpers\Auth::user()['id'] ?? 0)); ?>
-        <div id="department-field" <?= in_array($editUser['role_slug'], ['student', 'research_adviser', 'adviser', 'dept_research_coordinator', 'dean'], true) ? '' : 'hidden' ?>>
-            <label for="program_id">Department<?php if ($canChangeDepartment): ?> <span class="req">*</span><?php endif; ?></label>
+        <?php
+        $actor = \App\Helpers\Auth::user();
+        $canAssignUserDepartment = (($actor['role_slug'] ?? '') === \App\Helpers\Role::SCHOOL_ADMINISTRATOR);
+        $canChangeDepartment = $canAssignUserDepartment
+            || \App\Helpers\Role::canManageDepartments((string) ($actor['role_slug'] ?? ''), (string) ($actor['role_name'] ?? ''))
+            || (int) ($editUser['created_by'] ?? 0) === (int) ($actor['id'] ?? 0);
+        $boundRole = in_array($editUser['role_slug'], ['student', 'research_adviser', 'adviser', 'dept_research_coordinator', 'dean'], true);
+        ?>
+        <div id="department-field" <?= ($canAssignUserDepartment || $boundRole) ? '' : 'hidden' ?>>
+            <label for="program_id">Department<?php if ($boundRole): ?> <span class="req">*</span><?php endif; ?></label>
             <?php if (!$canChangeDepartment): ?>
                 <p class="muted"><?= e(trim((string) (($editUser['program_code'] ?? '') . ' — ' . ($editUser['program_name'] ?? '')), ' —') ?: 'No department') ?></p>
             <?php endif; ?>
             <select id="program_id" name="program_id"<?= $canChangeDepartment ? '' : ' disabled hidden' ?>>
-                <option value="">Select department</option>
+                <option value=""><?= $canAssignUserDepartment ? 'All departments' : 'Select department' ?></option>
                 <?php foreach ($programs as $p): ?>
                     <option value="<?= (int) $p['id'] ?>" <?= (int) $p['id'] === (int) ($editUser['program_id'] ?? 0) ? 'selected' : '' ?>><?= e($p['code'] . ' — ' . $p['name']) ?></option>
                 <?php endforeach; ?>

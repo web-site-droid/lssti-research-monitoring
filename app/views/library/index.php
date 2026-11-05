@@ -15,7 +15,7 @@ ksort($programs);
     'statusOptions' => [
         '' => 'Any status',
         'pending' => 'With dept coordinator',
-        'library_review' => 'With librarian',
+        'library_review' => 'With school admin',
         'admin_review' => 'With school admin',
         'approved' => 'Approved',
     ],
@@ -50,7 +50,7 @@ ksort($programs);
         $sendLabel = ($s['status'] ?? '') === 'library_review' ? 'Submit to school admin' : 'Submit to dean';
         $statusLabel = match ($s['status']) {
             'pending' => 'With dept coordinator',
-            'library_review' => 'With librarian',
+            'library_review' => 'With school admin',
             'admin_review' => 'With school admin',
             'approved' => 'Approved',
             default => ucwords(str_replace('_', ' ', $s['status'])),

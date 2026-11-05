@@ -1,7 +1,7 @@
 <?php $user = $user ?? \App\Helpers\Auth::user(); ?>
 <aside class="site-sidebar" id="site-sidebar">
-    <a class="brand brand-link" href="<?= e(url('')) ?>">
-        <img src="<?= e(asset_url('images/logo.png')) ?>" alt="Department of Computer Science, LSSTI" width="48" height="48">
+    <a class="brand brand-link" href="<?= e(url($user ? 'dashboard' : 'login')) ?>">
+        <img src="<?= e(asset_url('images/lssti-seal.png')) ?>" alt="LSSTI Research Repository" width="48" height="48">
         <div>
             <strong>LSSTI Research Repository</strong>
             <?php if ($user): ?>

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Helpers\Audit;
 use App\Helpers\Auth;
 use App\Helpers\StorageFiles;
+use App\Models\DownloadLog;
+use App\Models\ReadLog;
 use App\Models\Study;
 
 final class FileController
@@ -48,16 +49,11 @@ final class FileController
             exit('File missing');
         }
         $inline = isset($_GET['inline']) && $_GET['inline'] !== '0' && $_GET['inline'] !== '';
+        if ($inline && $user) {
+            ReadLog::record((int) $user['id'], $studyId, $versionId);
+        }
         if (!$inline && $user) {
-            $seen = db()->prepare(
-                "SELECT id FROM audit_logs
-                 WHERE user_id = :u AND action = 'study.download' AND entity_type = 'study' AND entity_id = :sid
-                 LIMIT 1"
-            );
-            $seen->execute(['u' => (int) $user['id'], 'sid' => $studyId]);
-            if (!$seen->fetch()) {
-                Audit::log('study.download', 'study', $studyId, ['version_id' => $versionId, 'copy' => 'full']);
-            }
+            DownloadLog::record($studyId, $versionId);
         }
         StorageFiles::stream($relative, (string) $mime, (string) $filename, $inline);
     }

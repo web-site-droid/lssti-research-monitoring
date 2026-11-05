@@ -6,9 +6,9 @@ $pageTitle = $pageTitle ?? APP_NAME;
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title><?= e($pageTitle) ?></title>
-    <link rel="icon" type="image/png" href="<?= e(asset_url('images/logo.png')) ?>">
+    <link rel="icon" type="image/png" href="<?= e(asset_url('images/lssti-seal.png')) ?>">
     <link rel="stylesheet" href="<?= e(asset_url('css/app.css')) ?>">
     <link rel="stylesheet" href="<?= e(asset_url('vendor/sweetalert2/sweetalert2.min.css')) ?>">
 </head>
@@ -17,6 +17,7 @@ $pageTitle = $pageTitle ?? APP_NAME;
 <?php $user = $user ?? \App\Helpers\Auth::user(); ?>
 <?php $useSidebar = $user && \App\Helpers\Role::canonical((string) ($user['role_slug'] ?? '')) !== \App\Helpers\Role::STUDENT; ?>
 <?php if ($useSidebar): ?><div class="app-shell"><?php partial('sidebar', ['user' => $user]); ?><div class="app-main"><?php partial('topbar', ['user' => $user]); ?><?php else: ?><?php partial('header', ['user' => $user]); ?><?php endif; ?>
+<?php if ($user): ?><?php partial('nav_sheet', ['user' => $user]); ?><?php endif; ?>
         <?php require $contentView; ?>
 <?php if ($useSidebar): ?></div></div><?php endif; ?>
 <script src="<?= e(asset_url('vendor/sweetalert2/sweetalert2.min.js')) ?>"></script>

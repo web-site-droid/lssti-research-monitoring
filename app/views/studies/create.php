@@ -17,8 +17,10 @@ $pageTitle = $editingId ? 'Edit draft' : 'Upload a study';
         <p class="lead"><?= $editingId ? 'Change this draft, then save or send it.' : 'Your research adviser checks this study first. Then you send it to the dept research coordinator.' ?></p>
     </div>
     <?php if (!empty($error)): ?><p class="alert alert-error"><?= e($error) ?></p><?php endif; ?>
-    <form method="post" action="<?= e(url($editingId ? 'studies/edit/submit' : 'studies/create/submit')) ?>" enctype="multipart/form-data" class="upload-layout" id="study-form">
+    <form method="post" action="<?= e(url($editingId ? 'studies/edit/submit' : 'studies/create/submit')) ?>" enctype="multipart/form-data" class="upload-layout" id="study-form" data-chunk-url="<?= e(url('studies/upload-part')) ?>">
         <?= \App\Helpers\Csrf::field() ?>
+        <input type="hidden" name="manuscript_stored" value="">
+        <input type="hidden" name="manuscript_name" value="">
         <?php if ($editingId): ?>
             <input type="hidden" name="id" value="<?= $editingId ?>">
         <?php endif; ?>
@@ -97,7 +99,8 @@ $pageTitle = $editingId ? 'Edit draft' : 'Upload a study';
                     <label for="manuscript">Manuscript<?= $editingId ? '' : ' <span class="req">*</span>' ?></label>
                     <input type="file" id="manuscript" name="manuscript" accept=".pdf,.docx,application/pdf" <?= $editingId ? '' : 'required' ?><?= $manuscriptInvalid ? ' aria-invalid="true"' : '' ?>>
                     <?php if ($manuscriptInvalid): ?><p class="field-error">Manuscript needs a correction. Choose the file again.</p><?php endif; ?>
-                    <p class="muted">PDF or DOCX. Readers see the full study.<?php if ($editingId): ?> Leave the file empty to keep the copy already saved.<?php else: ?> If a message appears, your answers stay in the form. Choose the file again.<?php endif; ?></p>
+                    <p class="upload-progress muted" hidden></p>
+                    <p class="muted">PDF or DOCX, up to <?= (int) \App\Helpers\FileUpload::maxMb() ?> MB. Readers see the full study.<?php if ($editingId): ?> Leave the file empty to keep the copy already saved.<?php else: ?> If a message appears, your answers stay in the form. Choose the file again.<?php endif; ?></p>
                 </div>
             </div>
             <div class="upload-actions">
@@ -113,4 +116,4 @@ $pageTitle = $editingId ? 'Edit draft' : 'Upload a study';
         </section>
     </form>
 </div>
-<?php $pageScripts = ['study-form.js']; ?>
+<?php $pageScripts = ['manuscript-upload.js', 'study-form.js']; ?>

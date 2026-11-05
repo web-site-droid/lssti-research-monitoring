@@ -18,7 +18,7 @@
         'pending' => 'With dept research coordinator',
         'dean_review' => 'With dean',
         'under_review' => 'With school research coordinator',
-        'library_review' => 'With librarian',
+        'library_review' => 'With school administrator',
         'admin_review' => 'With school administrator',
         default => ucwords(str_replace('_', ' ', (string) ($study['status'] ?? ''))),
     }) ?></p>

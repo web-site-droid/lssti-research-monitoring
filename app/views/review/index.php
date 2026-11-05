@@ -1,4 +1,9 @@
-<?php $adviserQueue = !empty($adviserQueue); $deanQueue = !empty($deanQueue); $adminQueue = !empty($adminQueue); ?>
+<?php
+$adviserQueue = !empty($adviserQueue);
+$deanQueue = !empty($deanQueue);
+$adminQueue = !empty($adminQueue);
+$ownDepartment = $adviserQueue || $deanQueue;
+?>
 <div class="page-header">
     <h1>Reviews</h1>
     <p class="lead"><?= $adviserQueue
@@ -6,9 +11,9 @@
         : ($deanQueue
             ? 'Approve studies from the dept research coordinator for the school research coordinator.'
             : ($adminQueue
-                ? 'Publish studies cleared by the librarian.'
+                ? 'Publish studies cleared by the school research coordinator.'
                 : (!empty($seeAllPapers)
-                    ? 'Complete checks, then send studies to the librarian.'
+                    ? 'Complete checks, then send studies to the school administrator.'
                     : 'Check a study, then accept or reject it.'))) ?></p>
 </div>
 <?php if (!empty($success)): ?><p class="alert alert-success"><?= e($success) ?></p><?php endif; ?>
@@ -19,6 +24,7 @@
     'papers' => $studies,
     'statusOptions' => $adviserQueue ? ['' => 'Any status', 'pending' => 'Pending', 'accepted' => 'Accepted'] : [],
     'statusAttr' => 'data-decision',
+    'showDepartment' => !$ownDepartment,
 ]); ?>
 <p class="muted">Click a card to read the whole file and play it aloud.</p>
 <div class="paper-cards" id="review-read-cards">
@@ -31,20 +37,22 @@
 </div>
 <div class="table-scroll<?= count($studies) > 10 ? ' is-scroll' : '' ?>">
 <div class="table-wrap dash-board">
-<table class="dash-table review-table" id="review-studies">
+<table class="dash-table review-table<?= $ownDepartment ? ' is-own-dept' : '' ?>" id="review-studies">
     <thead>
         <tr>
             <th>Title</th>
             <th>Submitted by</th>
             <th>Authors</th>
+            <?php if (!$ownDepartment): ?>
             <th>Department</th>
+            <?php endif; ?>
             <th><?= $adviserQueue ? 'Decision' : 'Academic year' ?></th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
     <?php if (!$studies): ?>
-        <tr class="dash-empty-row"><td><?= $adviserQueue ? 'No pending or accepted studies.' : 'No studies are waiting.' ?></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr class="dash-empty-row"><td><?= $adviserQueue ? 'No pending or accepted studies.' : 'No studies are waiting.' ?></td><td></td><td></td><?php if (!$ownDepartment): ?><td></td><?php endif; ?><td></td><td></td></tr>
     <?php endif; ?>
     <?php foreach ($studies as $s): ?>
         <?php $accepted = $adviserQueue && !in_array($s['status'], ['submitted', 'revision_requested'], true); ?>
@@ -52,7 +60,9 @@
             <td><?= e($s['short_title'] ?: $s['title']) ?></td>
             <td><?= e(trim(($s['submitter_last'] ?? '') . ', ' . ($s['submitter_first'] ?? ''), ' ,') ?: '—') ?></td>
             <td><?= author_cell($s['authors'] ?? '', (string) ($s['short_title'] ?: $s['title'])) ?></td>
+            <?php if (!$ownDepartment): ?>
             <td><?= e($s['program_code']) ?></td>
+            <?php endif; ?>
             <td>
                 <?php if ($adviserQueue): ?>
                     <span class="status-pill <?= $accepted ? 'is-on' : 'is-study' ?>"><?= $accepted ? 'Accepted' : 'Pending' ?></span>
@@ -88,13 +98,13 @@
                         echo '<form method="post" action="' . e(url('review/approve')) . '">'
                             . \App\Helpers\Csrf::field()
                             . '<input type="hidden" name="study_id" value="' . (int) $s['id'] . '">'
-                            . '<button type="submit" class="btn btn-green btn-icon-only" aria-label="Send to librarian" title="Send to librarian">' . icon('check') . '</button></form>';
+                            . '<button type="submit" class="btn btn-green btn-icon-only" aria-label="Send to school administrator" title="Send to school administrator">' . icon('check') . '</button></form>';
                         echo '<form method="post" action="' . e(url('review/reject')) . '" data-confirm="Do you want to reject this study?">'
                             . \App\Helpers\Csrf::field()
                             . '<input type="hidden" name="study_id" value="' . (int) $s['id'] . '">'
                             . '<button type="submit" class="btn btn-danger btn-icon-only" aria-label="Reject" title="Reject">' . icon('x') . '</button></form>';
                     }
-                    if ($adminQueue && ($s['status'] ?? '') === 'admin_review') {
+                    if ($adminQueue && in_array($s['status'] ?? '', ['admin_review', 'library_review'], true)) {
                         echo '<form method="post" action="' . e(url('review/final-publish')) . '">'
                             . \App\Helpers\Csrf::field()
                             . '<input type="hidden" name="study_id" value="' . (int) $s['id'] . '">'
@@ -109,7 +119,7 @@
     <?php if ($studies): ?>
         <tr class="review-empty-row" hidden>
             <td>No studies match this search.</td>
-            <td></td><td></td><td></td><td></td><td></td>
+            <td></td><td></td><?php if (!$ownDepartment): ?><td></td><?php endif; ?><td></td><td></td>
         </tr>
     <?php endif; ?>
     </tbody>

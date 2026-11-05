@@ -54,7 +54,7 @@ final class LibraryController
             redirect('library/review', ['id' => $id]);
         }
         $isLibrarian = ($user['role_slug'] ?? '') === Role::LIBRARIAN || ($study['status'] ?? '') === 'library_review';
-        $section = $isLibrarian ? 'Librarian review' : 'Department research coordinator review';
+        $section = $isLibrarian ? 'School administrator review' : 'Department research coordinator review';
         db()->prepare(
             'INSERT INTO review_comments (study_id, study_version_id, reviewer_user_id, section_label, comment_text, visibility)
              VALUES (:sid, :vid, :uid, :section, :comment, :vis)'
@@ -69,9 +69,9 @@ final class LibraryController
         Notification::create(
             (int) $study['submitter_user_id'],
             'library',
-            $isLibrarian ? 'Librarian review saved' : 'Department review saved',
+            $isLibrarian ? 'Review saved' : 'Department review saved',
             $isLibrarian
-                ? 'The librarian reviewed your study.'
+                ? 'Your study is ready for the school administrator.'
                 : 'The dept research coordinator reviewed your study.',
             'studies/view?id=' . $id
         );
@@ -97,7 +97,7 @@ final class LibraryController
 
         if ($isLibrarian) {
             if ($study['status'] !== 'library_review' || !Study::hasLibraryReview($id)) {
-                flash('error', 'Save a librarian review note before submitting to the school administrator.');
+                flash('error', 'Save a review note before submitting to the school administrator.');
                 redirect('library/review', ['id' => $id]);
             }
             if (!Study::sendToSchoolAdmin($id)) {

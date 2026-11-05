@@ -219,8 +219,7 @@ final class Study
             if ((int) ($study['submitter_user_id'] ?? 0) === (int) ($user['id'] ?? 0)) {
                 return true;
             }
-            return ($study['status'] ?? '') === 'approved'
-                && \App\Helpers\Role::sameDepartment($user, $study);
+            return \App\Helpers\Role::sameDepartment($user, $study);
         }
 
         // Advisers get the whole file for their department, for students they advise, and for papers they uploaded.
@@ -249,6 +248,19 @@ final class Study
             return self::canAccess($user, $study);
         }
         return true;
+    }
+
+    public static function canReplaceManuscript(?array $user, array $study): bool
+    {
+        if (!$user || $study === []) {
+            return false;
+        }
+        $role = \App\Helpers\Role::canonical((string) ($user['role_slug'] ?? ''), (string) ($user['role_name'] ?? ''));
+        if ($role === \App\Helpers\Role::SCHOOL_ADMINISTRATOR) {
+            return true;
+        }
+        return $role === \App\Helpers\Role::STUDENT
+            && (int) ($study['submitter_user_id'] ?? 0) === (int) ($user['id'] ?? 0);
     }
 
     /** Approved studies in one department (student catalog). */
@@ -299,10 +311,13 @@ final class Study
                     ) AS authors
              FROM studies s
              INNER JOIN programs p ON p.id = s.program_id
-             WHERE s.status = 'approved'
-             ORDER BY CASE WHEN s.program_id = :pid THEN 0 ELSE 1 END, p.code ASC, s.approved_at DESC, s.title ASC"
+             WHERE s.program_id = :home_pid
+             ORDER BY CASE WHEN s.program_id = :home_pid_case THEN 0 ELSE 1 END, p.code ASC, s.updated_at DESC, s.title ASC"
         );
-        $stmt->execute(['pid' => $homeProgramId]);
+        $stmt->execute([
+            'home_pid' => $homeProgramId,
+            'home_pid_case' => $homeProgramId,
+        ]);
         return $stmt->fetchAll();
     }
 
@@ -601,9 +616,14 @@ final class Study
 
     public static function sendToLibrarianGate(int $studyId): bool
     {
+        return self::sendToSchoolAdminFromCoordinator($studyId);
+    }
+
+    public static function sendToSchoolAdminFromCoordinator(int $studyId): bool
+    {
         $stmt = db()->prepare(
-            "UPDATE studies SET status = 'library_review', updated_at = NOW()
-             WHERE id = :id AND status = 'under_review'"
+            "UPDATE studies SET status = 'admin_review', updated_at = NOW()
+             WHERE id = :id AND status IN ('under_review', 'library_review')"
         );
         $stmt->execute(['id' => $studyId]);
         return $stmt->rowCount() > 0;
@@ -613,7 +633,7 @@ final class Study
     {
         $stmt = db()->prepare(
             "UPDATE studies SET status = 'admin_review', updated_at = NOW()
-             WHERE id = :id AND status = 'library_review'"
+             WHERE id = :id AND status IN ('library_review', 'under_review')"
         );
         $stmt->execute(['id' => $studyId]);
         return $stmt->rowCount() > 0;
@@ -773,17 +793,17 @@ final class Study
         if ($study['status'] !== 'under_review') {
             return ['ok' => false, 'reason' => 'Clear adviser, department, dean, then complete school research checks first.'];
         }
-        return ['ok' => true, 'reason' => ''];
+        return self::publicationChecks($study);
     }
 
-    /** School research coordinator sends the study to the librarian (not final publish). */
+    /** School research coordinator sends the study to the school administrator (not final publish). */
     public static function approve(int $studyId): bool
     {
         $check = self::canApprove($studyId);
         if (!$check['ok']) {
             return false;
         }
-        return self::sendToLibrarianGate($studyId);
+        return self::sendToSchoolAdminFromCoordinator($studyId);
     }
 
     public static function canFinalPublish(int $studyId): array
@@ -792,8 +812,37 @@ final class Study
         if (!$study) {
             return ['ok' => false, 'reason' => 'Study not found.'];
         }
-        if ($study['status'] !== 'admin_review') {
-            return ['ok' => false, 'reason' => 'The librarian must clear this study before school admin can publish it.'];
+        if (!in_array((string) $study['status'], ['admin_review', 'library_review'], true)) {
+            return ['ok' => false, 'reason' => 'The school research coordinator must clear this study first.'];
+        }
+        return self::publicationChecks($study);
+    }
+
+    /** Require compliance records for the manuscript being published. */
+    private static function publicationChecks(array $study): array
+    {
+        $ethics = self::ethics((int) $study['id']);
+        if (!$ethics || !self::ethicsIsComplete($ethics)) {
+            return ['ok' => false, 'reason' => 'Complete and pass all ethics checks before approval.'];
+        }
+        if (($ethics['manuscript_format'] ?? 'pending') !== 'passed') {
+            return ['ok' => false, 'reason' => 'Pass the manuscript format check before approval.'];
+        }
+        $versionId = (int) ($study['current_version_id'] ?? 0);
+        if ($versionId <= 0) {
+            return ['ok' => false, 'reason' => 'Upload a manuscript before approval.'];
+        }
+        $plagiarism = self::latestPlagiarism((int) $study['id'], $versionId);
+        if (!$plagiarism || !is_numeric($plagiarism['similarity_percentage'] ?? null)) {
+            return ['ok' => false, 'reason' => 'Record a plagiarism result for the current manuscript before approval.'];
+        }
+        $percent = (float) $plagiarism['similarity_percentage'];
+        $threshold = \App\Helpers\Settings::getFloat('plagiarism_block_percent', DEFAULT_PLAGIARISM_BLOCK_PERCENT);
+        if (!is_finite($threshold) || $threshold < 0 || $threshold > 100) {
+            return ['ok' => false, 'reason' => 'Configure a valid plagiarism blocking threshold before approval.'];
+        }
+        if (!is_finite($percent) || $percent < 0 || $percent > 100 || $percent >= $threshold) {
+            return ['ok' => false, 'reason' => 'Similarity must be below the configured plagiarism blocking threshold (' . $threshold . '%).'];
         }
         return ['ok' => true, 'reason' => ''];
     }
@@ -806,7 +855,7 @@ final class Study
         }
         $updated = db()->prepare(
             "UPDATE studies SET status = 'approved', approved_at = NOW(), updated_at = NOW()
-             WHERE id = :id AND status = 'admin_review'"
+             WHERE id = :id AND status IN ('admin_review', 'library_review')"
         );
         $updated->execute(['id' => $studyId]);
         if ($updated->rowCount() < 1) {

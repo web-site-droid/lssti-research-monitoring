@@ -16,7 +16,7 @@ final class AuthController
     public function loginForm(): void
     {
         if (Auth::check()) {
-            redirect($this->safeNext((string) ($_GET['next'] ?? '')) ?? '');
+            redirect($this->safeNext((string) ($_GET['next'] ?? '')) ?? 'dashboard');
         }
         view('auth/login', [
             'error' => flash('error'),
@@ -30,15 +30,14 @@ final class AuthController
             redirect('login');
         }
         Csrf::requireValid();
-        $ip = client_ip();
-        if (RateLimit::isLoginLocked($ip)) {
-            LoginLog::record(null, $_POST['school_id'] ?? null, 'login_failed');
+
+        if (RateLimit::isLoginLocked(client_ip())) {
             flash('error', 'Too many failed attempts. Try again later.');
             redirect('login');
         }
 
-        $schoolId = trim($_POST['school_id'] ?? '');
-        $password = $_POST['password'] ?? '';
+        $schoolId = strtoupper(trim((string) ($_POST['school_id'] ?? '')));
+        $password = (string) ($_POST['password'] ?? '');
         $user = User::findBySchoolId($schoolId);
 
         if (!$user || !(int) $user['is_active'] || !User::passwordMatches((string) $user['password_hash'], $password)) {

@@ -19,8 +19,9 @@ final class User
 
     public static function findBySchoolId(string $schoolId): ?array
     {
-        $stmt = db()->prepare(self::selectSql() . ' WHERE u.school_id = :sid LIMIT 1');
-        $stmt->execute(['sid' => $schoolId]);
+        $sid = strtoupper(trim($schoolId));
+        $stmt = db()->prepare(self::selectSql() . ' WHERE UPPER(TRIM(u.school_id)) = :sid LIMIT 1');
+        $stmt->execute(['sid' => $sid]);
         $row = $stmt->fetch();
         return $row ? self::withRoleLabel($row) : null;
     }

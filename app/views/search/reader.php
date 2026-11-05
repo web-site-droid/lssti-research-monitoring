@@ -15,6 +15,8 @@ $downloadUrl = $fullAccess ? url('file/manuscript', [
     <h1><?= e($study['title']) ?></h1>
     <p class="reader-byline"><?= e($authorDisplay) ?> · <?= e($study['program_code'] ?? '') ?> · <?= e($study['school_year']) ?> · <?= e(study_type_label($study['study_type'] ?? '')) ?></p>
     <?php if (!empty($success)): ?><p class="alert alert-success"><?= e($success) ?></p><?php endif; ?>
+    <?php if (!empty($error)): ?><p class="alert alert-error"><?= e($error) ?></p><?php endif; ?>
+    <?php if (!empty($fileMissing)): ?><p class="alert alert-error">The manuscript file is missing. Upload the PDF or DOCX again.</p><?php endif; ?>
     <?php if (!$fullAccess): ?>
         <p class="alert alert-warn"><?php
             $readerRole = $user['role_slug'] ?? '';
@@ -34,14 +36,14 @@ $downloadUrl = $fullAccess ? url('file/manuscript', [
             <div id="abstract-text"><?= nl2br(e($study['abstract'] ?? '')) ?></div>
             <h2>Keywords</h2>
             <p id="keyword-text"><?= e($keywords ? implode(', ', $keywords) : 'None listed.') ?></p>
-            <?php if (!$fullAccess && !empty($study['research_objectives'])): ?>
+            <?php if (!empty($study['research_objectives'])): ?>
                 <h2>Research objectives</h2>
-                <p><?= nl2br(e($study['research_objectives'])) ?></p>
+                <p id="objectives-text"><?= nl2br(e($study['research_objectives'])) ?></p>
             <?php endif; ?>
         </section>
-        <section class="card reader-play" aria-label="Play">
+        <section class="card reader-play" id="reader-speech" aria-label="Play" data-ext="<?= e($ext) ?>" data-file-url="<?= e($fileUrl) ?>" data-pdf-worker="<?= e(asset_url('vendor/pdfjs/build/pdf.worker.js')) ?>">
             <h2>Play</h2>
-            <p id="tts-status" class="muted"><?= $fullAccess ? 'Press Play to hear the whole paper.' : 'Press Play to hear the abstract.' ?></p>
+            <p id="tts-status" class="muted"><?= $fullAccess ? 'Loading the whole paper…' : 'Press Play to hear the abstract.' ?></p>
             <div class="tts-actions">
                 <button type="button" id="tts-play" class="btn btn-secondary"><?= icon('play') ?> Play</button>
                 <button type="button" id="tts-pause" class="btn btn-secondary"><?= icon('pause') ?> Pause</button>
@@ -56,6 +58,23 @@ $downloadUrl = $fullAccess ? url('file/manuscript', [
         </section>
     </div>
 </div>
+<?php if (!empty($showReaders)): ?>
+<section class="card card-elevated" style="margin-top:1.25rem" aria-label="Who read this article">
+    <h2 class="section-title">Who read this article</h2>
+    <p class="muted">People who opened the full file of this <?= e((string) ($study['program_code'] ?? '')) ?> article.</p>
+    <?php partial('readers_table', ['readers' => $readers ?? []]); ?>
+</section>
+<section class="card card-elevated" style="margin-top:1.25rem" aria-label="Who downloaded this file">
+    <h2 class="section-title">Who downloaded this file</h2>
+    <p class="muted">People who downloaded the full file of this <?= e((string) ($study['program_code'] ?? '')) ?> article.</p>
+    <?php partial('readers_table', [
+        'readers' => $downloaders ?? [],
+        'emptyText' => 'No one has downloaded this file yet.',
+        'timeLabel' => 'Downloaded',
+    ]); ?>
+</section>
+<?php endif; ?>
+<?php partial('replace_file', ['study' => $study, 'canReplaceFile' => $canReplaceFile ?? false]); ?>
 <?php if ($fullAccess): ?>
 <section class="doc-viewer" aria-label="Manuscript">
     <div class="doc-toolbar">
@@ -70,12 +89,14 @@ $downloadUrl = $fullAccess ? url('file/manuscript', [
         </div>
     </div>
 </section>
-<article id="reader-content" hidden data-ext="<?= e($ext) ?>" data-file-url="<?= e($fileUrl) ?>"></article>
+<article id="reader-content" hidden></article>
 <link rel="stylesheet" href="<?= e(asset_url('vendor/pdfjs/web/pdf_viewer.css')) ?>">
 <script src="<?= e(asset_url('vendor/mammoth/mammoth.browser.min.js')) ?>"></script>
 <script src="<?= e(asset_url('vendor/pdfjs/build/pdf.js')) ?>"></script>
 <script src="<?= e(asset_url('vendor/pdfjs/web/pdf_viewer.js')) ?>"></script>
-<?php $pageScripts = ['reader.js']; ?>
+<?php $pageScripts = !empty($canReplaceFile) ? ['manuscript-upload.js', 'reader.js'] : ['reader.js']; ?>
+<?php elseif (!empty($fileMissing)): ?>
+<?php $pageScripts = !empty($canReplaceFile) ? ['manuscript-upload.js', 'reader.js'] : ['reader.js']; ?>
 <?php else: ?>
 <section class="card" aria-label="Access notice">
     <h2>Full paper unavailable</h2>

@@ -11,7 +11,10 @@ $studentProgramLabel = trim((string) ($studentProgramLabel ?? ''), ' —');
 </div>
 <div class="search-panel">
     <label for="q">Search</label>
-    <input type="search" id="q" name="q" autocomplete="off" aria-autocomplete="list" aria-controls="suggestions" placeholder="<?= $studentLocked ? 'Search your department titles, authors, or objectives' : '' ?>">
+    <div class="search-row" style="display:flex; gap:.75rem; align-items:center;">
+        <input type="search" id="q" name="q" autocomplete="off" aria-autocomplete="list" aria-controls="suggestions" placeholder="<?= $studentLocked ? 'Search your department titles, authors, or objectives' : 'Search titles, authors, or keywords' ?>" style="flex:1;">
+        <button type="button" id="search-go" class="btn btn-primary">Search</button>
+    </div>
     <ul id="suggestions" class="suggestions" role="listbox"></ul>
     <div class="filters grid two">
         <label for="program_id">Program</label>

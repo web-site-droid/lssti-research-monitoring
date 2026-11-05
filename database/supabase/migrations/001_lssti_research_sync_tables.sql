@@ -1,1 +1,0 @@
--- Applied on Supabase project (Postgres). See docs/SUPABASE.md

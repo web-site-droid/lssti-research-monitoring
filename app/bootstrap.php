@@ -39,4 +39,3 @@ require_once APP_PATH . '/helpers/functions.php';
 App\Helpers\StorageFiles::ensureSchema();
 App\Helpers\Session::start();
 App\Helpers\IpAllowlist::enforce();
-App\Helpers\Role::repairStoredRoles();
