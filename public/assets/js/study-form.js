@@ -10,6 +10,17 @@ document.addEventListener('DOMContentLoaded', function () {
   var abstract = document.getElementById('abstract');
   var wordCount = document.getElementById('word-count');
   var form = document.getElementById('study-form');
+  var uploadDate = document.getElementById('upload_date');
+  var useToday = document.getElementById('upload-date-today');
+  if (uploadDate && useToday) {
+    useToday.hidden = false;
+    useToday.addEventListener('click', function () {
+      uploadDate.value = uploadDate.max;
+      uploadDate.dispatchEvent(new Event('input', { bubbles: true }));
+      uploadDate.dispatchEvent(new Event('change', { bubbles: true }));
+      uploadDate.focus();
+    });
+  }
 
   function updateShort() {
     if (short && shortCount) shortCount.textContent = String(short.value.length);

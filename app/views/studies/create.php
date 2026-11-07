@@ -87,8 +87,11 @@ $pageTitle = $editingId ? 'Edit draft' : 'Upload a study';
                 </div>
                 <div class="profile-field">
                     <label for="upload_date">Upload date <span class="req">*</span></label>
-                    <input type="date" id="upload_date" name="upload_date" min="1000-01-01" max="<?= e(date('Y-m-d')) ?>" required value="<?= e($old['upload_date'] ?? '') ?>" aria-describedby="upload-date-help">
-                    <p class="muted" id="upload-date-help">Choose the month, day, and year you uploaded this study.</p>
+                    <div class="upload-date-controls">
+                        <input type="date" id="upload_date" name="upload_date" min="1000-01-01" max="<?= e(date('Y-m-d')) ?>" required value="<?= e($old['upload_date'] ?? '') ?>" aria-describedby="upload-date-help">
+                        <button type="button" class="btn btn-secondary" id="upload-date-today" hidden>Use today</button>
+                    </div>
+                    <p class="muted" id="upload-date-help">Choose the month, day, and year, or use today's date. Future dates are not allowed.</p>
                 </div>
                 <div class="profile-field" id="adviser-field"<?= $isAdviser ? ' hidden' : '' ?>>
                     <label for="adviser_user_id">Adviser <span class="req">*</span></label>

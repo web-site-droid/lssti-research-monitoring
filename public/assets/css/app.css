@@ -2535,6 +2535,40 @@ input, select, textarea, .form-control, .stack input, .stack select, .stack text
 input::placeholder, textarea::placeholder { color: #8a95a8 !important; }
 .password-toggle { color: var(--text-muted) !important; }
 
+.upload-date-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+.profile-field #upload_date {
+  color-scheme: light;
+  background: #fff !important;
+  color: #172033 !important;
+  border: 2px solid #8493a8 !important;
+  min-height: 48px;
+  min-width: 0;
+  width: auto;
+  flex: 1 1 15rem;
+  font-size: 1rem;
+  padding: 0.6rem 0.75rem;
+}
+.profile-field #upload_date:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+#upload_date::-webkit-calendar-picker-indicator {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0.35rem;
+  cursor: pointer;
+  opacity: 1;
+}
+.upload-date-controls .btn {
+  min-height: 48px;
+  white-space: nowrap;
+}
+
 .data-table th { background: var(--lssti-blue) !important; color: #fff !important; }
 .data-table td { color: var(--text) !important; border-color: var(--border) !important; }
 .data-table tbody tr:hover { background: var(--lssti-sky) !important; }
