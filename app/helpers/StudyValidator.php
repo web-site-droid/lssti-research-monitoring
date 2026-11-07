@@ -46,6 +46,19 @@ final class StudyValidator
         if (empty($input['school_year'])) {
             $errors[] = 'School year is required.';
         }
+        $uploadDate = $input['upload_date'] ?? '';
+        if (!is_string($uploadDate) || $uploadDate === '') {
+            $errors[] = 'Upload date is required.';
+        } else {
+            $date = preg_match('/\A\d{4}-\d{2}-\d{2}\z/', $uploadDate)
+                ? \DateTimeImmutable::createFromFormat('!Y-m-d', $uploadDate)
+                : false;
+            if (!$date || $date->format('Y-m-d') !== $uploadDate || $uploadDate < '1000-01-01') {
+                $errors[] = 'Choose a valid upload date, including the year.';
+            } elseif ($uploadDate > date('Y-m-d')) {
+                $errors[] = 'Upload date cannot be in the future.';
+            }
+        }
         $type = $input['study_type'] ?? '';
         if (!in_array($type, array_keys(study_type_options()), true)) {
             $errors[] = 'Study type is required.';

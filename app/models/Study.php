@@ -9,6 +9,14 @@ use PDO;
 
 final class Study
 {
+    public static function ensureUploadDateSchema(): void
+    {
+        $column = db()->query("SHOW COLUMNS FROM studies LIKE 'upload_date'")->fetch();
+        if (!$column) {
+            db()->exec('ALTER TABLE studies ADD COLUMN upload_date DATE DEFAULT NULL');
+        }
+    }
+
     public static function find(int $id): ?array
     {
         $stmt = db()->prepare(
@@ -474,13 +482,14 @@ final class Study
 
     public static function createDraft(int $submitterId, array $meta, array $authors, array $keywords): int
     {
+        self::ensureUploadDateSchema();
         $pdo = db();
         $pdo->beginTransaction();
         try {
             $stmt = $pdo->prepare(
                 'INSERT INTO studies (submitter_user_id, title, short_title, abstract, research_objectives, study_type, program_id, adviser_user_id, pass_to,
-                 school_year, defense_date, coi_statement, status)
-                 VALUES (:sub, :title, :st, :abs, :obj, :type, :pid, :adv, :pass, :sy, :dd, :coi, :status)'
+                 school_year, upload_date, defense_date, coi_statement, status)
+                 VALUES (:sub, :title, :st, :abs, :obj, :type, :pid, :adv, :pass, :sy, :upload_date, :dd, :coi, :status)'
             );
             $stmt->execute([
                 'sub' => $submitterId,
@@ -493,6 +502,7 @@ final class Study
                 'adv' => $meta['adviser_user_id'] ?: null,
                 'pass' => $meta['pass_to'],
                 'sy' => $meta['school_year'],
+                'upload_date' => $meta['upload_date'],
                 'dd' => $meta['defense_date'] ?: null,
                 'coi' => $meta['coi_statement'],
                 'status' => 'draft',
@@ -696,10 +706,11 @@ final class Study
     /** @param array<string, mixed> $meta */
     public static function updateDetails(int $studyId, array $meta, array $authors, array $keywords): void
     {
+        self::ensureUploadDateSchema();
         $stmt = db()->prepare(
             'UPDATE studies SET title = :title, short_title = :st, abstract = :abs, research_objectives = :obj,
              study_type = :type, program_id = :pid, adviser_user_id = :adv, pass_to = :pass, school_year = :sy, defense_date = :dd,
-             coi_statement = :coi, updated_at = NOW()
+             upload_date = :upload_date, coi_statement = :coi, updated_at = NOW()
              WHERE id = :id'
         );
         $stmt->execute([
@@ -712,6 +723,7 @@ final class Study
             'adv' => $meta['adviser_user_id'] ?: null,
             'pass' => $meta['pass_to'],
             'sy' => $meta['school_year'],
+            'upload_date' => $meta['upload_date'],
             'dd' => $meta['defense_date'] ?: null,
             'coi' => $meta['coi_statement'],
             'id' => $studyId,

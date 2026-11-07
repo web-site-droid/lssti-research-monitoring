@@ -85,6 +85,11 @@ $pageTitle = $editingId ? 'Edit draft' : 'Upload a study';
                         </select>
                     </div>
                 </div>
+                <div class="profile-field">
+                    <label for="upload_date">Upload date <span class="req">*</span></label>
+                    <input type="date" id="upload_date" name="upload_date" min="1000-01-01" max="<?= e(date('Y-m-d')) ?>" required value="<?= e($old['upload_date'] ?? '') ?>" aria-describedby="upload-date-help">
+                    <p class="muted" id="upload-date-help">Choose the month, day, and year you uploaded this study.</p>
+                </div>
                 <div class="profile-field" id="adviser-field"<?= $isAdviser ? ' hidden' : '' ?>>
                     <label for="adviser_user_id">Adviser <span class="req">*</span></label>
                     <select id="adviser_user_id" name="adviser_user_id"<?= $isAdviser ? '' : ' required' ?>>
