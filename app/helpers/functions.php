@@ -308,9 +308,9 @@ function paper_find_attrs(array $paper): string
     $when = (string) ($paper['approved_at'] ?? $paper['submitted_at'] ?? $paper['created_at'] ?? $paper['updated_at'] ?? '');
     $month = '';
     if ($when !== '') {
-        $stamp = strtotime($when);
-        if ($stamp) {
-            $month = date('Y-m', $stamp);
+        $date = philippine_datetime($when);
+        if ($date) {
+            $month = $date->format('Y-m');
         }
     }
     return ' data-program="' . e((string) ($paper['program_code'] ?? '')) . '"'
@@ -330,16 +330,38 @@ function can_open_full_file(?array $user, array $study): bool
         && \App\Models\Study::canOpenFullManuscript($user, $study);
 }
 
-function publication_timestamp_label(?string $value): string
+/** Interpret DATETIME in the database's storage timezone; DATE stays a calendar date. */
+function philippine_datetime(?string $value): ?DateTimeImmutable
 {
     if ($value === null || trim($value) === '') {
-        return 'Publication date unavailable';
+        return null;
     }
-    $date = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $value);
+    $date = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $value, new DateTimeZone(defined('DB_TIMEZONE') ? DB_TIMEZONE : '+00:00'));
     if (!$date || $date->format('Y-m-d H:i:s') !== $value) {
-        return 'Publication date unavailable';
+        return null;
     }
-    return $date->format('F j, Y \a\t g:i A');
+    return $date->setTimezone(new DateTimeZone('Asia/Manila'));
+}
+
+function timestamp_label(?string $value): string
+{
+    $date = philippine_datetime($value);
+    return $date ? $date->format('F j, Y \a\t g:i A') . ' PHT' : 'Date unavailable';
+}
+
+function publication_timestamp_label(?string $value): string
+{
+    return philippine_datetime($value) ? timestamp_label($value) : 'Publication date unavailable';
+}
+
+function upload_date_label(array $paper): string
+{
+    $value = $paper['upload_date'] ?? '';
+    $date = is_string($value) ? DateTimeImmutable::createFromFormat('!Y-m-d', $value, new DateTimeZone('Asia/Manila')) : false;
+    if ($date && $date->format('Y-m-d') === $value) {
+        return $date->format('F j, Y');
+    }
+    return philippine_datetime($paper['created_at'] ?? null)?->format('F j, Y') ?? 'Date unavailable';
 }
 
 function study_type_label(?string $type): string

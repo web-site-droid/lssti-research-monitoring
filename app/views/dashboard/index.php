@@ -138,12 +138,13 @@ $schoolWideFilterEmpty = 'No papers in this department.';
             <th>Authors</th>
             <th>Department</th>
             <th>Status</th>
-            <th data-nosort>Action</th>
+            <th data-nosort>Uploaded (PHT)</th>
+                <th data-nosort>Action</th>
         </tr>
     </thead>
     <tbody>
     <?php if (!$directorStudies): ?>
-        <tr class="dash-empty-row"><td><?= e($schoolWideEmpty) ?></td><td></td><td></td><td></td><td></td></tr>
+        <tr class="dash-empty-row"><td><?= e($schoolWideEmpty) ?></td><td></td><td></td><td></td><td></td><td></td></tr>
     <?php else: ?>
         <?php foreach ($directorStudies as $study): ?>
             <?php
@@ -165,7 +166,8 @@ $schoolWideFilterEmpty = 'No papers in this department.';
                 <td><?= author_cell($study['authors'] ?? '', (string) $study['title']) ?></td>
                 <td><?= e($study['program_code']) ?></td>
                 <td><?= status_badge((string) $study['status']) ?></td>
-                <td class="actions-cell">
+                <td><?php partial('upload_timestamp', ['paper' => $study]); ?></td>
+                    <td class="actions-cell">
                     <?php
                     ob_start();
                     echo '<button type="button" class="btn btn-secondary btn-icon-only" data-study-quick'
@@ -217,7 +219,7 @@ $schoolWideFilterEmpty = 'No papers in this department.';
                 </td>
             </tr>
         <?php endforeach; ?>
-        <tr class="dash-empty-row" hidden><td><?= e($schoolWideFilterEmpty) ?></td><td></td><td></td><td></td><td></td></tr>
+        <tr class="dash-empty-row" hidden><td><?= e($schoolWideFilterEmpty) ?></td><td></td><td></td><td></td><td></td><td></td></tr>
     <?php endif; ?>
     </tbody>
 </table>
@@ -280,12 +282,13 @@ $schoolWideFilterEmpty = 'No papers in this department.';
                 <th>Student</th>
                 <th>Status</th>
                 <th>Year</th>
+                <th data-nosort>Uploaded (PHT)</th>
                 <th data-nosort>Action</th>
             </tr>
         </thead>
         <tbody>
         <?php if (!$deptCatalog): ?>
-            <tr class="dash-empty-row"><td>No studies in your department yet.</td><td></td><td></td><td></td><td></td></tr>
+            <tr class="dash-empty-row"><td>No studies in your department yet.</td><td></td><td></td><td></td><td></td><td></td></tr>
         <?php else: ?>
             <?php foreach ($deptCatalog as $paper): ?>
                 <tr<?= paper_find_attrs($paper) ?>>
@@ -293,6 +296,7 @@ $schoolWideFilterEmpty = 'No papers in this department.';
                     <td><?= e(trim(($paper['submitter_last'] ?? '') . ', ' . ($paper['submitter_first'] ?? ''), ', ')) ?></td>
                     <td><?= status_badge((string) ($paper['status'] ?? '')) ?></td>
                     <td><?= e($paper['school_year'] ?? '') ?></td>
+                    <td><?php partial('upload_timestamp', ['paper' => $paper]); ?></td>
                     <td class="actions-cell">
                         <?php
                         ob_start();
@@ -339,12 +343,13 @@ $schoolWideFilterEmpty = 'No papers in this department.';
                 <th>Authors</th>
                 <th>Department</th>
                 <th>Year</th>
+                <th data-nosort>Uploaded (PHT)</th>
                 <th data-nosort>Abstract</th>
             </tr>
         </thead>
         <tbody>
         <?php if (!$otherDeptCatalog): ?>
-            <tr class="dash-empty-row"><td>No approved papers from other departments.</td><td></td><td></td><td></td><td></td></tr>
+            <tr class="dash-empty-row"><td>No approved papers from other departments.</td><td></td><td></td><td></td><td></td><td></td></tr>
         <?php else: ?>
             <?php foreach ($otherDeptCatalog as $paper): ?>
                 <tr<?= paper_find_attrs($paper) ?>>
@@ -352,6 +357,7 @@ $schoolWideFilterEmpty = 'No papers in this department.';
                     <td><?= author_cell($paper['authors'] ?? '', (string) $paper['title']) ?></td>
                     <td><?= e($paper['program_code'] ?? '') ?></td>
                     <td><?= e($paper['school_year'] ?? '') ?></td>
+                    <td><?php partial('upload_timestamp', ['paper' => $paper]); ?></td>
                     <td class="actions-cell">
                         <?php ob_start(); ?>
                         <button type="button" class="btn btn-secondary btn-icon-only" data-study-quick
@@ -420,12 +426,13 @@ $deanQueue = $uploads ?? [];
                 <th>Student</th>
                 <th>Status</th>
                 <th>Year</th>
+                <th data-nosort>Uploaded (PHT)</th>
                 <th data-nosort>Action</th>
             </tr>
         </thead>
         <tbody>
         <?php if (!$deptCatalog): ?>
-            <tr class="dash-empty-row"><td>No studies in your department yet.</td><td></td><td></td><td></td><td></td></tr>
+            <tr class="dash-empty-row"><td>No studies in your department yet.</td><td></td><td></td><td></td><td></td><td></td></tr>
         <?php else: ?>
             <?php foreach ($deptCatalog as $paper): ?>
                 <?php
@@ -439,6 +446,7 @@ $deanQueue = $uploads ?? [];
                     <td><?= e(trim(($paper['submitter_last'] ?? '') . ', ' . ($paper['submitter_first'] ?? ''), ', ')) ?></td>
                     <td><?= status_badge((string) ($paper['status'] ?? '')) ?></td>
                     <td><?= e($paper['school_year'] ?? '') ?></td>
+                    <td><?php partial('upload_timestamp', ['paper' => $paper]); ?></td>
                     <td class="actions-cell">
                         <?php
                         ob_start();
@@ -499,12 +507,13 @@ $deanQueue = $uploads ?? [];
                 <th>Authors</th>
                 <th>Department</th>
                 <th>Year</th>
+                <th data-nosort>Uploaded (PHT)</th>
                 <th data-nosort>Abstract</th>
             </tr>
         </thead>
         <tbody>
         <?php if (!$otherDeptCatalog): ?>
-            <tr class="dash-empty-row"><td>No approved papers from other departments.</td><td></td><td></td><td></td><td></td></tr>
+            <tr class="dash-empty-row"><td>No approved papers from other departments.</td><td></td><td></td><td></td><td></td><td></td></tr>
         <?php else: ?>
             <?php foreach ($otherDeptCatalog as $paper): ?>
                 <tr<?= paper_find_attrs($paper) ?>>
@@ -512,6 +521,7 @@ $deanQueue = $uploads ?? [];
                     <td><?= author_cell($paper['authors'] ?? '', (string) $paper['title']) ?></td>
                     <td><?= e($paper['program_code'] ?? '') ?></td>
                     <td><?= e($paper['school_year'] ?? '') ?></td>
+                    <td><?php partial('upload_timestamp', ['paper' => $paper]); ?></td>
                     <td class="actions-cell">
                         <?php ob_start(); ?>
                         <button type="button" class="btn btn-secondary btn-icon-only" data-study-quick
@@ -581,12 +591,13 @@ $pendingUploads = $uploads ?? [];
                 <th>Student</th>
                 <th>Status</th>
                 <th>Year</th>
+                <th data-nosort>Uploaded (PHT)</th>
                 <th data-nosort>Action</th>
             </tr>
         </thead>
         <tbody>
         <?php if (!$deptCatalog): ?>
-            <tr class="dash-empty-row"><td>No studies in your department yet.</td><td></td><td></td><td></td><td></td></tr>
+            <tr class="dash-empty-row"><td>No studies in your department yet.</td><td></td><td></td><td></td><td></td><td></td></tr>
         <?php else: ?>
             <?php foreach ($deptCatalog as $paper): ?>
                 <?php
@@ -602,6 +613,7 @@ $pendingUploads = $uploads ?? [];
                     <td><?= e(trim(($paper['submitter_last'] ?? '') . ', ' . ($paper['submitter_first'] ?? ''), ', ')) ?></td>
                     <td><?= status_badge((string) ($paper['status'] ?? '')) ?></td>
                     <td><?= e($paper['school_year'] ?? '') ?></td>
+                    <td><?php partial('upload_timestamp', ['paper' => $paper]); ?></td>
                     <td class="actions-cell">
                         <?php
                         ob_start();
@@ -665,12 +677,13 @@ $pendingUploads = $uploads ?? [];
                 <th>Authors</th>
                 <th>Department</th>
                 <th>Year</th>
+                <th data-nosort>Uploaded (PHT)</th>
                 <th data-nosort>Abstract</th>
             </tr>
         </thead>
         <tbody>
         <?php if (!$otherDeptCatalog): ?>
-            <tr class="dash-empty-row"><td>No approved papers from other departments.</td><td></td><td></td><td></td><td></td></tr>
+            <tr class="dash-empty-row"><td>No approved papers from other departments.</td><td></td><td></td><td></td><td></td><td></td></tr>
         <?php else: ?>
             <?php foreach ($otherDeptCatalog as $paper): ?>
                 <tr<?= paper_find_attrs($paper) ?>>
@@ -678,6 +691,7 @@ $pendingUploads = $uploads ?? [];
                     <td><?= author_cell($paper['authors'] ?? '', (string) $paper['title']) ?></td>
                     <td><?= e($paper['program_code'] ?? '') ?></td>
                     <td><?= e($paper['school_year'] ?? '') ?></td>
+                    <td><?php partial('upload_timestamp', ['paper' => $paper]); ?></td>
                     <td class="actions-cell">
                         <?php ob_start(); ?>
                         <button type="button" class="btn btn-secondary btn-icon-only" data-study-quick

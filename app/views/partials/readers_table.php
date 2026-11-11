@@ -27,7 +27,7 @@ $timeKey = $timeKey ?? 'opened_at';
                     <td><?= e((string) ($row['school_id'] ?? '')) ?></td>
                     <td><?= e(\App\Helpers\Role::label('', (string) ($row['role_name'] ?? ''))) ?></td>
                     <td><?= $programCode !== '' ? e($programCode) : 'All departments' ?></td>
-                    <td><?= e((string) ($row[$timeKey] ?? $row['opened_at'] ?? '')) ?></td>
+                    <td><?= e(timestamp_label($row[$timeKey] ?? $row['opened_at'] ?? null)) ?></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>

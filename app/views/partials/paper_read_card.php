@@ -17,6 +17,7 @@ $meta = trim(
         <h3><?= e($title) ?></h3>
         <p class="paper-card-authors"><?= author_cell($authors, $title) ?></p>
         <p class="paper-card-meta"><?= e($meta) ?></p>
+        <p class="paper-card-meta"><?php partial('upload_timestamp', ['paper' => $paper]); ?></p>
         <?php if ($canRead): ?><span class="paper-card-hint">Open the whole file</span><?php endif; ?>
     <?php if ($canRead): ?>
     </a>

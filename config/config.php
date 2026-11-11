@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+// Calendar dates and PHP-generated labels follow Philippine time on every host.
+date_default_timezone_set('Asia/Manila');
+
 define('APP_NAME', 'Lanao School of Science and Technology Digital Research Repository');
 
 define('BASE_PATH', dirname(__DIR__));
@@ -42,6 +45,12 @@ $httpHost = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
 $isLocalDb = $httpHost === ''
     || str_starts_with($httpHost, 'localhost')
     || str_starts_with($httpHost, '127.0.0.1');
+
+// Preserve the existing DATETIME convention: local XAMPP uses UTC+8;
+// the hosted repository uses UTC. Override for a differently configured host.
+if (!defined('DB_TIMEZONE')) {
+    define('DB_TIMEZONE', lssti_env('DB_TIMEZONE', $isLocalDb && !VERCEL_DEPLOY ? '+08:00' : '+00:00'));
+}
 
 if (!VERCEL_DEPLOY && is_file(CONFIG_PATH . '/database.local.php')) {
     require CONFIG_PATH . '/database.local.php';

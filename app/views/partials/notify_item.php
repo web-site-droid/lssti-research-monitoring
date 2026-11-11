@@ -13,11 +13,11 @@ if (!empty($note['link_route'])) {
     data-read-url="<?= e(url('notifications/read', ['id' => (int) ($note['id'] ?? 0), 'ajax' => 1])) ?>"
     data-title="<?= e($note['title'] ?? '') ?>"
     data-body="<?= e($note['body'] ?? '') ?>"
-    data-time="<?= e($note['created_at'] ?? '') ?>"
+    data-time="<?= e(timestamp_label($note['created_at'] ?? null)) ?>"
     data-href="<?= e($href) ?>">
     <span class="notify-dot" aria-hidden="true"></span>
     <strong><?= e($note['title'] ?? '') ?></strong>
-    <time class="notify-time"><?= e($note['created_at'] ?? '') ?></time>
+    <time class="notify-time"><?= e(timestamp_label($note['created_at'] ?? null)) ?></time>
     <?php if (!empty($note['body'])): ?><span class="notify-body"><?= e($note['body']) ?></span><?php endif; ?>
     <span class="notify-state" data-notify-state><?= $unread ? 'Unread' : 'Read' ?></span>
 </button>

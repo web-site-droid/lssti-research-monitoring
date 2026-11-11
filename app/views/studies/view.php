@@ -19,7 +19,8 @@ $pageTitle = e($study['short_title']);
 <?php endif; ?>
 
 <p><strong>Authors:</strong> <?= e($authorDisplay) ?></p>
-<p><strong>Upload date:</strong> <?= e(date('F j, Y', strtotime($study['upload_date'] ?? $study['created_at']))) ?></p>
+<p><strong>Upload date:</strong> <?= e(upload_date_label($study)) ?></p>
+<p><strong>Recorded upload time:</strong> <?= e(timestamp_label($study['created_at'] ?? null)) ?></p>
 <p><strong>Keywords:</strong> <?= e(implode(', ', $keywords)) ?></p>
 <h2 class="section-title">Abstract</h2>
 <p><?= nl2br(e($study['abstract'])) ?></p>

@@ -7,5 +7,5 @@
 </form>
 <div class="table-wrap"><table class="data-table"><thead><tr><th>Date and time</th><th>ID no.</th><th>Librarian</th><th>Activity</th></tr></thead><tbody>
 <?php if (!$logs): ?><tr><td colspan="4">No recorded activity for this selection.</td></tr><?php endif; ?>
-<?php foreach ($logs as $log): ?><tr><td><?= e($log['created_at']) ?></td><td><?= e($log['school_id']) ?></td><td><?= e($log['first_name'] . ' ' . $log['last_name']) ?></td><td><?= e(ucwords(str_replace(['.', '_'], ' ', $log['action']))) ?></td></tr><?php endforeach; ?>
+<?php foreach ($logs as $log): ?><tr><td><?= e(timestamp_label($log['created_at'])) ?></td><td><?= e($log['school_id']) ?></td><td><?= e($log['first_name'] . ' ' . $log['last_name']) ?></td><td><?= e(ucwords(str_replace(['.', '_'], ' ', $log['action']))) ?></td></tr><?php endforeach; ?>
 </tbody></table></div>

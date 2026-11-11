@@ -208,7 +208,7 @@ final class StudyController
                 'program_id' => (string) $study['program_id'],
                 'adviser_user_id' => (string) $study['adviser_user_id'],
                 'school_year' => $study['school_year'],
-                'upload_date' => $study['upload_date'] ?? substr((string) $study['created_at'], 0, 10),
+                'upload_date' => $study['upload_date'] ?? philippine_datetime($study['created_at'])?->format('Y-m-d') ?? '',
                 'defense_date' => !empty($study['defense_date']) ? substr((string) $study['defense_date'], 0, 10) : '',
                 'coi_statement' => $study['coi_statement'],
                 'author_first' => array_column($authors, 'first_name') ?: [''],

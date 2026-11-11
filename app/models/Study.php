@@ -301,7 +301,7 @@ final class Study
         $stmt = db()->prepare(
             "SELECT s.id, s.title, s.short_title, s.status, s.abstract, s.research_objectives,
                     s.school_year, s.study_type, s.program_id, s.current_version_id, s.submitter_user_id,
-                    s.approved_at, s.submitted_at, s.created_at, p.code AS program_code,
+                    s.approved_at, s.submitted_at, s.created_at, s.upload_date, p.code AS program_code,
                     (
                         SELECT GROUP_CONCAT(
                             CONCAT(a.last_name, ', ', a.first_name,
@@ -327,7 +327,7 @@ final class Study
         $stmt = db()->prepare(
             "SELECT s.id, s.title, s.short_title, s.status, s.abstract, s.research_objectives,
                     s.school_year, s.study_type, s.program_id, s.current_version_id, s.submitter_user_id,
-                    s.approved_at, s.submitted_at, s.created_at, p.code AS program_code,
+                    s.approved_at, s.submitted_at, s.created_at, s.upload_date, p.code AS program_code,
                     (
                         SELECT GROUP_CONCAT(
                             CONCAT(a.last_name, ', ', a.first_name,
@@ -452,7 +452,7 @@ final class Study
     {
         $sql = "SELECT s.id, s.title, s.short_title, s.status, s.abstract, s.research_objectives,
                        s.school_year, s.study_type, s.program_id, s.current_version_id, s.submitter_user_id, s.adviser_user_id,
-                       s.approved_at, s.submitted_at, s.created_at, p.code AS program_code,
+                       s.approved_at, s.submitted_at, s.created_at, s.upload_date, p.code AS program_code,
                        (
                            SELECT GROUP_CONCAT(
                                CONCAT(a.last_name, ', ', a.first_name,

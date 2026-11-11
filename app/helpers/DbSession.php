@@ -29,7 +29,8 @@ final class DbSession implements \SessionHandlerInterface
     public function write(string $id, string $data): bool
     {
         $minutes = defined('SESSION_TIMEOUT_MINUTES') ? (int) SESSION_TIMEOUT_MINUTES : 30;
-        $expires = date('Y-m-d H:i:s', time() + max(5, $minutes) * 60);
+        $expires = (new \DateTimeImmutable('@' . (time() + max(5, $minutes) * 60)))
+            ->setTimezone(new \DateTimeZone(DB_TIMEZONE))->format('Y-m-d H:i:s');
         $stmt = db()->prepare(
             'REPLACE INTO php_sessions (id, data, expires_at) VALUES (:id, :data, :expires)'
         );

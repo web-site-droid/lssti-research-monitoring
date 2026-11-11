@@ -14,7 +14,7 @@
             <td><a href="<?= e(url('studies/view', ['id' => $s['id']])) ?>"><?= e($s['short_title']) ?></a></td>
             <td><?= e($s['program_code']) ?></td>
             <td><?= status_badge((string) $s['status']) ?></td>
-            <td><?= e($s['updated_at']) ?></td>
+            <td><?= e(timestamp_label($s['updated_at'])) ?></td>
         </tr>
     <?php endforeach; ?>
     </tbody>

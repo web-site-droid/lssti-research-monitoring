@@ -88,7 +88,7 @@
             <?php foreach ($comments as $c): ?>
                 <li>
                     <strong><?= e($c['first_name'] . ' ' . $c['last_name']) ?></strong>
-                    <span class="text-small"><?= e($c['created_at']) ?></span>
+                    <span class="text-small"><?= e(timestamp_label($c['created_at'])) ?></span>
                     <p><?= nl2br(e($c['comment_text'])) ?></p>
                 </li>
             <?php endforeach; ?>

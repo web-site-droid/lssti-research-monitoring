@@ -13,7 +13,7 @@ $studies=[
 ob_start();require APP_PATH.'/views/studies/track.php';$html=ob_get_clean();
 if(!(strpos($html,'Newest publication')<strpos($html,'Earlier same day')&&strpos($html,'Earlier same day')<strpos($html,'Older publication')))throw new RuntimeException('Publication ordering wrong');
 if(substr_count($html,'November 6, 2026</h2>')!==1)throw new RuntimeException('Same-day publications must be grouped');
-if(!str_contains($html,'November 6, 2026 at 2:30 PM'))throw new RuntimeException('Date and time missing');
+if(!str_contains($html,'November 6, 2026 at 10:30 PM PHT'))throw new RuntimeException('Philippine date and time missing');
 if(substr_count($html,'progress-step-result">Finished')!==4)throw new RuntimeException('Publish must be finished for each published paper');
 if(substr_count($html,'is-complete')!==28)throw new RuntimeException('All published steps must be completed');
 if(!str_contains($html,'Publication date unavailable'))throw new RuntimeException('Missing dates must not be invented');

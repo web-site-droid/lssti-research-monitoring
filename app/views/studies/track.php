@@ -47,7 +47,7 @@ usort($tracking, static fn (array $a, array $b): int => strcmp($trackTime($b), $
 $trackingGroups = [];
 foreach ($tracking as $paper) {
     $stamp = $trackTime($paper);
-    $trackingGroups[$stamp !== '' ? substr($stamp, 0, 10) : ''][] = $paper;
+    $trackingGroups[philippine_datetime($stamp)?->format('Y-m-d') ?? ''][] = $paper;
 }
 ?>
 <?php if ($waitingView): ?>

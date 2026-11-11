@@ -2,7 +2,7 @@
 $pageTitle = 'Study';
 $studyMonths = [];
 foreach ($studies as $study) {
-    $stamp = strtotime((string) ($study['submitted_at'] ?: $study['created_at'])) ?: time();
+    $stamp = philippine_datetime($study['submitted_at'] ?: $study['created_at'])?->getTimestamp() ?? time();
     $month = date('Y-m', $stamp);
     $day = date('Y-m-d', $stamp);
     if (!isset($studyMonths[$month])) {
@@ -63,7 +63,7 @@ foreach ($studies as $study) {
                     </span>
                 </button>
                 <?php foreach ($group['days'] as $day => $items): ?>
-                    <?php $latest = strtotime((string) ($items[0]['submitted_at'] ?: $items[0]['created_at'])); ?>
+                    <?php $latest = philippine_datetime($items[0]['submitted_at'] ?: $items[0]['created_at'])?->getTimestamp() ?? time(); ?>
                     <button type="button" class="folder-day folder-sub" data-open-folder="<?= e($day) ?>" data-month="<?= e($month) ?>">
                         <span class="folder-mark" aria-hidden="true"></span>
                         <span class="folder-day-text">

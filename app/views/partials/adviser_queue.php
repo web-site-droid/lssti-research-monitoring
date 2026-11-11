@@ -23,6 +23,7 @@ $pending = array_values(array_filter($assigned, static fn (array $paper): bool =
                     <?= status_badge($paper['status'], $paper['status'] === 'submitted' ? 'Ready for review' : 'Awaiting student revision') ?>
                     <h3><a href="<?= e(url('studies/view', ['id' => $paper['id']])) ?>"><?= e($paper['title']) ?></a></h3>
                     <p><?= e(trim(($paper['submitter_first'] ?? '') . ' ' . ($paper['submitter_last'] ?? ''))) ?> &middot; <?= e($paper['school_year'] ?? '') ?></p>
+                    <p><?php partial('upload_timestamp', ['paper' => $paper]); ?></p>
                 </div>
                 <?php if ($paper['status'] === 'submitted'): ?>
                     <a class="btn btn-secondary" href="<?= e(url('review/ethics', ['id' => $paper['id']])) ?>">Review study</a>

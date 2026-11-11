@@ -12,7 +12,7 @@
     <tbody>
     <?php foreach ($logs as $log): ?>
         <tr>
-            <td><?= e($log['created_at']) ?></td>
+            <td><?= e(timestamp_label($log['created_at'])) ?></td>
             <td><?= e(trim(($log['last_name'] ?? '') . ' ' . ($log['first_name'] ?? ''))) ?></td>
             <td><?= e($log['school_id_attempt'] ?? $log['school_id'] ?? '') ?></td>
         </tr>

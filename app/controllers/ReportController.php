@@ -47,11 +47,13 @@ final class ReportController
         }
         if ($from) {
             $sql .= ' AND a.created_at >= :from';
-            $params['from'] = $from;
+            $params['from'] = (new \DateTimeImmutable($from . ' 00:00:00', new \DateTimeZone('Asia/Manila')))
+                ->setTimezone(new \DateTimeZone(DB_TIMEZONE))->format('Y-m-d H:i:s');
         }
         if ($to) {
             $sql .= ' AND a.created_at <= :to';
-            $params['to'] = $to . ' 23:59:59';
+            $params['to'] = (new \DateTimeImmutable($to . ' 23:59:59', new \DateTimeZone('Asia/Manila')))
+                ->setTimezone(new \DateTimeZone(DB_TIMEZONE))->format('Y-m-d H:i:s');
         }
         $sql .= ' ORDER BY a.created_at DESC LIMIT 500';
         $stmt = db()->prepare($sql);

@@ -64,7 +64,7 @@ if ($viewProgramCode !== '' && !isset($departments[$viewProgramCode])) {
                         <td><?= e($row['school_id']) ?></td>
                         <td><?= e(\App\Helpers\Role::label('', (string) $row['role_name'])) ?></td>
                         <td><?= $programCode !== '' ? e($programCode) : 'All departments' ?></td>
-                        <td><?= e((string) $row['last_login']) ?></td>
+                        <td><?= e(timestamp_label($row['last_login'])) ?></td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>
@@ -122,7 +122,7 @@ if ($viewProgramCode !== '' && !isset($departments[$viewProgramCode])) {
                                 echo e($title);
                             }
                         ?></td>
-                        <td><?= e((string) $row['opened_at']) ?></td>
+                        <td><?= e(timestamp_label($row['opened_at'])) ?></td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>
@@ -180,7 +180,7 @@ if ($viewProgramCode !== '' && !isset($departments[$viewProgramCode])) {
                                 echo e($title);
                             }
                         ?></td>
-                        <td><?= e((string) $row['created_at']) ?></td>
+                        <td><?= e(timestamp_label($row['created_at'])) ?></td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>

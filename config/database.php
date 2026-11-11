@@ -64,6 +64,8 @@ function db(): PDO
         $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=%s', $host, $port, $name, $charset);
         try {
             $pdo = new PDO($dsn, $user, $pass, $options);
+            // NOW(), defaults, and PHP-generated values use the same storage timezone.
+            $pdo->exec('SET time_zone = ' . $pdo->quote(DB_TIMEZONE));
             $hintDir = dirname($hint);
             if (!is_dir($hintDir)) {
                 @mkdir($hintDir, 0775, true);
